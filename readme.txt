@@ -1,5 +1,5 @@
 === External Videos ===
-Contributors: silviapfeiffer
+Contributors: silviapfeiffer, johnfjohnf
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
