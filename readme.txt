@@ -1,10 +1,10 @@
 === External Videos ===
-Contributors: silviapfeiffer, johnfjohnf
+Contributors: silviapfeiffer1, johnfjohnf
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
 Tested up to: 3.0-beta1
-Stable tag: 0.3
+Stable tag: 0.4
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
@@ -54,5 +54,7 @@ We use OEmbed. For DotSub we use the service of embed.ly.
 * Add support for wordpress 2.9+
 
 = 0.3 =
+* Fix stupid syntax error in 0.2 release
 
-* Fix stupid syntax error in 0.2 releas
+= 0.4 =
+* Add Silvia as a proper author so she has commit rights
