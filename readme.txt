@@ -18,6 +18,7 @@ features:
 
 * Admin Interface to list videos
 * Video page per video
+* Adding videos as attachments to posts
 
 
 == Installation ==

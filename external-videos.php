@@ -35,13 +35,25 @@
 
 */
 
+$features_3_0 = false;
+
+if (version_compare($wp_version,"3.0",">="))
+{
+    $features_3_0 = true;
+}
+
 require_once(ABSPATH . 'wp-admin/includes/taxonomy.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/helpers.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/video_sites_fetching.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/vimeo_library.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/ev-widget.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/simple_html_dom.php');
-require_once(WP_PLUGIN_DIR . '/external-videos/media_gallery.php');
+
+if ($feature_3_0) {
+{
+    require_once(WP_PLUGIN_DIR . '/external-videos/media_gallery.php');
+}
+
 
 /// ***   Pulling Videos From Diverse Sites   *** ///
 
@@ -390,7 +402,13 @@ function external_videos_gallery($attr, $content = null) {
           }
           ?>
           <br/>
+          <?php
+          if ($feature_3_0) {
+          ?>
           <a href="<?php the_permalink() ?>">Video page</a>
+          <?php
+          }
+          ?>
         </div>
         <div style="margin-bottom:10px;">
           <?php echo $desc ?>
