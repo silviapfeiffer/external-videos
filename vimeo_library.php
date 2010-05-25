@@ -1,5 +1,8 @@
 <?
 
+// downloaded as part of http://vimeo.com/api/libs/vimeo-php-lib.zip
+// Vimeo published this library without a license
+
 class phpVimeo {
 	
 	const API_REST_URL = 'http://www.vimeo.com/api/rest/v2';

@@ -4,7 +4,7 @@
  * Plugin URI: http://wordpress.org/
  * Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
  * Author: Silvia Pfeiffer
- * Version: 0.4
+ * Version: 0.5
  * Author URI: http://www.gingertech.net/
  * License: GPL2
  */
@@ -42,14 +42,14 @@ if (version_compare($wp_version,"3.0",">=")) {
 }
 
 require_once(ABSPATH . 'wp-admin/includes/taxonomy.php');
-require_once(WP_PLUGIN_DIR . '/external-videos/helpers.php');
-require_once(WP_PLUGIN_DIR . '/external-videos/video_sites_fetching.php');
-require_once(WP_PLUGIN_DIR . '/external-videos/vimeo_library.php');
+require_once(WP_PLUGIN_DIR . '/external-videos/ev-helpers.php');
+require_once(WP_PLUGIN_DIR . '/external-videos/ev-video_sites.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/ev-widget.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/simple_html_dom.php');
+require_once(WP_PLUGIN_DIR . '/external-videos/vimeo_library.php');
 
 if ($feature_3_0) {
-    require_once(WP_PLUGIN_DIR . '/external-videos/media_gallery.php');
+    require_once(WP_PLUGIN_DIR . '/external-videos/ev-media_gallery.php');
 }
 
 
@@ -338,9 +338,9 @@ function external_videos_gallery($attr, $content = null) {
   ob_start();
 
   $params = array(
-    'show_posts'  => 20,
-    'post_type'   => 'external-videos',
-    'post_status' => 'publish',
+    'posts_per_page' => 20,
+    'post_type'      => 'external-videos',
+    'post_status'    => 'publish',
   );
   $old_params = $wp_query->query;
   $params['paged'] = $old_params['paged'];
