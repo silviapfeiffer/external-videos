@@ -1,0 +1,7 @@
+- video tags inconsistent with post tags (video posts are not found)
+- introduce paging for gallery
+- introduce next/prev buttons into thickbox with videos
+
+Later ... maybe:
+- Remove all videos for an author when you remove the author (should be a setting option)
+- Update should be separated from retrieving new videos
