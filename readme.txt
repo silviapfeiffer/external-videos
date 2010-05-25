@@ -2,15 +2,22 @@
 Contributors: silviapfeiffer
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
-Requires at least: 3.0-beta1
+Requires at least: 2.9
 Tested up to: 3.0-beta1
-Stable tag: 0.1
+Stable tag: 0.2
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
 == Description ==
 
 This plugin creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post type.
+
+While some aspects of this plugin do work on wordpress 2.9.2 it is
+really designed for 3.0+. When using 2.9 you will miss the following
+features:
+
+* Admin Interface to list videos
+* Video page per video
 
 
 == Installation ==

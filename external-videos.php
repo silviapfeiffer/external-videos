@@ -371,7 +371,7 @@ function external_videos_gallery($attr, $content = null) {
              style="display:inline; margin:0; border:1px solid black;"/>
       </a>
       <div style="width:120px; height: 12px; margin-bottom:7px; line-height: 90%">
-        <small><i><?php echo date('F j, Y',strtotime(get_the_date())) ?></i></small>
+        <small><i><?php echo get_the_time('F j, Y') ?></i></small>
       </div>
       <div style="width:120px; height: 30px; margin-bottom:20px; line-height: 80%">
         <small><?php echo $short_title ?></small>
