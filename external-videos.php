@@ -37,8 +37,7 @@
 
 $features_3_0 = false;
 
-if (version_compare($wp_version,"3.0",">="))
-{
+if (version_compare($wp_version,"3.0",">=")) {
     $features_3_0 = true;
 }
 
@@ -50,7 +49,6 @@ require_once(WP_PLUGIN_DIR . '/external-videos/ev-widget.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/simple_html_dom.php');
 
 if ($feature_3_0) {
-{
     require_once(WP_PLUGIN_DIR . '/external-videos/media_gallery.php');
 }
 

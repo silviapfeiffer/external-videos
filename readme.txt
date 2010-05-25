@@ -4,7 +4,7 @@ Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
 Tested up to: 3.0-beta1
-Stable tag: 0.2
+Stable tag: 0.3
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
@@ -47,7 +47,12 @@ We use OEmbed. For DotSub we use the service of embed.ly.
 
 == Changelog ==
 
-= 0.0.1 =
+= 0.1 =
 * Initial version
 
+= 0.2 =
+* Add support for wordpress 2.9+
 
+= 0.3 =
+
+* Fix stupid syntax error in 0.2 releas
