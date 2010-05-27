@@ -1,7 +1,7 @@
 - video tags inconsistent with post tags (video posts are not found)
 - introduce next/prev buttons into thickbox with videos
-- add to the shortcode for gallery the number of videos to show and potentially a tag.
-  to restrict the selected videos to
+- add to the shortcode for gallery the number of videos to show and potentially a tag
+  to restrict the selected videos to.
 - add link to post into video post page, potentially with a redirect
 
 Later ... maybe:
