@@ -49,6 +49,12 @@ When you register a external video publisher (e.g. a YouTube user), you should h
 
 We use OEmbed. For DotSub we use the service of embed.ly.
 
+= What short codes are available? =
+
+The general shortcode is [external-videos], which creates a video gallery.
+You can also now specify [external-videos feature="embed"] to get just the latest video as a featured video and with all its embedding code.
+You can further specify [external-videos width="300" height="200"] if you want to change the width and the height of the embedded video.
+
 
 == Screenshots ==
 
