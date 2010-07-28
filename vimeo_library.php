@@ -1,7 +1,7 @@
 <?
 
 // downloaded as part of http://vimeo.com/api/libs/vimeo-php-lib.zip
-// Vimeo published this library without a license
+// Vimeo published this library for the Advanced API without a license
 
 class phpVimeo {
 	
