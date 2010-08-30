@@ -1,5 +1,6 @@
 - introduce next/prev buttons into thickbox with videos
 - add link to post into video post page, potentially with a redirect
+- add Google video sitemap http://www.reelseo.com/how-video-sitemaps/
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode
