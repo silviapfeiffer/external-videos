@@ -91,7 +91,7 @@ function external_videos_gallery($atts, $content = null) {
 }
 
 function display_gallery ($width, $height) {
-  global $wp_query, $post;
+  global $wp_query, $post, $features_3_0;
 
 ?>
 
@@ -148,7 +148,7 @@ function display_gallery ($width, $height) {
           ?>
           <br/>
           <?php
-          if ($feature_3_0) {
+          if ($features_3_0) {
           ?>
           <a href="<?php the_permalink() ?>">Video page</a>
           <?php
