@@ -78,8 +78,8 @@ function media_upload_external_videos_form($errors) {
 <input type="hidden" name="post_id" value="<?php echo (int) $post_id; ?>" />
 <input type="hidden" name="post_mime_type" value="<?php echo isset( $_GET['post_mime_type'] ) ? esc_attr( $_GET['post_mime_type'] ) : ''; ?>" />
 
-<p id="media-search" class="search-box">
-    <label class="screen-reader-text" for="media-search-input"><?php _e('Search Media');?>:</label>
+<p id="media-search" class="ev-search-box">
+    <label class="ev-screen-reader-text" for="media-search-input"><?php _e('Search Media');?>:</label>
     <input type="text" id="media-search-input" name="s" value="<?php the_search_query(); ?>" />
     <input type="submit" value="<?php esc_attr_e( 'Search Media' ); ?>" class="button" />
 </p>
@@ -138,7 +138,7 @@ foreach ($arc_result as $arc_row) {
 </div>
 </form>
 
-<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="media-upload-form validate" id="library-form">
+<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="ev-media-upload-form validate" id="library-form">
 
 <?php wp_nonce_field('media-form'); ?>
 <?php //media_upload_form( $errors ); ?>
@@ -155,7 +155,7 @@ jQuery(function($){
 -->
 </script>
 
-<div id="media-items">
+<div id="ev-media-items">
 <?php add_filter('attachment_fields_to_edit', 'media_post_single_attachment_fields_to_edit', 10, 2); ?>
 <?php echo get_media_items(null, $errors); ?>
 </div>
