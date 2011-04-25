@@ -1,4 +1,4 @@
-<?
+<?php
 /*
   Copyright 2010  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
 
@@ -26,41 +26,41 @@ function fetch_youtube_videos($author_id)
 
     $url = "http://gdata.youtube.com/feeds/api/users/$author_id/uploads/";
     $date = date(DATE_RSS);
-    $new_videos = 0;
+    $new_videos = array();
 
     // loop through all feed pages
     while ($url != NULL) {
         $videofeed = fetch_feed($url);
         $length = $videofeed->get_item_quantity();
-        $items = $videofeed->get_items(0,$length);
+        if ($length != 0) {
+            $items = $videofeed->get_items(0,$length);
 
-        for ($i = 0; $i < $length; $i++) {
-            // media:group mediaRSS subpart
-            $mediagroup = $items[$i]->get_enclosure();
+            for ($i = 0; $i < $length; $i++) {
+                // media:group mediaRSS subpart
+                $mediagroup = $items[$i]->get_enclosure();
 
-            // extract fields
-            $video = array();
-            $video['host_id']     = 'youtube';
-            $video['author_id']   = strtolower($author_id);
-            $video['video_id']    = preg_replace('/http:\/\/gdata.youtube.com\/feeds\/api\/videos\//', '', $items[$i]->get_id());
-            $video['title']       = $items[$i]->get_title();
-            $video['description'] = $items[$i]->get_content();
-            $video['authorname']  = $items[$i]->get_author()->get_name();
-            $video['videourl']    = preg_replace('/\&amp;feature=youtube_gdata/','', $items[$i]->get_link());
-            $video['published']   = date("Y-m-d H:i:s", strtotime($items[$i]->get_date()));
-            $video['author_url']  = "http://www.youtube.com/user/".$video['author_id'];
-            $video['category']    = $mediagroup->get_category()->get_label();
-            $video['keywords']    = $mediagroup->get_keywords();
-            $video['thumbnail']   = $mediagroup->get_thumbnail();
-            $video['duration']    = $mediagroup->get_duration($convert = true);
-
-            // save video
-            $is_new = save_video($video);
-            if ($is_new) {
-                $new_videos++;
+                // extract fields
+                $video = array();
+                $video['host_id']     = 'youtube';
+                $video['author_id']   = strtolower($author_id);
+                $video['video_id']    = preg_replace('/http:\/\/gdata.youtube.com\/feeds\/api\/videos\//', '', $items[$i]->get_id());
+                $video['title']       = $items[$i]->get_title();
+                $video['description'] = $items[$i]->get_content();
+                $video['authorname']  = $items[$i]->get_author()->get_name();
+                $video['videourl']    = preg_replace('/\&amp;feature=youtube_gdata/','', $items[$i]->get_link());
+                $video['published']   = date("Y-m-d H:i:s", strtotime($items[$i]->get_date()));
+                $video['author_url']  = "http://www.youtube.com/user/".$video['author_id'];
+                if ($mediagroup != NULL) {
+                  $video['category']    = $mediagroup->get_category()->get_label();
+                  $video['keywords']    = $mediagroup->get_keywords();
+                  $video['thumbnail']   = $mediagroup->get_thumbnail();
+                  $video['duration']    = $mediagroup->get_duration($convert = true);
+                }
+            
+                // add $video to the end of $new_videos
+                array_push($new_videos, $video);
             }
-        }
-
+        }       
         // next feed page, if available
         $next_url = $videofeed->get_links($rel = 'next');
         $url = $next_url[0];
@@ -75,7 +75,7 @@ function fetch_vimeo_videos($author_id, $developer_key, $secret_key)
   $vimeo = new phpVimeo($developer_key, $secret_key);
   $per_page = 50;
   $date = date(DATE_RSS);
-  $new_videos = 0;
+  $new_videos = array();
 
   // loop through all feed pages
   $page = 1;
@@ -119,11 +119,8 @@ function fetch_vimeo_videos($author_id, $developer_key, $secret_key)
       $video['thumbnail']   = $vid->thumbnails->thumbnail[0]->_content;
       $video['duration']    = sec2hms($vid->duration);
 
-      // save video
-      $is_new = save_video($video);
-      if ($is_new) {
-          $new_videos++;
-      }
+      // add $video to the end of $new_videos
+      array_push($new_videos, $video);
     }
 
     // next page
@@ -140,11 +137,11 @@ function fetch_dotsub_videos($author_id)
     $newlines = array("\t","\n","\r","\x20\x20","\0","\x0B",",");
     $date = date(DATE_RSS);
     $page=0;
-    $new_videos = 0;
+    $new_videos = array();
 
     // loop through all feed pages
     while ($url != NULL) {
-        $html = file_get_html($url);
+        $html = ev_html_dom_parser::file_get_html($url);
         
         $length_str = $html->find('div[class=pagercontext]',0);
         $length_pcs = explode(" ", str_replace($newlines, "",$length_str->plaintext));
@@ -170,7 +167,7 @@ function fetch_dotsub_videos($author_id)
             $video['videourl']    = 'http://dotsub.com'.$metadata->find('a',0)->href;
             
             // need to retrieve videourl to gain upload date
-            $html_video = file_get_html($video['videourl']);
+            $html_video = ev_html_dom_parser::file_get_html($video['videourl']);
             $published_div = $html_video->find('div[class=moduleBody]',0)->find('div',6);
             $published_pcs = explode(" ", str_replace($newlines, "",$published_div));
             $monthnames = array(1=>'Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec');
@@ -189,11 +186,8 @@ function fetch_dotsub_videos($author_id)
             $duration_pcs = explode(" ", str_replace($newlines, "",$duration_str));
             $video['duration'] = $duration_pcs[1];
 
-            // save video
-            $is_new = save_video($video);
-            if ($is_new) {
-                $new_videos++;
-            }
+            // add $video to the end of $new_videos
+            array_push($new_videos, $video);
         }
 
         // next feed page, if available
