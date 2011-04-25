@@ -1,4 +1,4 @@
-<?
+<?php
 /*
   Copyright 2010  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
 
