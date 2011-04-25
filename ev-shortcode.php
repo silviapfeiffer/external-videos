@@ -102,7 +102,7 @@ function display_gallery ($width, $height) {
   </div><!-- #nav-above -->
   <?php // endif; ?>
 
-  <div class="gallerycontainer">
+  <div class="gallerycontainer" style="clear:all;">
     <?php
     while ( have_posts() ) {
       the_post();
@@ -124,8 +124,10 @@ function display_gallery ($width, $height) {
     <div style="margin:2px; height:auto; width:auto; float:left;">
       <a href="#TB_inline?height=500&width=700&inlineId=hiddenModalContent_<?php the_ID() ?>"
          title="<?php echo $thickbox_title ?>" class="thickbox">
-        <img title="<?php the_title() ?>" src="<?php echo $thumb ?>" width="120px" height="90px"
-             style="display:inline; margin:0; border:1px solid black;"/>
+        <div style="display:box; width:120px; height:90px;">
+          <img title="<?php the_title() ?>" src="<?php echo $thumb ?>"
+            style="display:inline; margin:0; border:1px solid black; width:120px; height:90px"/>
+        </div>
       </a>
       <div style="width:120px; height: 12px; margin-bottom:7px; line-height: 90%">
         <small><i><?php echo get_the_time('F j, Y') ?></i></small>
@@ -170,6 +172,7 @@ function display_gallery ($width, $height) {
   </div>
 
   <?php // if ( $wp_the_query->max_num_pages > 1 ) : ?>
+    <br/>
     <div id="nav-below" class="navigation">
       <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'twentyten' ) ); ?></div>
       <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'twentyten' ) ); ?></div>

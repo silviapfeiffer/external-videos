@@ -1,9 +1,19 @@
 - introduce next/prev buttons into thickbox with videos
 - add link to post into video post page, potentially with a redirect
 - add Google video sitemap http://www.reelseo.com/how-video-sitemaps/
+- support @longdesc http://wordpress.mfields.org/2010/how-to-enable-longdesc-attributes-on-images-in-wordpress/
+- introduce option to link the thumbnails in the gallery directly to the video's wp page instead of having the Ajax pop-up
+- remove whitespace on youtube user name copies into the form
+- also allow YouTube favorites and Vimeo likes to be pulled in as RSS feed
+- check why auto update doesn't work for many people (wp 3.01/3.02 ?)
+- introduce a RSS feed on all the videos on the gallery page
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode
 - separate the embed code and description into separate variables in ev-shortcode
 - add to the shortcode for gallery the number of videos to show and potentially a tag
   to restrict the selected videos to.
+
+Bugs:
+- Lightbox-plus conflict:
+Fatal error: Cannot redeclare file_get_html() (previously declared in /wp-content/plugins/external-videos/simple_html_dom.php:37) in wp-content/plugins/lightbox-plus/classes/shd.class.php on line 41 

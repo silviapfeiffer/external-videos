@@ -295,6 +295,10 @@ function settings_page() {
 
     $options = $raw_options == "" ? array('version' => 1, 'authors' => array()) : $raw_options;
 
+    // clean up entered data from surplus white space
+    $_POST['author_id'] = trim($_POST['author_id']);
+    $_POST['secret_key'] = trim($_POST['secret_key']);
+    $_POST['developer_key'] = trim($_POST['developer_key']);
 
     if ($_POST['external_videos'] == 'Y' ) {
         if ($_POST['action'] == 'add_author') {
