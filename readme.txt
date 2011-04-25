@@ -3,8 +3,8 @@ Contributors: silviapfeiffer1, johnfjohnf
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
-Tested up to: 3.0
-Stable tag: 0.7
+Tested up to: 3.1.1
+Stable tag: 0.8
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
@@ -67,6 +67,13 @@ You can further specify [external-videos width="300" height="200"] if you want t
 7. screenshot-7.png : a video page as automatically created by the plugin
 
 == Changelog ==
+
+= 0.8 =
+* changed some class names to avoid clashes with other plugins that people reported
+* turned simple_html_dom code into a class of its own to avoid clashes with other plugins that use this code, too
+* cleaning up entered data from surplus white space
+* styling fixes to the overlay on gallery
+* shielding against a bug with no videos on channels to retrieve yet
 
 = 0.7 =
 * fixed bug on get_category() being called on non-object (can't test it though)

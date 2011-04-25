@@ -13,7 +13,3 @@ Improvements to the shortcode:
 - separate the embed code and description into separate variables in ev-shortcode
 - add to the shortcode for gallery the number of videos to show and potentially a tag
   to restrict the selected videos to.
-
-Bugs:
-- Lightbox-plus conflict:
-Fatal error: Cannot redeclare file_get_html() (previously declared in /wp-content/plugins/external-videos/simple_html_dom.php:37) in wp-content/plugins/lightbox-plus/classes/shd.class.php on line 41 
