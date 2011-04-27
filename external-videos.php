@@ -204,6 +204,17 @@ function delete_videos() {
     return $del_videos;
 }
 
+// ADDS POST TYPES TO RSS FEED
+add_filter('request', 'ev_feed_request');
+function ev_feed_request($qv) {
+  $raw_options = get_option('external_videos_options');
+  $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
+  if ($options['rss'] == true) {
+  	if (isset($qv['feed']) && !isset($qv['post_type']))
+  		$qv['post_type'] = array('external-videos', 'post');
+  }
+	return $qv;
+}
 
 /// ***   Admin Settings Page   *** ///
 
@@ -260,6 +271,9 @@ function authorization_exists($host_id, $developer_key, $secret_key) {
 }
 
 function settings_page() {
+    // activate cron hook if not active
+    ev_activation();
+    
     wp_enqueue_script('jquery');
     ?>
     <form id="delete_author" method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>" style="display: none">
@@ -293,7 +307,7 @@ function settings_page() {
 
     $raw_options = get_option('external_videos_options');
 
-    $options = $raw_options == "" ? array('version' => 1, 'authors' => array()) : $raw_options;
+    $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
 
     // clean up entered data from surplus white space
     $_POST['author_id'] = trim($_POST['author_id']);
@@ -362,6 +376,19 @@ function settings_page() {
             $num_videos = delete_videos();
             ?><div class="deleted"><p><strong><?php printf(__("Deleted %d videos."), $num_videos); ?></strong></p></div><?php
         }
+        elseif ($_POST['action'] == 'ev_settings') {
+            ?><div class="update"><p><strong><?php
+            
+            if ($_POST['ev-rss'] == "rss") {
+              printf(__("Added video pages to RSS feed."));
+              $options['rss'] = true;
+            } else {
+              printf(__("Removed video pages from RSS feed.")); 
+              $options['rss'] = false;
+            }
+            update_option('external_videos_options', $options);
+            ?></strong></p></div><?php
+        }
     }
 
     ?>
@@ -403,6 +430,23 @@ function settings_page() {
         </p>
     </form>
 
+    <h3>Plugin Settings</h3>
+    <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
+      <input type="hidden" name="external_videos" value="Y" />
+      <input type="hidden" name="action" value="ev_settings" />
+      <p>
+        <?php
+        $ev_rss = $options['rss'];
+        ?>
+        
+        <input type="checkbox" name="ev-rss" value="rss" <?php if ($ev_rss == true) echo "checked"; ?>/>
+        Add video posts to Website RSS feed
+      </p>
+      <p class="submit">
+          <input type="submit" name="Submit" value="Save" />
+      </p>
+    </form>
+    
     <h3>Update Videos (newly added/deleted videos)</h3>
     <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
         <input type="hidden" name="external_videos" value="Y" />
@@ -414,7 +458,7 @@ function settings_page() {
     <p>Next automatic update scheduled for:
       <i><?php echo date('Y-m-d H:i:s', wp_next_scheduled('ev_daily_event')) ?></i>
     </p><br/>
-    
+
     <h3>Delete All Videos</h3>
     <p>
       Be careful with this option - you will lose all links you have built between blog posts and the video pages.
@@ -529,7 +573,7 @@ function ev_deactivation() {
 add_action('ev_daily_event', 'ev_daily_function');
 function ev_daily_function() {
   $raw_options = get_option('external_videos_options');
-  $options = $raw_options == "" ? array('version' => 1, 'authors' => array()) : $raw_options;
+  $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
   update_videos($options['authors']);
 }
 
@@ -560,10 +604,10 @@ function external_videos_init() {
     // Oembed support for dotsub
     wp_oembed_add_provider('#http://(www\.)?dotsub\.com/view/.*#i', 'http://api.embed.ly/v1/api/oembed', true);
     
+
     // enable thickbox use for gallery
     wp_enqueue_style('thickbox');
     wp_enqueue_script('thickbox');
-
 }
 
 /// *** Setup of Videos Gallery: implemented in ev-media-gallery.php *** ///

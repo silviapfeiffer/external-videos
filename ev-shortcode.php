@@ -92,10 +92,16 @@ function external_videos_gallery($atts, $content = null) {
 
 function display_gallery ($width, $height) {
   global $wp_query, $post, $features_3_0;
-
 ?>
 
   <?php // if ( $wp_query->max_num_pages > 1 ) : ?>
+  <!-- see http://core.trac.wordpress.org/ticket/6453 -->
+  <script type="text/javascript">
+  //<![CDATA[
+  var tb_pathToImage = "wp-includes/js/thickbox/loadingAnimation.gif";
+  var tb_closeImage = "wp-includes/js/thickbox/tb-close.png";
+  //]]>
+  </script>
   <div id="nav-above" class="navigation">
     <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'twentyten' ) ); ?></div>
     <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'twentyten' ) ); ?></div>

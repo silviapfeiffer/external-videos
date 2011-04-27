@@ -45,6 +45,8 @@ Go into the admin interface and add the site and user name. For Vimeo you will a
 
 When you register a external video publisher (e.g. a YouTube user), you should hit the button "add new videos from channels" to extract all existing videos. A daily "cron" job then pulls in any newly posted videos from the last 24 hours. If that is not fast enough for you, you can of course always hit that button again.
 
+If you have problems with "cron", consider installing the "Core Control" plugin, which shows you in Tools -> Core Control -> Cron Tasks tab which tasks you have scheduled.
+
 = How do you do the embedding? =
 
 We use OEmbed. For DotSub we use the service of embed.ly.
@@ -55,6 +57,11 @@ The general shortcode is [external-videos], which creates a video gallery.
 You can also now specify [external-videos feature="embed"] to get just the latest video as a featured video and with all its embedding code.
 You can further specify [external-videos width="300" height="200"] if you want to change the width and the height of the embedded video.
 
+= How can I get a RSS feed URL for the external videos? =
+
+Just add the following to your Website URL: ?feed=rss2&post_type=external-videos .
+You can add a link like this to your theme layout.
+ 
 
 == Screenshots ==
 
@@ -67,6 +74,11 @@ You can further specify [external-videos width="300" height="200"] if you want t
 7. screenshot-7.png : a video page as automatically created by the plugin
 
 == Changelog ==
+
+= 0.10 =
+* added option to add the video posts to the site's RSS feed
+* fixed a bug on image paths for the thickbox
+* made sure whenever a user goes to the admin page that the cron hook is active
 
 = 0.9 =
 * some weirdness with commits didn't seem to update to tag 0.8

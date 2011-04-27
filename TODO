@@ -6,7 +6,6 @@
 - remove whitespace on youtube user name copies into the form
 - also allow YouTube favorites and Vimeo likes to be pulled in as RSS feed
 - check why auto update doesn't work for many people (wp 3.01/3.02 ?)
-- introduce a RSS feed on all the videos on the gallery page
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode
