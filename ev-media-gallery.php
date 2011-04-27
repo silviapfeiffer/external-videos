@@ -25,6 +25,7 @@
  */
 
 
+add_filter('media_upload_tabs', 'add_media_upload_tab');
 function add_media_upload_tab($tabs) {
 
     $tabs['external_videos'] = __('External Videos');
@@ -32,8 +33,8 @@ function add_media_upload_tab($tabs) {
     return $tabs;
 }
 
-add_filter('media_upload_tabs', 'add_media_upload_tab');
 
+add_action('media_upload_external_videos', 'media_upload_external_videos');
 function media_upload_external_videos() {
     $errors = array();
     if ( !empty($_POST) ) {
@@ -47,8 +48,6 @@ function media_upload_external_videos() {
 
     return wp_iframe('media_upload_external_videos_form', $errors);
 }
-
-add_action('media_upload_external_videos', 'media_upload_external_videos');
 
 
 function media_upload_external_videos_form($errors) {
@@ -79,8 +78,8 @@ function media_upload_external_videos_form($errors) {
 <input type="hidden" name="post_id" value="<?php echo (int) $post_id; ?>" />
 <input type="hidden" name="post_mime_type" value="<?php echo isset( $_GET['post_mime_type'] ) ? esc_attr( $_GET['post_mime_type'] ) : ''; ?>" />
 
-<p id="media-search" class="search-box">
-    <label class="screen-reader-text" for="media-search-input"><?php _e('Search Media');?>:</label>
+<p id="media-search" class="ev-search-box">
+    <label class="ev-screen-reader-text" for="media-search-input"><?php _e('Search Media');?>:</label>
     <input type="text" id="media-search-input" name="s" value="<?php the_search_query(); ?>" />
     <input type="submit" value="<?php esc_attr_e( 'Search Media' ); ?>" class="button" />
 </p>
@@ -139,7 +138,7 @@ foreach ($arc_result as $arc_row) {
 </div>
 </form>
 
-<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="media-upload-form validate" id="library-form">
+<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="ev-media-upload-form validate" id="library-form">
 
 <?php wp_nonce_field('media-form'); ?>
 <?php //media_upload_form( $errors ); ?>
@@ -156,7 +155,7 @@ jQuery(function($){
 -->
 </script>
 
-<div id="media-items">
+<div id="ev-media-items">
 <?php add_filter('attachment_fields_to_edit', 'media_post_single_attachment_fields_to_edit', 10, 2); ?>
 <?php echo get_media_items(null, $errors); ?>
 </div>
@@ -169,7 +168,6 @@ jQuery(function($){
 }
 
 
-
 function wp_edit_external_videos_query( $q = false ) {
     if ( false === $q )
         $q = $_GET;
@@ -177,7 +175,6 @@ function wp_edit_external_videos_query( $q = false ) {
     $q['m']   = isset( $q['m'] ) ? (int) $q['m'] : 0;
     $q['cat'] = isset( $q['cat'] ) ? (int) $q['cat'] : 0;
     $q['post_type'] = 'external-videos';
-    $q['post_status'] = isset( $q['status'] ) && 'trash' == $q['status'] ? 'trash' : 'inherit';
     $media_per_page = (int) get_user_option( 'upload_per_page' );
     if ( empty( $media_per_page ) || $media_per_page < 1 )
         $media_per_page = 20;
@@ -195,6 +192,7 @@ function wp_edit_external_videos_query( $q = false ) {
 }
 
 
+add_filter('image_downsize', 'external_videos_image_downsize', 10, 3);
 function external_videos_image_downsize($var, $id, $size) {
 
     // TODO provide a different thumbnail based on $size
@@ -212,9 +210,8 @@ function external_videos_image_downsize($var, $id, $size) {
     return array( $thumb, 120, 90, false );
 }
 
-add_filter('image_downsize', 'external_videos_image_downsize', 10, 3);
 
-
+add_filter('media_send_to_editor', 'external_videos_media_send_to_editor', 10, 3);
 function external_videos_media_send_to_editor($html, $attachment_id, $attachment) {
     $post =& get_post($attachment_id);
     if ( $post->post_type == 'external-videos' ) {
@@ -225,26 +222,26 @@ function external_videos_media_send_to_editor($html, $attachment_id, $attachment
     return $html;
 }
 
-add_filter('media_send_to_editor', 'external_videos_media_send_to_editor', 10, 3);
-
 
 // This is a bit of a hack so we can add some js script we need on the external videos page
+add_action('admin_init', 'add_media_select');
 function add_media_select() {
     if (preg_match('/wp-admin\/edit\.php\?.*post_type=external-videos/', $_SERVER["REQUEST_URI"])) {
         wp_enqueue_script('media');
         wp_enqueue_script('wp-ajax-response');
     }
 }
-add_action('admin_init', 'add_media_select');
 
+
+add_action('restrict_manage_posts', 'add_find_posts_div');
 function add_find_posts_div() {
     if (preg_match('/wp-admin\/edit\.php\?.*post_type=external-videos/', $_SERVER["REQUEST_URI"])) {
         print find_posts_div();
     }
 }
-add_action('restrict_manage_posts', 'add_find_posts_div');
 
 
+add_filter('edit_posts_per_page', 'do_attach');
 function do_attach($per_page) {
     global $wpdb;
 
@@ -299,6 +296,5 @@ function do_attach($per_page) {
     }
     return $per_page;
 }
-add_filter('edit_posts_per_page', 'do_attach');
 
 ?>
