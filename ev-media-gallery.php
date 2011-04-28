@@ -83,45 +83,8 @@ function media_upload_external_videos_form($errors) {
 <p id="media-search" class="ev-search-box">
     <label class="ev-screen-reader-text" for="media-search-input"><?php _e('Search Media');?>:</label>
     <input type="text" id="media-search-input" name="s" value="<?php the_search_query(); ?>" />
-    <?php submit_button( __( 'Search Media' ), 'button', '', false ); ?>
+    <input type="submit" value="<?php esc_attr_e( 'Search Media' ); ?>" class="button" />
 </p>
-
-<ul class="subsubsub">
-<?php
-$type_links = array();
-$_num_posts = (array) wp_count_attachments();
-$matches = wp_match_mime_types(array_keys($post_mime_types), array_keys($_num_posts));
-foreach ( $matches as $_type => $reals )
-    foreach ( $reals as $real )
-        if ( isset($num_posts[$_type]) )
-            $num_posts[$_type] += $_num_posts[$real];
-        else
-            $num_posts[$_type] = $_num_posts[$real];
-// If available type specified by media button clicked, filter by that type
-if ( empty($_GET['post_mime_type']) && !empty($num_posts[$type]) ) {
-    $_GET['post_mime_type'] = $type;
-    list($post_mime_types, $avail_post_mime_types) = wp_edit_attachments_query();
-}
-if ( empty($_GET['post_mime_type']) || $_GET['post_mime_type'] == 'all' )
-    $class = ' class="current"';
-else
-    $class = '';
-$type_links[] = "<li><a href='" . esc_url(add_query_arg(array('post_mime_type'=>'all', 'paged'=>false, 'm'=>false))) . "'$class>".__('All Types')."</a>";
-foreach ( $post_mime_types as $mime_type => $label ) {
-    $class = '';
-
-    if ( !wp_match_mime_types($mime_type, $avail_post_mime_types) )
-        continue;
-
-    if ( isset($_GET['post_mime_type']) && wp_match_mime_types($mime_type, $_GET['post_mime_type']) )
-        $class = ' class="current"';
-
-    $type_links[] = "<li><a href='" . esc_url(add_query_arg(array('post_mime_type'=>$mime_type, 'paged'=>false))) . "'$class>" . sprintf( translate_nooped_plural( $label[2], $num_posts[$mime_type] ), "<span id='$mime_type-counter'>" . number_format_i18n( $num_posts[$mime_type] ) . '</span>') . '</a>';
-}
-echo implode(' | </li>', apply_filters( 'media_upload_mime_type_links', $type_links ) ) . '</li>';
-unset($type_links);
-?>
-</ul>
 
 <div class="tablenav">
 
@@ -169,8 +132,7 @@ foreach ($arc_result as $arc_row) {
 ?>
 </select>
 <?php } ?>
-
-<?php submit_button( __( 'Filter &#187;' ), 'secondary', 'post-query-submit', false ); ?>
+<input type="submit" id="post-query-submit" value="<?php echo esc_attr( __( 'Filter &#187;' ) ); ?>" class="button-secondary" />
 
 </div>
 
@@ -200,7 +162,7 @@ jQuery(function($){
 <?php echo get_media_items(null, $errors); ?>
 </div>
 <p class="ml-submit">
-<?php submit_button( __( 'Save all changes' ), 'button savebutton', 'save', false ); ?>
+<input type="submit" class="button savebutton" name="save" value="<?php esc_attr_e( 'Save all changes' ); ?>" />
 <input type="hidden" name="post_id" id="post_id" value="<?php echo (int) $post_id; ?>" />
 </p>
 </form>
@@ -215,7 +177,6 @@ function wp_edit_external_videos_query( $q = false ) {
     $q['m']   = isset( $q['m'] ) ? (int) $q['m'] : 0;
     $q['cat'] = isset( $q['cat'] ) ? (int) $q['cat'] : 0;
     $q['post_type'] = 'external-videos';
-    //$q['post_status'] = isset( $q['status'] ) && 'trash' == $q['status'] ? 'trash' : 'inherit'; This breaks the media attach screen on the post and the videos don't get listed
     $media_per_page = (int) get_user_option( 'upload_per_page' );
     if ( empty( $media_per_page ) || $media_per_page < 1 )
         $media_per_page = 20;
@@ -227,13 +188,7 @@ function wp_edit_external_videos_query( $q = false ) {
     if ( isset($q['post_mime_type']) && !array_intersect( (array) $q['post_mime_type'], array_keys($post_mime_types) ) )
         unset($q['post_mime_type']);
 
-    if ( isset($q['detached']) )
-        add_filter('posts_where', '_edit_attachments_query_helper');
-
-    wp( $q );
-
-    if ( isset($q['detached']) )
-        remove_filter('posts_where', '_edit_attachments_query_helper');
+    wp($q);
 
     return array($post_mime_types, $avail_post_mime_types);
 }
@@ -289,21 +244,20 @@ function add_find_posts_div() {
 
 
 add_filter('edit_posts_per_page', 'do_attach');
-// see doaction in ./wp-admin/upload.php
 function do_attach($per_page) {
     global $wpdb;
 
     if ( isset($_GET['attached']) && (int) $_GET['attached'] ) {
         $attached = (int) $_GET['attached'];
-        $message = sprintf( _n('Reattached %d attachment.', 'Reattached %d attachments.', $attached), $attached );
+        $message = sprintf( _n('Changed %d attachment.', 'Attached %d attachments.', $attached), $attached );
         $_SERVER['REQUEST_URI'] = remove_query_arg(array('attached'), $_SERVER['REQUEST_URI']);
         ?>
         <div id="message" class="updated"><p><strong><?php echo $message; ?></strong></p></div>
         <?php
-    }
+        unset($_GET['attached']);
+}
     elseif ( isset($_GET['found_post_id']) && isset($_GET['media'])  ) {
-        $parent_id = (int) $_REQUEST['found_post_id'];
-        if ( !$parent_id )
+        if ( ! ( $parent_id = (int) $_GET['found_post_id'] ) )
             return;
 
         $parent = &get_post($parent_id);
@@ -323,13 +277,13 @@ function do_attach($per_page) {
 
         if ( ! empty($attach) ) {
             $attach = implode(',', $attach);
-            $attached = $wpdb->query( $wpdb->prepare("UPDATE $wpdb->posts SET post_parent = %d WHERE post_type = 'external-videos' AND ID IN ( $attach )", $parent_id) );
+            $attached = $wpdb->query( $wpdb->prepare("UPDATE $wpdb->posts SET post_parent = %d WHERE post_type = 'external-videos' AND ID IN ($attach)", $parent_id) );
         }
 
         if ( isset($attached) ) {
-            $location = 'upload.php';
+            $location = 'edit.php';
             if ( $referer = wp_get_referer() ) {
-                if ( false !== strpos($referer, 'upload.php') )
+                if ( false !== strpos($referer, 'edit.php') )
                     $location = $referer;
             }
 

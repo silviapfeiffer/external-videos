@@ -12,3 +12,6 @@ Improvements to the shortcode:
 - separate the embed code and description into separate variables in ev-shortcode
 - add to the shortcode for gallery the number of videos to show and potentially a tag
   to restrict the selected videos to.
+
+Allow detaching of blog posts:
+Once this bug is applied http://core.trac.wordpress.org/ticket/6820 to wordpress with diff from here http://core.trac.wordpress.org/attachment/ticket/6820/detach_media2.diff also add the stuff from wp-admin/includes/class-wp-media-list-table.php of the diff to external-videos.php line 543
