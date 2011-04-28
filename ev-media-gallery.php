@@ -246,18 +246,15 @@ function do_attach($per_page) {
     global $wpdb;
 
     if ( isset($_GET['attached']) && (int) $_GET['attached'] ) {
-        error_log("Loading");
         $attached = (int) $_GET['attached'];
-        $message = sprintf( _n('Reattached %d attachment.', 'Reattached %d attachments.', $attached), $attached );
+        $message = sprintf( _n('Changed %d attachment.', 'Attached %d attachments.', $attached), $attached );
         $_SERVER['REQUEST_URI'] = remove_query_arg(array('attached'), $_SERVER['REQUEST_URI']);
         ?>
         <div id="message" class="updated"><p><strong><?php echo $message; ?></strong></p></div>
         <?php
-    }
+        unset($_GET['attached']);
+}
     elseif ( isset($_GET['found_post_id']) && isset($_GET['media'])  ) {
-        // TODO Do we need this?
-        check_admin_referer('bulk-posts');
-
         if ( ! ( $parent_id = (int) $_GET['found_post_id'] ) )
             return;
 
