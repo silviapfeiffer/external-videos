@@ -3,8 +3,8 @@ Contributors: silviapfeiffer1, johnfjohnf
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
-Tested up to: 3.0-beta1
-Stable tag: 0.5
+Tested up to: 3.1.1
+Stable tag: 0.11
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
@@ -45,6 +45,8 @@ Go into the admin interface and add the site and user name. For Vimeo you will a
 
 When you register a external video publisher (e.g. a YouTube user), you should hit the button "add new videos from channels" to extract all existing videos. A daily "cron" job then pulls in any newly posted videos from the last 24 hours. If that is not fast enough for you, you can of course always hit that button again.
 
+If you have problems with "cron", consider installing the "Core Control" plugin, which shows you in Tools -> Core Control -> Cron Tasks tab which tasks you have scheduled.
+
 = How do you do the embedding? =
 
 We use OEmbed. For DotSub we use the service of embed.ly.
@@ -54,7 +56,14 @@ We use OEmbed. For DotSub we use the service of embed.ly.
 The general shortcode is [external-videos], which creates a video gallery.
 You can also now specify [external-videos feature="embed"] to get just the latest video as a featured video and with all its embedding code.
 You can further specify [external-videos width="300" height="200"] if you want to change the width and the height of the embedded video.
+And you can specify [external-videos link="page"] if you want to get the links on the video
+gallery to link straight through to the video pages instead of providing an overlay.
 
+= How can I get a RSS feed URL for the external videos? =
+
+Just add the following to your Website URL: ?feed=rss2&post_type=external-videos .
+You can add a link like this to your theme layout.
+ 
 
 == Screenshots ==
 
@@ -67,6 +76,38 @@ You can further specify [external-videos width="300" height="200"] if you want t
 7. screenshot-7.png : a video page as automatically created by the plugin
 
 == Changelog ==
+
+= 0.11 =
+* added a shortcode that allows to link straight through to video pages instead of the overlay
+* fixed a bug on retrieval of keyframe for dotsub
+
+= 0.10 =
+* added option to add the video posts to the site's RSS feed
+* fixed a bug on image paths for the thickbox
+* made sure whenever a user goes to the admin page that the cron hook is active
+
+= 0.9 =
+* some weirdness with commits didn't seem to update to tag 0.8
+
+= 0.8 =
+* changed some class names to avoid clashes with other plugins that people reported
+* turned simple_html_dom code into a class of its own to avoid clashes with other plugins that use this code, too
+* cleaning up entered data from surplus white space
+* styling fixes to the overlay on gallery
+* shielding against a bug with no videos on channels to retrieve yet
+
+= 0.7 =
+* fixed bug on get_category() being called on non-object (can't test it though)
+* fixed bug on "attach" to post from external videos list to make it work again
+* fixed reports on cron time not working - damned, don't believe the articles on how to use register_activation_hook!
+* included a new feature to remove all external videos post types in one go
+* fixed up the inclusion of video pages into tag and category management
+* now removes videos when a author is being removed
+* now deals with deleted videos on external hosts and removes them, too
+* fixed bug on "External Videos" tab on "attach video" for posts and pages
+
+= 0.6 =
+* extended the shortcode with width, height, and feature parameters
 
 = 0.5 =
 * General clean up and reorg

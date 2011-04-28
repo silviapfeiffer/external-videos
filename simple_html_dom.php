@@ -30,57 +30,61 @@ define('HDOM_INFO_INNER',   5);
 define('HDOM_INFO_OUTER',   6);
 define('HDOM_INFO_ENDSPACE',7);
 
-// helper functions
-// -----------------------------------------------------------------------------
-// get html dom form file
-function file_get_html() {
-    $dom = new simple_html_dom;
-    $args = func_get_args();
-    $dom->load(call_user_func_array('file_get_contents', $args), true);
-    return $dom;
-}
+// put in class to avoid conflict with other plugins
+class ev_html_dom_parser {
 
-// get html dom form string
-function str_get_html($str, $lowercase=true) {
-    $dom = new simple_html_dom;
-    $dom->load($str, $lowercase);
-    return $dom;
-}
+  // helper functions
+  // -----------------------------------------------------------------------------
+  // get html dom form file
+  function file_get_html() {
+      $dom = new ev_simple_html_dom;
+      $args = func_get_args();
+      $dom->load(call_user_func_array('file_get_contents', $args), true);
+      return $dom;
+  }
 
-// dump html dom tree
-function dump_html_tree($node, $show_attr=true, $deep=0) {
-    $lead = str_repeat('    ', $deep);
-    echo $lead.$node->tag;
-    if ($show_attr && count($node->attr)>0) {
-        echo '(';
-        foreach($node->attr as $k=>$v)
-            echo "[$k]=>\"".$node->$k.'", ';
-        echo ')';
-    }
-    echo "\n";
+  // get html dom form string
+  function str_get_html($str, $lowercase=true) {
+      $dom = new ev_simple_html_dom;
+      $dom->load($str, $lowercase);
+      return $dom;
+  }
 
-    foreach($node->nodes as $c)
-        dump_html_tree($c, $show_attr, $deep+1);
-}
+  // dump html dom tree
+  function dump_html_tree($node, $show_attr=true, $deep=0) {
+      $lead = str_repeat('    ', $deep);
+      echo $lead.$node->tag;
+      if ($show_attr && count($node->attr)>0) {
+          echo '(';
+          foreach($node->attr as $k=>$v)
+              echo "[$k]=>\"".$node->$k.'", ';
+          echo ')';
+      }
+      echo "\n";
 
-// get dom form file (deprecated)
-function file_get_dom() {
-    $dom = new simple_html_dom;
-    $args = func_get_args();
-    $dom->load(call_user_func_array('file_get_contents', $args), true);
-    return $dom;
-}
+      foreach($node->nodes as $c)
+          dump_html_tree($c, $show_attr, $deep+1);
+  }
 
-// get dom form string (deprecated)
-function str_get_dom($str, $lowercase=true) {
-    $dom = new simple_html_dom;
-    $dom->load($str, $lowercase);
-    return $dom;
+  // get dom form file (deprecated)
+  function file_get_dom() {
+      $dom = new ev_simple_html_dom;
+      $args = func_get_args();
+      $dom->load(call_user_func_array('file_get_contents', $args), true);
+      return $dom;
+  }
+
+  // get dom form string (deprecated)
+  function str_get_dom($str, $lowercase=true) {
+      $dom = new ev_simple_html_dom;
+      $dom->load($str, $lowercase);
+      return $dom;
+  }
 }
 
 // simple html dom node
 // -----------------------------------------------------------------------------
-class simple_html_dom_node {
+class ev_simple_html_dom_node {
     public $nodetype = HDOM_TYPE_TEXT;
     public $tag = 'text';
     public $attr = array();
@@ -110,7 +114,7 @@ class simple_html_dom_node {
         $this->parent = null;
         $this->children = null;
     }
-    
+  
     // dump node's tree
     function dump($show_attr=true) {
         dump_html_tree($this, $show_attr);
@@ -217,7 +221,7 @@ class simple_html_dom_node {
             $ret .= $n->text();
         return $ret;
     }
-    
+  
     function xmltext() {
         $ret = $this->innertext();
         $ret = str_ireplace('<![CDATA[', '', $ret);
@@ -478,7 +482,7 @@ class simple_html_dom_node {
 
 // simple html dom parser
 // -----------------------------------------------------------------------------
-class simple_html_dom {
+class ev_simple_html_dom {
     public $root = null;
     public $nodes = array();
     public $callback = null;
@@ -585,7 +589,7 @@ class simple_html_dom {
         unset($this->doc);
         unset($this->noise);
     }
-    
+  
     function dump($show_attr=true) {
         $this->root->dump($show_attr);
     }
@@ -599,7 +603,7 @@ class simple_html_dom {
         $this->noise = array();
         $this->nodes = array();
         $this->lowercase = $lowercase;
-        $this->root = new simple_html_dom_node($this);
+        $this->root = new ev_simple_html_dom_node($this);
         $this->root->tag = 'root';
         $this->root->_[HDOM_INFO_BEGIN] = -1;
         $this->root->nodetype = HDOM_TYPE_ROOT;
@@ -615,7 +619,7 @@ class simple_html_dom {
             return $this->read_tag();
 
         // text
-        $node = new simple_html_dom_node($this);
+        $node = new ev_simple_html_dom_node($this);
         ++$this->cursor;
         $node->_[HDOM_INFO_TEXT] = $s;
         $this->link_nodes($node, false);
@@ -687,7 +691,7 @@ class simple_html_dom {
             return true;
         }
 
-        $node = new simple_html_dom_node($this);
+        $node = new ev_simple_html_dom_node($this);
         $node->_[HDOM_INFO_BEGIN] = $this->cursor;
         ++$this->cursor;
         $tag = $this->copy_until($this->token_slash);
@@ -851,7 +855,7 @@ class simple_html_dom {
 
     // as a text node
     protected function as_text_node($tag) {
-        $node = new simple_html_dom_node($this);
+        $node = new ev_simple_html_dom_node($this);
         ++$this->cursor;
         $node->_[HDOM_INFO_TEXT] = '</' . $tag . '>';
         $this->link_nodes($node, false);
@@ -972,4 +976,5 @@ class simple_html_dom {
     function getElementsByTagName($name, $idx=-1) {return $this->find($name, $idx);}
     function loadFile() {$args = func_get_args();$this->load(call_user_func_array('file_get_contents', $args), true);}
 }
+
 ?>

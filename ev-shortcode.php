@@ -21,15 +21,17 @@
 
 /*
  * Functions related to setting up a shortcode for the videos.
- * [external-videos] - provides a gallery
- * [external-videos feature="embed"] - provides the embed code 
- *                     for new newest video to feature as an embed
+ * [external-videos link="page/overlay"]
+ *      - provides a gallery with links to video pages or overlays
+ * [external-videos feature="embed" width="600" height="360"]
+ *      - provides the embed code 
+ *        for new newest video to feature as an embed
  */
 
 
 /// ***   Short Code   *** ///
 
-// handlex [external-videos feature="embed"] shortcode
+// handles [external-videos ...] shortcode
 function external_videos_gallery($atts, $content = null) {
   global $wp_query, $post;
 
@@ -38,6 +40,7 @@ function external_videos_gallery($atts, $content = null) {
   // as a choice between an embedded video and a thumbnail with overlay
   // - does embed only right now
   extract(shortcode_atts(array(
+    'link'    => 'overlay',
     'feature' => '',
     'width'   => '600',
     'height'  => '360',
@@ -81,7 +84,7 @@ function external_videos_gallery($atts, $content = null) {
     query_posts($params);
     
     // display the gallery
-    display_gallery($width, $height);
+    display_gallery($width, $height, $link);
   }
   
   //Reset Query
@@ -90,19 +93,25 @@ function external_videos_gallery($atts, $content = null) {
   return $result;
 }
 
-function display_gallery ($width, $height) {
-  global $wp_query, $post;
-
+function display_gallery ($width, $height, $link) {
+  global $wp_query, $post, $features_3_0;
 ?>
 
   <?php // if ( $wp_query->max_num_pages > 1 ) : ?>
+  <!-- see http://core.trac.wordpress.org/ticket/6453 -->
+  <script type="text/javascript">
+  //<![CDATA[
+  var tb_pathToImage = "wp-includes/js/thickbox/loadingAnimation.gif";
+  var tb_closeImage = "wp-includes/js/thickbox/tb-close.png";
+  //]]>
+  </script>
   <div id="nav-above" class="navigation">
     <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'twentyten' ) ); ?></div>
     <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'twentyten' ) ); ?></div>
   </div><!-- #nav-above -->
   <?php // endif; ?>
 
-  <div class="gallerycontainer">
+  <div class="gallerycontainer" style="clear:all;">
     <?php
     while ( have_posts() ) {
       the_post();
@@ -122,46 +131,72 @@ function display_gallery ($width, $height) {
       $html = preg_replace ('/height="\d+"/', 'height="'.$height.'"', $html);
     ?>
     <div style="margin:2px; height:auto; width:auto; float:left;">
-      <a href="#TB_inline?height=500&width=700&inlineId=hiddenModalContent_<?php the_ID() ?>"
-         title="<?php echo $thickbox_title ?>" class="thickbox">
-        <img title="<?php the_title() ?>" src="<?php echo $thumb ?>" width="120px" height="90px"
-             style="display:inline; margin:0; border:1px solid black;"/>
-      </a>
-      <div style="width:120px; height: 12px; margin-bottom:7px; line-height: 90%">
-        <small><i><?php echo get_the_time('F j, Y') ?></i></small>
-      </div>
-      <div style="width:120px; height: 30px; margin-bottom:20px; line-height: 80%">
-        <small><?php echo $short_title ?></small>
-      </div>
-      <!-- Hidden content for the thickbox -->
-      <div id="hiddenModalContent_<?php echo $post->ID ?>" style="display:none;">
-        <p align="center"  style="margin-bottom:10px;">
-          <?php echo $html ?>
-        </p>
-        <div style="margin-bottom:10px;">
-          <?php
-          if ($post->post_parent > 0) {
-          ?>
-            <a href="<?php echo get_permalink($post->post_parent) ?>">Blog post related to this video</a>
-          <?php
-          }
-          ?>
-          <br/>
-          <?php
-          if ($feature_3_0) {
-          ?>
-          <a href="<?php the_permalink() ?>">Video page</a>
-          <?php
-          }
-          ?>
+      <?php 
+      // display overlay if requested
+      if ($link == "page") {
+      ?>
+        <a href="<?php the_permalink() ?>"
+           title="<?php echo $thickbox_title ?>">
+          <div style="display:box; width:120px; height:90px;">
+            <img title="<?php the_title() ?>" src="<?php echo $thumb ?>"
+              style="display:inline; margin:0; border:1px solid black; width:120px; height:90px"/>
+          </div>
+        </a>
+        <div style="width:120px; height: 12px; margin-bottom:7px; line-height: 90%">
+          <small><i><?php echo get_the_time('F j, Y') ?></i></small>
         </div>
-        <div style="margin-bottom:10px;">
-          <?php echo $desc ?>
+        <div style="width:120px; height: 30px; margin-bottom:20px; line-height: 80%">
+          <small><?php echo $short_title ?></small>
+        </div>        
+      <?php 
+      // display overlay if requested
+      } else {
+      ?>
+        <a href="#TB_inline?height=500&width=700&inlineId=hiddenModalContent_<?php the_ID() ?>"
+           title="<?php echo $thickbox_title ?>" class="thickbox">
+          <div style="display:box; width:120px; height:90px;">
+            <img title="<?php the_title() ?>" src="<?php echo $thumb ?>"
+              style="display:inline; margin:0; border:1px solid black; width:120px; height:90px"/>
+          </div>
+        </a>
+        <div style="width:120px; height: 12px; margin-bottom:7px; line-height: 90%">
+          <small><i><?php echo get_the_time('F j, Y') ?></i></small>
         </div>
-        <div style="text-align: center;">
-          <input type="submit" id="Login" value="OK" onclick="tb_remove()"/>
+        <div style="width:120px; height: 30px; margin-bottom:20px; line-height: 80%">
+          <small><?php echo $short_title ?></small>
         </div>
-      </div>
+        <!-- Hidden content for the thickbox -->
+        <div id="hiddenModalContent_<?php echo $post->ID ?>" style="display:none;">
+          <p align="center"  style="margin-bottom:10px;">
+            <?php echo $html ?>
+          </p>
+          <div style="margin-bottom:10px;">
+            <?php
+            if ($post->post_parent > 0) {
+            ?>
+              <a href="<?php echo get_permalink($post->post_parent) ?>">Blog post related to this video</a>
+            <?php
+            }
+            ?>
+            <br/>
+            <?php
+            if ($features_3_0) {
+            ?>
+            <a href="<?php the_permalink() ?>">Video page</a>
+            <?php
+            }
+            ?>
+          </div>
+          <div style="margin-bottom:10px;">
+            <?php echo $desc ?>
+          </div>
+          <div style="text-align: center;">
+            <input type="submit" id="Login" value="OK" onclick="tb_remove()"/>
+          </div>
+        </div>
+      <?php 
+      }
+      ?>
     </div>
     <?php
     }
@@ -170,6 +205,7 @@ function display_gallery ($width, $height) {
   </div>
 
   <?php // if ( $wp_the_query->max_num_pages > 1 ) : ?>
+    <br/>
     <div id="nav-below" class="navigation">
       <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'twentyten' ) ); ?></div>
       <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'twentyten' ) ); ?></div>
