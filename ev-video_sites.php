@@ -176,10 +176,10 @@ function fetch_dotsub_videos($author_id)
             $video['published']   = date("Y-m-d H:i:s", $published);
 
             // further fields
-            $video['author_url']  = "http://www.youtube.com/user/".$video['author_id'];
+            $video['author_url']  = "http://dotsub.com/channel/user/".$video['author_id'];
             $video['category']    = $metadata->find('div[class=mediaLinks]',0)->find('a',2)->plaintext;
             $video['keywords']    = NULL;
-            $video['thumbnail']   = 'http://dotsub.com'.$item->find('div[class=thumbnail]',0)->find('img',0)->src;
+            $video['thumbnail']   = $item->find('div[class=thumbnail]',0)->find('img',0)->src;
             
             // parse the seconds out of the duration string
             $duration_str = $metadata->find('li[class=first-metadataItem]',0)->find('h4',0)->plaintext;

@@ -73,7 +73,7 @@ function save_video($video) {
     }
 
     // put content together
-    $video_content .= "<br/>"+$video['videourl'];
+    $video_content .= "<br/>".$video['videourl'];
     $video_content .= "\n<p>".$video['description']."</p>";
     if ($video['category'] != '') {
       $video_content .= "<p><small><i>Category:</i> ".$video['category'];

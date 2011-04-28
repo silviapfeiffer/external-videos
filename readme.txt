@@ -56,6 +56,8 @@ We use OEmbed. For DotSub we use the service of embed.ly.
 The general shortcode is [external-videos], which creates a video gallery.
 You can also now specify [external-videos feature="embed"] to get just the latest video as a featured video and with all its embedding code.
 You can further specify [external-videos width="300" height="200"] if you want to change the width and the height of the embedded video.
+And you can specify [external-videos link="page"] if you want to get the links on the video
+gallery to link straight through to the video pages instead of providing an overlay.
 
 = How can I get a RSS feed URL for the external videos? =
 
@@ -74,6 +76,10 @@ You can add a link like this to your theme layout.
 7. screenshot-7.png : a video page as automatically created by the plugin
 
 == Changelog ==
+
+= 0.11 =
+* added a shortcode that allows to link straight through to video pages instead of the overlay
+* fixed a bug on retrieval of keyframe for dotsub
 
 = 0.10 =
 * added option to add the video posts to the site's RSS feed
