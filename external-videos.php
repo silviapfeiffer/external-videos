@@ -1,7 +1,7 @@
 <?php
 /*
  * Plugin Name: External Videos
- * Plugin URI: http://wordpress.org/
+ * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
  * Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
  * Author: Silvia Pfeiffer
  * Version: 0.12
