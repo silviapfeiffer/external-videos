@@ -2,13 +2,17 @@
 - add link to post into video post page, potentially with a redirect
 - add Google video sitemap http://www.reelseo.com/how-video-sitemaps/
 - support @longdesc http://wordpress.mfields.org/2010/how-to-enable-longdesc-attributes-on-images-in-wordpress/
-- remove whitespace on youtube user name copies into the form
-- also allow YouTube favorites and Vimeo likes to be pulled in as RSS feed
-- check why auto update doesn't work for many people (wp 3.01/3.02 ?)
+- also allow YouTube favorites and Vimeo likes to be pulled in as RSS feed,http://wordpress.org/support/topic/plugin-external-videos-youtube-favs-or-vimeo-like?replies=3
+- allow to add single videos, too
 - translations see http://codex.wordpress.org/I18n_for_WordPress_Developers
 
 Improvements to the shortcode:
-- add authorname in Gallery mode in ev-shortcode
+- add authorname in Gallery mode in ev-shortcode, see http://wordpress.org/support/topic/plugin-external-videos-different-authot-for-each-page?replies=2
 - separate the embed code and description into separate variables in ev-shortcode
 - add to the shortcode for gallery the number of videos to show and potentially a tag
   to restrict the selected videos to.
+- add a shortcode for categories filter, see http://wordpress.org/support/topic/plugin-external-videos-a-way-to-have-multiple-galleries-based-on-categories?replies=8
+- add a param for order of displayed posts, see http://wordpress.org/support/topic/plugin-external-videos-is-there-an-easy-way-to-reverse-the-gallery-thumbnails?replies=4
+
+Allow detaching of blog posts:
+Once this bug is applied http://core.trac.wordpress.org/ticket/6820 to wordpress with diff from here http://core.trac.wordpress.org/attachment/ticket/6820/detach_media2.diff also add the stuff from wp-admin/includes/class-wp-media-list-table.php of the diff to external-videos.php line 543
