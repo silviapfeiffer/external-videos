@@ -3,7 +3,7 @@
 // Vimeo published this library for the Advanced API without a license
 
 
-class phpVimeo
+class spEvPhpVimeo
 {
     const API_REST_URL = 'http://vimeo.com/api/rest/v2';
     const API_AUTH_URL = 'http://vimeo.com/oauth/authorize';
@@ -282,7 +282,7 @@ class phpVimeo
     /**
 * Enable the cache.
 *
-* @param string $type The type of cache to use (phpVimeo::CACHE_FILE is built in)
+* @param string $type The type of cache to use (spEvPhpVimeo::CACHE_FILE is built in)
 * @param string $path The path to the cache (the directory for CACHE_FILE)
 * @param int $expire The amount of time to cache responses (default 10 minutes)
 */
@@ -531,7 +531,7 @@ class phpVimeo
     public static function url_encode_rfc3986($input)
     {
         if (is_array($input)) {
-            return array_map(array('phpVimeo', 'url_encode_rfc3986'), $input);
+            return array_map(array('spEvPhpVimeo', 'url_encode_rfc3986'), $input);
         }
         else if (is_scalar($input)) {
             return str_replace(array('+', '%7E'), array(' ', '~'), rawurlencode($input));

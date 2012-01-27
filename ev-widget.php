@@ -23,9 +23,9 @@
  * you can give it a title and define the number of recent videos to display.
  */
 
-class WP_Widget_External_Videos extends WP_Widget {
+class WP_Widget_SP_External_Videos extends WP_Widget {
 
-  function WP_Widget_External_Videos() {
+  function WP_Widget_SP_External_Videos() {
     $widget_ops = array('classname' => 'widget_recent_videos', 'description' => __( "The most recent external videos on your blog") );
     $this->WP_Widget('recent-videos', __('Recent Videos'), $widget_ops);
     $this->alt_option_name = 'widget_recent_entries';
@@ -113,8 +113,8 @@ class WP_Widget_External_Videos extends WP_Widget {
 }
 
 /* Function that registers widget. */
-function external_videos_load_widget() {
-	return register_widget( 'WP_Widget_External_Videos' );
+function sp_external_videos_load_widget() {
+	return register_widget( 'WP_Widget_SP_External_Videos' );
 }
 
 ?>

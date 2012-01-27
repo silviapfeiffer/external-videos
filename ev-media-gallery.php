@@ -25,8 +25,8 @@
  */
 
 
-add_filter('media_upload_tabs', 'add_media_upload_tab');
-function add_media_upload_tab($tabs) {
+add_filter('media_upload_tabs', 'sp_ev_add_media_upload_tab');
+function sp_ev_add_media_upload_tab($tabs) {
 
     $tabs['external_videos'] = __('External Videos');
 
@@ -34,9 +34,9 @@ function add_media_upload_tab($tabs) {
 }
 
 
-add_action('media_upload_external_videos', 'media_upload_external_videos');
+add_action('media_upload_external_videos', 'sp_ev_media_upload_external_videos');
 // see media.php media_upload_library() to update
-function media_upload_external_videos() {
+function sp_ev_media_upload_external_videos() {
     $errors = array();
     if ( !empty($_POST) ) {
         $return = media_upload_form_handler();
@@ -47,12 +47,12 @@ function media_upload_external_videos() {
             $errors = $return;
     }
 
-    return wp_iframe('media_upload_external_videos_form', $errors);
+    return wp_iframe('sp_ev_media_upload_external_videos_form', $errors);
 }
 
 
 // see media.php media_upload_library_form() to update
-function media_upload_external_videos_form($errors) {
+function sp_ev_media_upload_external_videos_form($errors) {
     global $wpdb, $wp_query, $wp_locale, $type, $tab, $post_mime_types;
 
     media_upload_header();

@@ -21,7 +21,7 @@
 
 
 // Convert $num_secs to Hours:Minutes:Seconds
-function sec2hms($num_secs) {
+function sp_ev_sec2hms($num_secs) {
   $result = '';
 
   $hours   = intval(intval($num_secs) / 3600);
@@ -38,7 +38,7 @@ function sec2hms($num_secs) {
   return $result;
 }
 
-function shorten_text($input, $length = 36, $ellipses = true) {
+function sp_ev_shorten_text($input, $length = 36, $ellipses = true) {
 	//no need to trim, already shorter than trim length
 	if (strlen($input) <= $length) {
 		return $input;
