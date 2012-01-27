@@ -32,7 +32,7 @@
 /// ***   Short Code   *** ///
 
 // handles [external-videos ...] shortcode
-function external_videos_gallery($atts, $content = null) {
+function sp_external_videos_gallery($atts, $content = null) {
   global $wp_query, $post;
 
   // extract shortcode parameters
@@ -84,7 +84,7 @@ function external_videos_gallery($atts, $content = null) {
     query_posts($params);
     
     // display the gallery
-    display_gallery($width, $height, $link);
+    sp_ev_display_gallery($width, $height, $link);
   }
   
   //Reset Query
@@ -93,7 +93,7 @@ function external_videos_gallery($atts, $content = null) {
   return $result;
 }
 
-function display_gallery ($width, $height, $link) {
+function sp_ev_display_gallery ($width, $height, $link) {
   global $wp_query, $post, $features_3_0;
 ?>
 
@@ -121,8 +121,8 @@ function display_gallery ($width, $height, $link) {
       $video = trim($videourl[0]);
       $description = get_post_meta(get_the_ID(), 'description');
       $desc = $description[0];
-      $short_title = shorten_text(get_the_title(), 33);
-      $thickbox_title = shorten_text(get_the_title(), 90);
+      $short_title = sp_ev_shorten_text(get_the_title(), 33);
+      $thickbox_title = sp_ev_shorten_text(get_the_title(), 90);
       // get oEmbed code
       $oembed = new WP_Embed();
       $html = $oembed->shortcode(null, $video);

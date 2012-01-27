@@ -1,10 +1,16 @@
+- allow to add single videos, too
+- when removing an author, ask if their videos should be removed
+- update to videos of a single author only
 - introduce next/prev buttons into thickbox with videos
 - add link to post into video post page, potentially with a redirect
 - add Google video sitemap http://www.reelseo.com/how-video-sitemaps/
 - support @longdesc http://wordpress.mfields.org/2010/how-to-enable-longdesc-attributes-on-images-in-wordpress/
 - also allow YouTube favorites and Vimeo likes to be pulled in as RSS feed,http://wordpress.org/support/topic/plugin-external-videos-youtube-favs-or-vimeo-like?replies=3
-- allow to add single videos, too
 - translations see http://codex.wordpress.org/I18n_for_WordPress_Developers
+- add option to extract comments for videos from sites
+- internationalize text
+- allow choice of category name
+- Auto excerpts with thumbnail images (as used in the gallery) so that if a video shows up in a tag page, search query or the external videos category page it shows the description only and the thumbnail on the left.
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode, see http://wordpress.org/support/topic/plugin-external-videos-different-authot-for-each-page?replies=2

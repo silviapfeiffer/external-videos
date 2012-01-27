@@ -4,7 +4,7 @@
  * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
  * Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
  * Author: Silvia Pfeiffer
- * Version: 0.13
+ * Version: 0.14
  * Author URI: http://www.gingertech.net/
  * License: GPL2
  */
@@ -28,9 +28,9 @@
 
   @package    external-videos
   @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
-  @copyright  Copyright 2010 Silvia Pfeiffer
+  @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    0.13
+  @version    0.14
   @link       http://wordpress.org/extend/plugins/external-videos/
 
 */
@@ -57,7 +57,7 @@ if ($features_3_0) {
 
 /// ***   Pulling Videos From Diverse Sites   *** ///
 
-function save_video($video) {
+function sp_ev_save_video($video) {
 
     // See if video exists
     $the_query = new WP_Query(array(
@@ -73,8 +73,10 @@ function save_video($video) {
     }
 
     // put content together
-    $video_content .= "\n".$video['videourl'];
-    $video_content .= "\n<p>".$video['description']."</p>";
+    $video_content .= "\n";
+    $video_content .= $video['videourl'];
+    $video_content .= "\n\n";
+    $video_content .= "<p>".$video['description']."</p>";
     if ($video['category'] != '') {
       $video_content .= "<p><small><i>Category:</i> ".$video['category'];
       $video_content .= "<br/>";
@@ -118,22 +120,35 @@ function save_video($video) {
     return true;
 }
 
-// FIX for getting the custom post type posts when querying for posts with a certain tag
-add_filter('pre_get_posts', 'query_post_type');
-function query_post_type($query) {
-    if(is_category() || is_tag()) {
-        $post_type = get_query_var('post_type');
-        if($post_type)
-            $post_type = $post_type;
-        else
-            $post_type = array('post','external-videos');
-        $query->set('post_type',$post_type);
+// FIX to render External Video post type entries on Category and Tag archive pages
+// by Chris Jean, chris@ithemes.com
+add_filter( 'pre_get_posts', 'sp_ev_filter_query_post_type' );
+function sp_ev_filter_query_post_type( $query ) {
+    if ( $query->query_vars['suppress_filters'] || ( ! is_category() && ! is_tag() ) )
         return $query;
+   
+    $post_type = get_query_var( 'post_type' );
+   
+    if ( 'any' == $post_type )
+        return $query;
+   
+    if ( empty( $post_type ) ) {
+        $post_type = 'any';
     }
+    else {
+        if ( ! is_array( $post_type ) )
+            $post_type = array( $post_type );
+       
+        $post_type[] = 'external-videos';
+    }
+   
+    $query->set( 'post_type', $post_type );
+   
+    return $query;
 }
 
-function update_videos($authors) {
-  $current_videos = get_all_videos($authors);
+function sp_ev_update_videos($authors) {
+  $current_videos = sp_ev_get_all_videos($authors);
   
   if (!$current_videos) return 0;
   
@@ -142,7 +157,7 @@ function update_videos($authors) {
   $video_ids = array();
   foreach ($current_videos as $video) {
     array_push($video_ids, $video['video_id']);
-    $is_new = save_video($video);
+    $is_new = sp_ev_save_video($video);
     if ($is_new) {
         $num_videos++;
     }
@@ -167,21 +182,21 @@ function update_videos($authors) {
   return $num_videos;
 }
 
-function get_all_videos($authors) {
+function sp_ev_get_all_videos($authors) {
     $new_videos = array();
 
     foreach ($authors as $author) {
         switch ($author['host_id']) {
             case 'youtube':
-                $videos = fetch_youtube_videos($author['author_id']);
+                $videos = sp_ev_fetch_youtube_videos($author['author_id']);
                 break;
             case 'vimeo':
-                $videos = fetch_vimeo_videos($author['author_id'],
+                $videos = sp_ev_fetch_vimeo_videos($author['author_id'],
                                                   $author['developer_key'],
                                                   $author['secret_key']);
                 break;
             case 'dotsub':
-                $videos = fetch_dotsub_videos($author['author_id']);
+                $videos = sp_ev_fetch_dotsub_videos($author['author_id']);
                 break;
         }
         // append $videos to the end of $new_videos
@@ -191,7 +206,7 @@ function get_all_videos($authors) {
     return $new_videos;
 }
 
-function delete_videos() {
+function sp_ev_delete_videos() {
     $del_videos = 0;
     // query all post types of external videos
     $ev_posts = new WP_Query(array('post_type' => 'external-videos',
@@ -205,9 +220,9 @@ function delete_videos() {
 }
 
 // ADDS POST TYPES TO RSS FEED
-add_filter('request', 'ev_feed_request');
-function ev_feed_request($qv) {
-  $raw_options = get_option('external_videos_options');
+add_filter('request', 'sp_ev_feed_request');
+function sp_ev_feed_request($qv) {
+  $raw_options = get_option('sp_external_videos_options');
   $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
   if ($options['rss'] == true) {
   	if (isset($qv['feed']) && !isset($qv['post_type']))
@@ -218,7 +233,7 @@ function ev_feed_request($qv) {
 
 /// ***   Admin Settings Page   *** ///
 
-function remote_author_exists($host_id, $author_id) {
+function sp_ev_remote_author_exists($host_id, $author_id) {
     $url = null;
     switch ($host_id) {
         case 'youtube':
@@ -245,7 +260,7 @@ function remote_author_exists($host_id, $author_id) {
     return true;
 }
 
-function local_author_exists($host_id, $author_id, $authors) {
+function sp_ev_local_author_exists($host_id, $author_id, $authors) {
     foreach ($authors as $author) {
         if ( $author['author_id'] == $author_id && $author['host_id'] == $host_id ) {
             return true;
@@ -255,7 +270,7 @@ function local_author_exists($host_id, $author_id, $authors) {
     return false;
 }
 
-function authorization_exists($host_id, $developer_key, $secret_key) {
+function sp_ev_authorization_exists($host_id, $developer_key, $secret_key) {
   switch ($host_id) {
       case 'youtube':
           return true;
@@ -270,9 +285,9 @@ function authorization_exists($host_id, $developer_key, $secret_key) {
   return true;
 }
 
-function settings_page() {
+function sp_ev_settings_page() {
     // activate cron hook if not active
-    ev_activation();
+    sp_ev_activation();
     
     wp_enqueue_script('jquery');
     ?>
@@ -305,7 +320,7 @@ function settings_page() {
         'dotsub'  => 'DotSub',
     );
 
-    $raw_options = get_option('external_videos_options');
+    $raw_options = get_option('sp_external_videos_options');
 
     $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
 
@@ -319,13 +334,13 @@ function settings_page() {
             if (!array_key_exists($_POST['host_id'], $VIDEO_HOSTS)) {
                 ?><div class="error"><p><strong><?php echo __('Invalid video host.'); ?></strong></p></div><?php
             }
-            elseif (local_author_exists($_POST['host_id'], $_POST['author_id'], $options['authors'])) {
+            elseif (sp_ev_local_author_exists($_POST['host_id'], $_POST['author_id'], $options['authors'])) {
                 ?><div class="error"><p><strong><?php echo __('Author already exists.'); ?></strong></p></div><?php
             }
-            elseif (!remote_author_exists($_POST['host_id'], $_POST['author_id'])) {
+            elseif (!sp_ev_remote_author_exists($_POST['host_id'], $_POST['author_id'])) {
                 ?><div class="error"><p><strong><?php echo __('Invalid author.'); ?></strong></p></div><?php
             }
-            elseif (!authorization_exists($_POST['host_id'],$_POST['developer_key'],$_POST['secret_key'])) {
+            elseif (!sp_ev_authorization_exists($_POST['host_id'],$_POST['developer_key'],$_POST['secret_key'])) {
               ?><div class="error"><p><strong><?php echo __('Missing developer key.'); ?></strong></p></div><?php              
             }
             else {
@@ -333,12 +348,12 @@ function settings_page() {
                                               'author_id' => $_POST['author_id'],
                                               'developer_key' => $_POST['developer_key'],
                                               'secret_key' => $_POST['secret_key']);
-                update_option('external_videos_options', $options);
+                update_option('sp_external_videos_options', $options);
                 ?><div class="updated"><p><strong><?php echo __('Added author.'); ?></strong></p></div><?php
             }
         }
         elseif ($_POST['action'] == 'delete_author') {
-            if (!local_author_exists($_POST['host_id'], $_POST['author_id'], $options['authors'])) {
+            if (!sp_ev_local_author_exists($_POST['host_id'], $_POST['author_id'], $options['authors'])) {
                 ?><div class="error"><p><strong><?php echo __("Can't delete an author that doesn't exist."); ?></strong></p></div><?php
             }
             else {
@@ -364,16 +379,16 @@ function settings_page() {
                   }
                 }
                 
-                update_option('external_videos_options', $options);
+                update_option('sp_external_videos_options', $options);
                 ?><div class="updated"><p><strong><?php printf(__("Deleted author and its %d videos."), $del_videos); ?></strong></p></div><?php
             }
         }
-        elseif ($_POST['action'] == 'update_videos') {
-            $num_videos = update_videos($options['authors']);
+        elseif ($_POST['action'] == 'sp_ev_update_videos') {
+            $num_videos = sp_ev_update_videos($options['authors']);
             ?><div class="updated"><p><strong><?php printf(__("Found %d videos."), $num_videos); ?></strong></p></div><?php
         }
-        elseif ($_POST['action'] == 'delete_videos') {
-            $num_videos = delete_videos();
+        elseif ($_POST['action'] == 'sp_ev_delete_videos') {
+            $num_videos = sp_ev_delete_videos();
             ?><div class="deleted"><p><strong><?php printf(__("Deleted %d videos."), $num_videos); ?></strong></p></div><?php
         }
         elseif ($_POST['action'] == 'ev_settings') {
@@ -386,7 +401,7 @@ function settings_page() {
               printf(__("Removed video pages from RSS feed.")); 
               $options['rss'] = false;
             }
-            update_option('external_videos_options', $options);
+            update_option('sp_external_videos_options', $options);
             ?></strong></p></div><?php
         }
     }
@@ -450,7 +465,7 @@ function settings_page() {
     <h3>Update Videos (newly added/deleted videos)</h3>
     <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
         <input type="hidden" name="external_videos" value="Y" />
-        <input type="hidden" name="action" value="update_videos" />
+        <input type="hidden" name="action" value="sp_ev_update_videos" />
         <p class="submit">
             <input type="submit" name="Submit" value="Update Videos from Channels" />
         </p>
@@ -466,7 +481,7 @@ function settings_page() {
     </p>
     <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
         <input type="hidden" name="external_videos" value="Y" />
-        <input type="hidden" name="action" value="delete_videos" />
+        <input type="hidden" name="action" value="sp_ev_delete_videos" />
         <p class="submit">
             <input type="submit" name="Submit" value="Remove All Stored Videos From Channels" />
         </p>
@@ -476,16 +491,16 @@ function settings_page() {
     <?php
 }
 
-add_action('admin_menu', 'external_videos_options');
-function external_videos_options() {
-  add_options_page('External Videos Options','External Videos', 10, __FILE__, 'settings_page');
+add_action('admin_menu', 'sp_external_videos_options');
+function sp_external_videos_options() {
+  add_options_page('External Videos Options','External Videos', 10, __FILE__, 'sp_ev_settings_page');
 }
 
 
 /// ***   Admin Interface to External Videos   *** ///
 
-add_filter('manage_edit-external-videos_columns', 'external_videos_columns');
-function external_videos_columns($columns)
+add_filter('manage_edit-external-videos_columns', 'sp_external_videos_columns');
+function sp_external_videos_columns($columns)
 {
     $columns = array(
         "cb"          => "<input type=\"checkbox\" />",
@@ -501,8 +516,8 @@ function external_videos_columns($columns)
     return $columns;
 }
 
-add_action('manage_posts_custom_column', 'external_videos_custom_columns');
-function external_videos_custom_columns($column_name)
+add_action('manage_posts_custom_column', 'sp_external_videos_custom_columns');
+function sp_external_videos_custom_columns($column_name)
 {
     global $post;
     $duration  = get_post_meta($post->ID, 'duration');
@@ -557,32 +572,32 @@ function external_videos_custom_columns($column_name)
 
 /// ***   Daily "Cron" Setup   *** ///
 
-register_activation_hook(WP_PLUGIN_DIR . '/external-videos/external-videos.php', 'ev_activation' );
-function ev_activation() {
+register_activation_hook(WP_PLUGIN_DIR . '/external-videos/external-videos.php', 'sp_ev_activation' );
+function sp_ev_activation() {
   // register daily "cron" on plugin installation
   if (!wp_next_scheduled('ev_daily_event')) {
     wp_schedule_event( time(), 'daily', 'ev_daily_event' );
   }
 }
 
-register_deactivation_hook(WP_PLUGIN_DIR . '/external-videos/external-videos.php', 'ev_deactivation' );
-function ev_deactivation() {
+register_deactivation_hook(WP_PLUGIN_DIR . '/external-videos/external-videos.php', 'sp_ev_deactivation' );
+function sp_ev_deactivation() {
   // unregister daily "cron"
   wp_clear_scheduled_hook('ev_daily_event');
 }
 
-add_action('ev_daily_event', 'ev_daily_function');
-function ev_daily_function() {
-  $raw_options = get_option('external_videos_options');
+add_action('ev_daily_event', 'sp_ev_daily_function');
+function sp_ev_daily_function() {
+  $raw_options = get_option('sp_external_videos_options');
   $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
-  update_videos($options['authors']);
+  sp_ev_update_videos($options['authors']);
 }
 
 
 /// ***   Setup of Plugin   *** ///
 
-add_action('init', 'external_videos_init');
-function external_videos_init() {
+add_action('init', 'sp_external_videos_init');
+function sp_external_videos_init() {
     // create a "video" category to store posts against
     wp_create_category('External Videos');
 
@@ -596,7 +611,6 @@ function external_videos_init() {
         'show_ui'         => true,
         'capability_type' => 'post',
         'hierarchical'    => false,
-        'rewrite'         => false,
         'query_var'       => false,
         'supports'        => array('title', 'editor', 'author', 'thumbnail', 'excerpts', 'custom-fields', 'comments', 'revisions', 'excerpt'),
         'taxonomies'      => array('post_tag', 'category')
@@ -612,8 +626,8 @@ function external_videos_init() {
 }
 
 /// *** Setup of Videos Gallery: implemented in ev-media-gallery.php *** ///
-add_shortcode('external-videos', 'external_videos_gallery');
+add_shortcode('external-videos', 'sp_external_videos_gallery');
 
 /// *** Setup of Widget: implemented in ev-widget.php file *** ///
-add_action('widgets_init', 'external_videos_load_widget');
+add_action('widgets_init', 'sp_external_videos_load_widget');
 

@@ -21,7 +21,7 @@
 /// ***   Pulling Videos From Diverse Sites   *** ///
 
 
-function fetch_youtube_videos($author_id)
+function sp_ev_fetch_youtube_videos($author_id)
 {
 
     $url = "http://gdata.youtube.com/feeds/api/users/$author_id/uploads/";
@@ -70,9 +70,9 @@ function fetch_youtube_videos($author_id)
 }
 
 
-function fetch_vimeo_videos($author_id, $developer_key, $secret_key)
+function sp_ev_fetch_vimeo_videos($author_id, $developer_key, $secret_key)
 {
-  $vimeo = new phpVimeo($developer_key, $secret_key);
+  $vimeo = new spEvPhpVimeo($developer_key, $secret_key);
   $per_page = 50;
   $date = date(DATE_RSS);
   $new_videos = array();
@@ -88,7 +88,7 @@ function fetch_vimeo_videos($author_id, $developer_key, $secret_key)
                                       'page' => $page,
                                       'per_page' => $per_page), 
                                       'GET', 
-                                phpVimeo::API_REST_URL, 
+                                spEvPhpVimeo::API_REST_URL, 
                                 false, 
                                 true);  
     }
@@ -117,7 +117,7 @@ function fetch_vimeo_videos($author_id, $developer_key, $secret_key)
         }
       }
       $video['thumbnail']   = $vid->thumbnails->thumbnail[0]->_content;
-      $video['duration']    = sec2hms($vid->duration);
+      $video['duration']    = sp_ev_sec2hms($vid->duration);
 
       // add $video to the end of $new_videos
       array_push($new_videos, $video);
@@ -130,7 +130,7 @@ function fetch_vimeo_videos($author_id, $developer_key, $secret_key)
   return $new_videos;
 }
 
-function fetch_dotsub_videos($author_id)
+function sp_ev_fetch_dotsub_videos($author_id)
 {
 
     $url = "http://dotsub.com/view/user/$author_id?page=0";
