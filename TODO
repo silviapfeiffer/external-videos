@@ -11,6 +11,7 @@
 - internationalize text
 - allow choice of category name
 - Auto excerpts with thumbnail images (as used in the gallery) so that if a video shows up in a tag page, search query or the external videos category page it shows the description only and the thumbnail on the left.
+- display date below latest video when using latest video shortcode like the full list shows
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode, see http://wordpress.org/support/topic/plugin-external-videos-different-authot-for-each-page?replies=2
