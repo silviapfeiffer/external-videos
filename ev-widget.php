@@ -43,7 +43,7 @@ class WP_Widget_SP_External_Videos extends WP_Widget {
     $title = isset($instance['title']) ? esc_attr($instance['title']) : '';
     if ( !isset($instance['number']) || !$number = (int) $instance['number'] )
       $number = 5;
-	$thumbnail = isset($instance['thumbnail']) ? isset($instance['thumbnail']) : false;
+	$thumbnail = isset($instance['thumbnail']) ? (bool) $instance['thumbnail'] : false;
     ?>
     <p><label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Title:'); ?></label>
     <input class="widefat" id="<?php echo $this->get_field_id('title'); ?>" name="<?php echo $this->get_field_name('title'); ?>" type="text" value="<?php echo $title; ?>" /></p>
@@ -53,7 +53,7 @@ class WP_Widget_SP_External_Videos extends WP_Widget {
     <small><?php _e('(at most 15)'); ?></small></p>
 
 	<p><label for="<?php echo $this->get_field_id('thumbnail'); ?>"><?php _e('Show video thumbnails:'); ?></label>
-    <input id="<?php echo $this->get_field_id('thumbnail'); ?>" name="<?php echo $this->get_field_name('thumbnail'); ?>" type="checkbox" value="<?php echo $thumbnail; ?>"/></p>
+    <input id="<?php echo $this->get_field_id('thumbnail'); ?>" name="<?php echo $this->get_field_name('thumbnail'); ?>" type="checkbox" <?php if ( $thumbnail ) { ?> checked <?php } ?>/></p>
     <?php
   }
 
@@ -61,7 +61,7 @@ class WP_Widget_SP_External_Videos extends WP_Widget {
     $instance = $old_instance;
     $instance['title'] = strip_tags($new_instance['title']);
     $instance['number'] = (int) $new_instance['number'];
-	$instance['thumbnail'] = (boolean) $new_instance['thumbnail'];
+	$instance['thumbnail'] = (bool) $new_instance['thumbnail'];
     $this->flush_widget_cache();
 
     $alloptions = wp_cache_get( 'alloptions', 'options' );
@@ -92,8 +92,8 @@ class WP_Widget_SP_External_Videos extends WP_Widget {
       $number = 1;
     else if ( $number > 15 )
       $number = 15;
-    $thumbnail = (boolean) $instance['thumbnail'];
-$thumbnail = true;
+    $thumbnail = (bool) $instance['thumbnail'];
+
     $r = new WP_Query(array('showposts' => $number,
                             'nopaging' => 0,
                             'post_type' => 'external-videos',
