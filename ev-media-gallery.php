@@ -56,6 +56,7 @@ function sp_ev_media_upload_external_videos_form($errors) {
     global $wpdb, $wp_query, $wp_locale, $type, $tab, $post_mime_types;
 
     media_upload_header();
+	wp_enqueue_style( 'media' );
 
     $post_id = intval($_REQUEST['post_id']);
 
