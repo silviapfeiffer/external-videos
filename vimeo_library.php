@@ -240,7 +240,7 @@ class spEvPhpVimeo
                 return $response;
             }
             else if ($response->err) {
-                throw new VimeoAPIException($response->err->msg, $response->err->code);
+                throw new spEvVimeoAPIException($response->err->msg, $response->err->code);
             }
 
             return false;
@@ -401,7 +401,7 @@ class spEvPhpVimeo
         // Make sure we have enough room left in the user's quota
         $quota = $this->call('vimeo.videos.upload.getQuota');
         if ($quota->user->upload_space->free < $file_size) {
-            throw new VimeoAPIException('The file is larger than the user\'s remaining quota.', 707);
+            throw new spEvVimeoAPIException('The file is larger than the user\'s remaining quota.', 707);
         }
 
         // Get an upload ticket
@@ -417,7 +417,7 @@ class spEvPhpVimeo
 
         // Make sure we're allowed to upload this size file
         if ($file_size > $rsp->ticket->max_file_size) {
-            throw new VimeoAPIException('File exceeds maximum allowed size.', 710);
+            throw new spEvVimeoAPIException('File exceeds maximum allowed size.', 710);
         }
 
         // Split up the file if using multiple pieces
@@ -508,7 +508,7 @@ class spEvPhpVimeo
             return $complete->ticket->video_id;
         }
         else if ($complete->err) {
-            throw new VimeoAPIException($complete->err->msg, $complete->err->code);
+            throw new spEvVimeoAPIException($complete->err->msg, $complete->err->code);
         }
     }
 
@@ -543,6 +543,6 @@ class spEvPhpVimeo
 
 }
 
-class VimeoAPIException extends Exception {}
+class spEvVimeoAPIException extends Exception {}
 
 ?>
