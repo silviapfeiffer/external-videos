@@ -56,6 +56,7 @@ function sp_ev_media_upload_external_videos_form($errors) {
     global $wpdb, $wp_query, $wp_locale, $type, $tab, $post_mime_types;
 
     media_upload_header();
+    wp_enqueue_style( 'media' );
 
     $post_id = intval($_REQUEST['post_id']);
 
@@ -132,7 +133,7 @@ foreach ($arc_result as $arc_row) {
 ?>
 </select>
 <?php } ?>
-<input type="submit" id="post-query-submit" value="<?php echo esc_attr( __( 'Filter &#187;' ) ); ?>" class="button-secondary" />
+<?php submit_button( __( 'Filter &#187;' ), 'secondary', 'post-query-submit', false ); ?>
 
 </div>
 
@@ -162,7 +163,7 @@ jQuery(function($){
 <?php echo get_media_items(null, $errors); ?>
 </div>
 <p class="ml-submit">
-<input type="submit" class="button savebutton" name="save" value="<?php esc_attr_e( 'Save all changes' ); ?>" />
+<?php submit_button( __( 'Save all changes' ), 'button savebutton', 'save', false ); ?>
 <input type="hidden" name="post_id" id="post_id" value="<?php echo (int) $post_id; ?>" />
 </p>
 </form>
