@@ -1,5 +1,5 @@
 - allow pulling in playlists
-- allow filtering display based on a tag (shortcode)
+- allow filtering display based on a tag and channel (shortcode)
 - allow to add single videos, too
 - when removing an author, ask if their videos should be removed
 - update to videos of a single author only

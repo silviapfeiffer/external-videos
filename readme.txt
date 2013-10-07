@@ -3,8 +3,8 @@ Contributors: silviapfeiffer1, johnfjohnf
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
-Tested up to: 3.3.1
-Stable Tag: 0.17
+Tested up to: 3.6.1
+Stable Tag: 0.18
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
@@ -76,6 +76,9 @@ You can add a link like this to your theme layout.
 7. screenshot-7.png : a video page as automatically created by the plugin
 
 == Changelog ==
+
+= 0.18 =
+* checked support for WP 3.6.1
 
 = 0.17 =
 * bug fix on thumbnail option to sidebar widget
