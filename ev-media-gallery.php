@@ -28,7 +28,7 @@
 add_filter('media_upload_tabs', 'sp_ev_add_media_upload_tab');
 function sp_ev_add_media_upload_tab($tabs) {
 
-    $tabs['external_videos'] = __('External Videos');
+    $tabs['external_videos'] = __('External Videos', 'external-videos');
 
     return $tabs;
 }
@@ -250,7 +250,7 @@ function do_attach($per_page) {
 
     if ( isset($_GET['attached']) && (int) $_GET['attached'] ) {
         $attached = (int) $_GET['attached'];
-        $message = sprintf( _n('Changed %d attachment.', 'Attached %d attachments.', $attached), $attached );
+        $message = sprintf( _n('Changed %d attachment.', 'Attached %d attachments.', $attached, 'external-videos'), $attached );
         $_SERVER['REQUEST_URI'] = remove_query_arg(array('attached'), $_SERVER['REQUEST_URI']);
         ?>
         <div id="message" class="updated"><p><strong><?php echo $message; ?></strong></p></div>
@@ -263,7 +263,7 @@ function do_attach($per_page) {
 
         $parent = &get_post($parent_id);
         if ( !current_user_can('edit_post', $parent_id) )
-            wp_die( __('You are not allowed to edit this post.') );
+            wp_die( __('You are not allowed to edit this video.', 'external-videos') );
 
         $attach = array();
         foreach( (array) $_GET['media'] as $att_id ) {

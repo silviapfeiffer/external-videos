@@ -1,0 +1,328 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: external-videos\n"
+"POT-Creation-Date: 2012-09-28 15:51+0100\n"
+"PO-Revision-Date: 2012-10-04 11:00+0100\n"
+"Last-Translator: Piotr Łukaszewski <nowotnypl@gmail.com>\n"
+"Language-Team: Piotr Łukaszewski <nowotnypl@gmail.com>\n"
+"Language: pl_PL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.3\n"
+"X-Poedit-KeywordsList: __;_e;_n;_x\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"Plural-Forms: nplurals=3; plural=n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2;\n"
+"X-Poedit-SearchPath-0: ..\n"
+
+#: ../ev-media-gallery.php:31 ../external-videos.php:117
+#: ../external-videos.php:498 ../external-videos.php:607
+#: ../external-videos.php:611
+msgid "External Videos"
+msgstr "Filmy"
+
+#: ../ev-media-gallery.php:85
+msgid "Search Media"
+msgstr "Szukaj mediów"
+
+#: ../ev-media-gallery.php:96
+msgid "&laquo;"
+msgstr "&laquo;"
+
+#: ../ev-media-gallery.php:97
+msgid "&raquo;"
+msgstr "&raquo;"
+
+#: ../ev-media-gallery.php:117
+msgid "Show all dates"
+msgstr "Pokaż wszystkie daty"
+
+#: ../ev-media-gallery.php:136
+msgid "Filter &#187;"
+msgstr "Przefiltruj &#187;"
+
+#: ../ev-media-gallery.php:253
+#, php-format
+msgid "Changed %d attachment."
+msgid_plural "Attached %d attachments."
+msgstr[0] "Załączono %d film."
+msgstr[1] "Załączono %d filmy."
+msgstr[2] "Załączono %d filmów."
+
+#: ../ev-media-gallery.php:266
+msgid "You are not allowed to edit this video."
+msgstr "Nie posiadasz uprawnienia do edycji tego filmu."
+
+#: ../ev-shortcode.php:109 ../ev-shortcode.php:210
+msgid "<span class=\"meta-nav\">&larr;</span> Older videos"
+msgstr "<span class=\"meta-nav\">&larr;</span> Starsze filmy"
+
+#: ../ev-shortcode.php:110 ../ev-shortcode.php:211
+msgid "Newer videos <span class=\"meta-nav\">&rarr;</span>"
+msgstr "Nowsze filmy <span class=\"meta-nav\">&rarr;</span>"
+
+#: ../ev-shortcode.php:177
+msgid "Blog post related to this video"
+msgstr "Wpisy związane z tym filmem"
+
+#: ../ev-shortcode.php:185
+msgid "Video page"
+msgstr "Strona filmu"
+
+#: ../ev-widget.php:29
+msgid "The most recent external videos on your blog"
+msgstr "Najnowsze filmy na Twojej witrynie"
+
+#: ../ev-widget.php:30 ../ev-widget.php:88
+msgid "Recent Videos"
+msgstr "Najnowsze filmy"
+
+#: ../ev-widget.php:48
+msgid "Title:"
+msgstr "Tytuł:"
+
+#: ../ev-widget.php:51
+msgid "Number of posts to show:"
+msgstr "Liczba wyświetlanych wpisów:"
+
+#: ../ev-widget.php:53
+msgid "(at most 15)"
+msgstr "(nie więcej niż 15)"
+
+#: ../ev-widget.php:55
+msgid "Show video thumbnails:"
+msgstr "Pokazuj miniatury filmów:"
+
+#: ../external-videos.php:82
+msgid "<i>Category:</i>"
+msgstr "<i>Kategoria:</i>"
+
+#: ../external-videos.php:85
+msgid "<i>Uploaded by:</i>"
+msgstr "<i>Wysłane przez:</i>"
+
+#: ../external-videos.php:87
+msgid "<i>Hosted:</i>"
+msgstr "<i>Strona:</i>"
+
+#: ../external-videos.php:180
+#, php-format
+msgid ""
+"Note: %d video was deleted on external host and thus removed from this "
+"collection."
+msgid_plural ""
+"Note: %d videos were deleted on external host and thus removed from this "
+"collection."
+msgstr[0] ""
+"Uwaga: %d film został usunięty ze strony z filmami i w związku z tym "
+"usunięto go również z naszej kolekcji."
+msgstr[1] ""
+"Uwaga: %d filmy zostały usunięte ze strony z filmami i w związku z tym "
+"usunięto je również z naszej kolekcji."
+msgstr[2] ""
+"Uwaga: %d filmów zostało usuniętych ze strony z filmami i w związku z tym "
+"usunięto je również z naszej kolekcji."
+
+#: ../external-videos.php:306
+#, php-format
+msgid "Are you sure you want to remove %s on %s?"
+msgstr "Czy na pewno chcesz usunąć autora %s z %s?"
+
+#: ../external-videos.php:315 ../external-videos.php:498
+msgid "External Videos Settings"
+msgstr "Ustawienia pluginu External Videos"
+
+#: ../external-videos.php:336
+msgid "Invalid video host."
+msgstr "Niepoprawna strona z filmami."
+
+#: ../external-videos.php:339
+msgid "Author already exists."
+msgstr "Autor już istnieje."
+
+#: ../external-videos.php:342
+msgid "Invalid author."
+msgstr "Autor niepoprawny."
+
+#: ../external-videos.php:345
+msgid "Missing developer key."
+msgstr "Brakujący klucz developera."
+
+#: ../external-videos.php:353
+msgid "Added author."
+msgstr "Dodano autora."
+
+#: ../external-videos.php:358
+msgid "Can't delete an author that doesn't exist."
+msgstr "Nie można usunąć nieistniejącego autora."
+
+#: ../external-videos.php:383
+#, php-format
+msgid "Deleted author and his %d video."
+msgid_plural "Deleted author and his %d videos."
+msgstr[0] "Usunięto autora i jego %d film."
+msgstr[1] "Usunięto autora i jego %d filmy."
+msgstr[2] "Usunięto autora i jego %d filmów."
+
+#: ../external-videos.php:388
+#, php-format
+msgid "Found %d video."
+msgid_plural "Found %d videos."
+msgstr[0] "Znaleziono %d film."
+msgstr[1] "Znaleziono %d filmy."
+msgstr[2] "Znaleziono %d filmów."
+
+#: ../external-videos.php:392
+#, php-format
+msgid "Deleted %d video."
+msgid_plural "Deleted %d videos."
+msgstr[0] "Usunięto %d film."
+msgstr[1] "Usunięto %d filmy."
+msgstr[2] "Usunięto %d filmów."
+
+#: ../external-videos.php:401
+msgid "Added video pages to RSS feed."
+msgstr "Dodano strony filmów do kanału RSS."
+
+#: ../external-videos.php:404
+msgid "Removed video pages from RSS feed."
+msgstr "Usunięto strony filmów z kanału RSS."
+
+#: ../external-videos.php:413
+msgid "Authors"
+msgstr "Autorzy"
+
+#: ../external-videos.php:417
+#, php-format
+msgid "%1$s at %2$s"
+msgstr "%1$s na %2$s"
+
+#: ../external-videos.php:417
+msgid "Delete"
+msgstr "Usuń"
+
+#: ../external-videos.php:421
+msgid "Add Authors"
+msgstr "Dodawanie autora"
+
+#: ../external-videos.php:426
+msgid "Video Host:"
+msgstr "Strona z filmami:"
+
+#: ../external-videos.php:435
+msgid "Author ID:"
+msgstr "ID Autora:"
+
+#: ../external-videos.php:438
+msgid "Developer Key:"
+msgstr "Developer Key:"
+
+#: ../external-videos.php:440 ../external-videos.php:444
+msgid "(required for Vimeo, leave empty otherwise)"
+msgstr "(wymagany dla Vimeo, w pozostałym przypadku zostaw puste)"
+
+#: ../external-videos.php:442
+msgid "Secret Key:"
+msgstr "Secret Key:"
+
+#: ../external-videos.php:447
+msgid "Add new author"
+msgstr "Dodaj nowego autora"
+
+#: ../external-videos.php:451
+msgid "Plugin Settings"
+msgstr "Ustawienia wtyczki"
+
+#: ../external-videos.php:461
+msgid "Add video posts to Website RSS feed"
+msgstr "Dodaj strony filmów do kanału RSS."
+
+#: ../external-videos.php:464
+msgid "Save"
+msgstr "Zapisz"
+
+#: ../external-videos.php:468
+msgid "Update Videos (newly added/deleted videos)"
+msgstr "Aktualizacja filmów"
+
+#: ../external-videos.php:473
+msgid "Update Videos from Channels"
+msgstr "Aktualizuj filmy"
+
+#: ../external-videos.php:476
+msgid "Next automatic update scheduled for:"
+msgstr "Data następnej automatycznej aktualizacji:"
+
+#: ../external-videos.php:480
+msgid "Delete All Videos"
+msgstr "Usunięcie wszystkich filmów"
+
+#: ../external-videos.php:482
+msgid ""
+"Be careful with this option - you will lose all links you have built between "
+"blog posts and the video pages. This is really only meant as a reset option."
+msgstr ""
+"OSTROŻNIE - utracisz wszystkie ustawione powiązania pomiędzy wpisami i "
+"filmami. Ta opcja resetuje wszystko."
+
+#: ../external-videos.php:488
+msgid "Remove All Stored Videos From Channels"
+msgstr "Usuń wszystkie filmy"
+
+#: ../external-videos.php:508
+msgid "Title"
+msgstr "Tytuł"
+
+#: ../external-videos.php:509
+msgid "Thumbnail"
+msgstr "Miniatura"
+
+#: ../external-videos.php:510
+msgid "Host"
+msgstr "Strona"
+
+#: ../external-videos.php:511
+msgid "Duration"
+msgstr "Czas trwania"
+
+#: ../external-videos.php:512
+msgid "Published"
+msgstr "Opublikowano"
+
+#: ../external-videos.php:513
+msgid "Attached to"
+msgstr "Załączony do"
+
+#: ../external-videos.php:514
+msgid "Tags"
+msgstr "Tagi"
+
+#: ../external-videos.php:515
+msgid "Comments"
+msgstr "Komentarze"
+
+#: ../external-videos.php:559
+msgid "Y/m/d"
+msgstr "d-m-Y"
+
+#: ../external-videos.php:560
+msgid "Change"
+msgstr "Zmień"
+
+#: ../external-videos.php:564
+msgid "(Unattached)"
+msgstr "(Nie załączono)"
+
+#: ../external-videos.php:565
+msgid "Attach"
+msgstr "Załącz"
+
+#: ../external-videos.php:612
+msgid "External Video"
+msgstr "Film"
+
+#: ../external-videos.php:613
+msgid "pulls in videos from external hosting sites"
+msgstr "zaciąga filmy ze stron zewnętrznych, np. YouTube"

@@ -26,7 +26,7 @@
 class WP_Widget_SP_External_Videos extends WP_Widget {
 
   function WP_Widget_SP_External_Videos() {
-    $widget_ops = array('classname' => 'widget_recent_videos', 'description' => __( "The most recent external videos on your blog") );
+    $widget_ops = array('classname' => 'widget_recent_videos', 'description' => __( "The most recent external videos on your blog", 'external-videos') );
     $this->WP_Widget('recent-videos', __('Recent Videos'), $widget_ops);
     $this->alt_option_name = 'widget_recent_entries';
 
@@ -52,7 +52,7 @@ class WP_Widget_SP_External_Videos extends WP_Widget {
     <input id="<?php echo $this->get_field_id('number'); ?>" name="<?php echo $this->get_field_name('number'); ?>" type="text" value="<?php echo $number; ?>" size="3" /><br />
     <small><?php _e('(at most 15)'); ?></small></p>
 
-	<p><label for="<?php echo $this->get_field_id('thumbnail'); ?>"><?php _e('Show video thumbnails:'); ?></label>
+	<p><label for="<?php echo $this->get_field_id('thumbnail'); ?>"><?php _e('Show video thumbnails:', 'external-videos'); ?></label>
     <input id="<?php echo $this->get_field_id('thumbnail'); ?>" name="<?php echo $this->get_field_name('thumbnail'); ?>" type="checkbox" <?php if ( $thumbnail ) { ?> checked <?php } ?>/></p>
     <?php
   }
@@ -85,7 +85,7 @@ class WP_Widget_SP_External_Videos extends WP_Widget {
     ob_start();
     extract($args);
 
-    $title = apply_filters('widget_title', empty($instance['title']) ? __('Recent Videos') : $instance['title'], $instance, $this->id_base);
+    $title = apply_filters('widget_title', empty($instance['title']) ? __('Recent Videos', 'external-videos') : $instance['title'], $instance, $this->id_base);
     if ( !$number = (int) $instance['number'] )
       $number = 10;
     else if ( $number < 1 )
