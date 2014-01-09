@@ -28,7 +28,7 @@
 add_filter('media_upload_tabs', 'sp_ev_add_media_upload_tab');
 function sp_ev_add_media_upload_tab($tabs) {
 
-    $tabs['external_videos'] = __('External Videos');
+    $tabs['external_videos'] = __('External Videos', 'external-videos');
 
     return $tabs;
 }
@@ -56,6 +56,7 @@ function sp_ev_media_upload_external_videos_form($errors) {
     global $wpdb, $wp_query, $wp_locale, $type, $tab, $post_mime_types;
 
     media_upload_header();
+    wp_enqueue_style( 'media' );
 
     $post_id = intval($_REQUEST['post_id']);
 
@@ -132,7 +133,7 @@ foreach ($arc_result as $arc_row) {
 ?>
 </select>
 <?php } ?>
-<input type="submit" id="post-query-submit" value="<?php echo esc_attr( __( 'Filter &#187;' ) ); ?>" class="button-secondary" />
+<?php submit_button( __( 'Filter &#187;' ), 'secondary', 'post-query-submit', false ); ?>
 
 </div>
 
@@ -162,7 +163,7 @@ jQuery(function($){
 <?php echo get_media_items(null, $errors); ?>
 </div>
 <p class="ml-submit">
-<input type="submit" class="button savebutton" name="save" value="<?php esc_attr_e( 'Save all changes' ); ?>" />
+<?php submit_button( __( 'Save all changes' ), 'button savebutton', 'save', false ); ?>
 <input type="hidden" name="post_id" id="post_id" value="<?php echo (int) $post_id; ?>" />
 </p>
 </form>
@@ -249,7 +250,7 @@ function do_attach($per_page) {
 
     if ( isset($_GET['attached']) && (int) $_GET['attached'] ) {
         $attached = (int) $_GET['attached'];
-        $message = sprintf( _n('Changed %d attachment.', 'Attached %d attachments.', $attached), $attached );
+        $message = sprintf( _n('Changed %d attachment.', 'Attached %d attachments.', $attached, 'external-videos'), $attached );
         $_SERVER['REQUEST_URI'] = remove_query_arg(array('attached'), $_SERVER['REQUEST_URI']);
         ?>
         <div id="message" class="updated"><p><strong><?php echo $message; ?></strong></p></div>
@@ -262,7 +263,7 @@ function do_attach($per_page) {
 
         $parent = &get_post($parent_id);
         if ( !current_user_can('edit_post', $parent_id) )
-            wp_die( __('You are not allowed to edit this post.') );
+            wp_die( __('You are not allowed to edit this video.', 'external-videos') );
 
         $attach = array();
         foreach( (array) $_GET['media'] as $att_id ) {

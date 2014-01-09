@@ -92,7 +92,7 @@ function sp_ev_fetch_vimeo_videos($author_id, $developer_key, $secret_key)
                                 false, 
                                 true);  
     }
-    catch (VimeoAPIException $e) {
+    catch (spEvVimeoAPIException $e) {
       echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
     }
 
