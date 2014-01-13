@@ -106,8 +106,8 @@ function sp_ev_display_gallery ($width, $height, $link) {
   //]]>
   </script>
   <div id="nav-above" class="navigation">
-    <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'twentyten' ) ); ?></div>
-    <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'twentyten' ) ); ?></div>
+    <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'external-videos' ) ); ?></div>
+    <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'external-videos' ) ); ?></div>
   </div><!-- #nav-above -->
   <?php // endif; ?>
 
@@ -174,7 +174,7 @@ function sp_ev_display_gallery ($width, $height, $link) {
             <?php
             if ($post->post_parent > 0) {
             ?>
-              <a href="<?php echo get_permalink($post->post_parent) ?>">Blog post related to this video</a>
+              <a href="<?php echo get_permalink($post->post_parent) ?>"><?php _e('Blog post related to this video', 'external-videos'); ?></a>
             <?php
             }
             ?>
@@ -182,7 +182,7 @@ function sp_ev_display_gallery ($width, $height, $link) {
             <?php
             if ($features_3_0) {
             ?>
-            <a href="<?php the_permalink() ?>">Video page</a>
+            <a href="<?php the_permalink(); ?>"><?php _e('Video page', 'external-videos'); ?></a>
             <?php
             }
             ?>
@@ -207,8 +207,8 @@ function sp_ev_display_gallery ($width, $height, $link) {
   <?php // if ( $wp_the_query->max_num_pages > 1 ) : ?>
     <br/>
     <div id="nav-below" class="navigation">
-      <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'twentyten' ) ); ?></div>
-      <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'twentyten' ) ); ?></div>
+      <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'external-videos' ) ); ?></div>
+      <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'external-videos' ) ); ?></div>
     </div><!-- #nav-below -->
   <?php // endif; ?>
   <?php

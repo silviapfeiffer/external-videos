@@ -3,8 +3,8 @@ Contributors: silviapfeiffer1, johnfjohnf
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
-Tested up to: 3.3.1
-Stable Tag: 0.14
+Tested up to: 3.8
+Stable Tag: 0.21
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
@@ -54,10 +54,12 @@ We use OEmbed. For DotSub we use the service of embed.ly.
 = What short codes are available? =
 
 The general shortcode is [external-videos], which creates a video gallery.
+
 You can also now specify [external-videos feature="embed"] to get just the latest video as a featured video and with all its embedding code.
+
 You can further specify [external-videos width="300" height="200"] if you want to change the width and the height of the embedded video.
-And you can specify [external-videos link="page"] if you want to get the links on the video
-gallery to link straight through to the video pages instead of providing an overlay.
+
+And you can specify [external-videos link="page"] if you want to get the links on the video gallery to link straight through to the video pages instead of providing an overlay.
 
 = How can I get a RSS feed URL for the external videos? =
 
@@ -76,6 +78,35 @@ You can add a link like this to your theme layout.
 7. screenshot-7.png : a video page as automatically created by the plugin
 
 == Changelog ==
+
+= 0.21 =
+* Enable choosing author for external video posts
+* Enable setting post status for external video posts
+* Enable setting post format for external video posts
+* Enable choosing video categories for external video posts
+* Don't remove manually created external-video pages
+
+= 0.20 =
+* applied patches from nowotny https://github.com/nowotny/external-videos/
+* fixed styling of "Add Media" dialog in admin section again
+* added localization support
+* added Polish translation file
+* added English translation file
+
+= 0.19 =
+* rename VimeoAPIException to spEvVimeoAPIException to avoid clash with other plugins
+
+= 0.18 =
+* checked support for WP 3.6.1
+
+= 0.17 =
+* bug fix on thumbnail option to sidebar widget
+
+= 0.16 =
+* added thumbnail option to sidebar widget
+
+= 0.15 =
+* fixed styling of "Add Media" dialog in admin section
 
 = 0.14 =
 * added bug fix contributed by Chris Jean to query post types
