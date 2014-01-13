@@ -21,8 +21,9 @@
 /// ***   Pulling Videos From Diverse Sites   *** ///
 
 
-function sp_ev_fetch_youtube_videos($author_id)
+function sp_ev_fetch_youtube_videos($author)
 {
+    $author_id = $author['author_id'];
 
     $url = "http://gdata.youtube.com/feeds/api/users/$author_id/uploads/";
     $date = date(DATE_RSS);
@@ -55,6 +56,10 @@ function sp_ev_fetch_youtube_videos($author_id)
                   $video['keywords']    = $mediagroup->get_keywords();
                   $video['thumbnail']   = $mediagroup->get_thumbnail();
                   $video['duration']    = $mediagroup->get_duration($convert = true);
+                  $video['ev_author']   = $author['ev_author'];
+                  $video['ev_category'] = $author['ev_category'];
+                  $video['ev_post_format'] = $author['ev_post_format'];
+                  $video['ev_post_status'] = $author['ev_post_status'];
                 }
             
                 // add $video to the end of $new_videos
@@ -70,8 +75,12 @@ function sp_ev_fetch_youtube_videos($author_id)
 }
 
 
-function sp_ev_fetch_vimeo_videos($author_id, $developer_key, $secret_key)
+function sp_ev_fetch_vimeo_videos($author)
 {
+  $author_id = $author['author_id'];
+  $developer_key = $author['developer_key'];
+  $secret_key = $author['secret_key'];
+
   $vimeo = new spEvPhpVimeo($developer_key, $secret_key);
   $per_page = 50;
   $date = date(DATE_RSS);
@@ -118,6 +127,10 @@ function sp_ev_fetch_vimeo_videos($author_id, $developer_key, $secret_key)
       }
       $video['thumbnail']   = $vid->thumbnails->thumbnail[0]->_content;
       $video['duration']    = sp_ev_sec2hms($vid->duration);
+      $video['ev_author']   = $author['ev_author'];
+      $video['ev_category'] = $author['ev_category'];
+      $video['ev_post_format'] = $author['ev_post_format'];
+      $video['ev_post_status'] = $author['ev_post_status'];
 
       // add $video to the end of $new_videos
       array_push($new_videos, $video);
@@ -130,8 +143,9 @@ function sp_ev_fetch_vimeo_videos($author_id, $developer_key, $secret_key)
   return $new_videos;
 }
 
-function sp_ev_fetch_dotsub_videos($author_id)
+function sp_ev_fetch_dotsub_videos($author)
 {
+    $author_id = $author['author_id'];
 
     $url = "http://dotsub.com/view/user/$author_id?page=0";
     $newlines = array("\t","\n","\r","\x20\x20","\0","\x0B",",");
@@ -185,6 +199,10 @@ function sp_ev_fetch_dotsub_videos($author_id)
             $duration_str = $metadata->find('li[class=first-metadataItem]',0)->find('h4',0)->plaintext;
             $duration_pcs = explode(" ", str_replace($newlines, "",$duration_str));
             $video['duration'] = $duration_pcs[1];
+            $video['ev_author']   = $author['ev_author'];
+            $video['ev_category'] = $author['ev_category'];
+            $video['ev_post_format'] = $author['ev_post_format'];
+            $video['ev_post_status'] = $author['ev_post_status'];
 
             // add $video to the end of $new_videos
             array_push($new_videos, $video);

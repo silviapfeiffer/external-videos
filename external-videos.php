@@ -62,6 +62,7 @@ function sp_ev_save_video($video) {
     // See if video exists
     $the_query = new WP_Query(array(
         'post_type' => 'external-videos',
+        'post_status' => 'any',
         'meta_key' => 'video_id',
         'meta_value' => $video['video_id']
     ));
@@ -73,9 +74,9 @@ function sp_ev_save_video($video) {
     }
 
     // put content together
-    $video_content .= '\n';
+    $video_content .= "\n";
     $video_content .= $video['videourl'];
-    $video_content .= '\n\n';
+    $video_content .= "\n\n";
     $video_content .= '<p>'.$video['description'].'</p>';
     $video_content .= '<p><small>';
     if ($video['category'] != '') {
@@ -90,17 +91,23 @@ function sp_ev_save_video($video) {
     // prepare post
     $video_post = array();
     $video_post['post_type']      = 'external-videos';
-    $video_post['post_title']     = $video['title'];
+    $video_post['post_title']     = $video['title'] . ' [Video]';
     $video_post['post_content']   = $video_content;
-    $video_post['post_status']    = 'publish';
-    $video_post['post_author']    = 1;
+    $video_post['post_status']    = $video['ev_post_status'];
+    $video_post['post_author']    = $video['ev_author'];
     $video_post['post_date']      = $video['published'];
     $video_post['tags_input']     = $video['keywords'];
     $video_post['post_mime_type'] = 'import';
 
     // save to DB
     $post_id = wp_insert_post($video_post);
+    $post = get_post( $post_id );
 
+    // set post format
+    if ( current_theme_supports( 'post-formats' ) &&
+         post_type_supports( $post->post_type, 'post-formats' )) {
+        set_post_format( $post, $video['ev_post_format'] );
+    }
     // add post meta
     add_post_meta($post_id, 'host_id',       $video['host_id']);
     add_post_meta($post_id, 'author_id',     $video['author_id']);
@@ -114,8 +121,7 @@ function sp_ev_save_video($video) {
     add_post_meta($post_id, 'description',   $video['description']);
 
     // category id & tag attribution
-    $category_id = get_cat_ID('External Videos', 'external-videos');
-    wp_set_post_categories($post_id, array($category_id));
+    wp_set_post_categories($post_id, $video['ev_category']);
     wp_set_post_tags($post_id, $video['keywords'], 'post_tag');
 
     return true;
@@ -125,7 +131,7 @@ function sp_ev_save_video($video) {
 // by Chris Jean, chris@ithemes.com
 add_filter( 'pre_get_posts', 'sp_ev_filter_query_post_type' );
 function sp_ev_filter_query_post_type( $query ) {
-    if ( $query->query_vars['suppress_filters'] || ( ! is_category() && ! is_tag() ) )
+    if ( ( isset($query->query_vars['suppress_filters']) && $query->query_vars['suppress_filters'] )  || ( ! is_category() && ! is_tag() ) )
         return $query;
    
     $post_type = get_query_var( 'post_type' );
@@ -157,6 +163,7 @@ function sp_ev_update_videos($authors) {
   $num_videos = 0;
   $video_ids = array();
   foreach ($current_videos as $video) {
+//echo print_r($video);
     array_push($video_ids, $video['video_id']);
     $is_new = sp_ev_save_video($video);
     if ($is_new) {
@@ -171,7 +178,7 @@ function sp_ev_update_videos($authors) {
   while($all_videos->have_posts()) {
     $old_video = $all_videos->next_post();
     $video_id  = get_post_meta($old_video->ID, 'video_id', true);
-    if (!in_array($video_id, $video_ids)) {
+    if ($video_id != NULL && !in_array($video_id, $video_ids)) {
       wp_delete_post($old_video->ID, false);
       $del_videos += 1;      
     }
@@ -185,19 +192,16 @@ function sp_ev_update_videos($authors) {
 
 function sp_ev_get_all_videos($authors) {
     $new_videos = array();
-
     foreach ($authors as $author) {
         switch ($author['host_id']) {
             case 'youtube':
-                $videos = sp_ev_fetch_youtube_videos($author['author_id']);
+                $videos = sp_ev_fetch_youtube_videos($author);
                 break;
             case 'vimeo':
-                $videos = sp_ev_fetch_vimeo_videos($author['author_id'],
-                                                  $author['developer_key'],
-                                                  $author['secret_key']);
+                $videos = sp_ev_fetch_vimeo_videos($author);
                 break;
             case 'dotsub':
-                $videos = sp_ev_fetch_dotsub_videos($author['author_id']);
+                $videos = sp_ev_fetch_dotsub_videos($author);
                 break;
         }
         // append $videos to the end of $new_videos
@@ -326,9 +330,9 @@ function sp_ev_settings_page() {
     $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
 
     // clean up entered data from surplus white space
-    $_POST['author_id'] = trim($_POST['author_id']);
-    $_POST['secret_key'] = trim($_POST['secret_key']);
-    $_POST['developer_key'] = trim($_POST['developer_key']);
+    $_POST['author_id'] = trim(sanitize_text_field($_POST['author_id']));
+    $_POST['secret_key'] = trim(sanitize_text_field($_POST['secret_key']));
+    $_POST['developer_key'] = trim(sanitize_text_field($_POST['developer_key']));
 
     if ($_POST['external_videos'] == 'Y' ) {
         if ($_POST['action'] == 'add_author') {
@@ -348,7 +352,11 @@ function sp_ev_settings_page() {
                 $options['authors'][] = array('host_id' => $_POST['host_id'], 
                                               'author_id' => $_POST['author_id'],
                                               'developer_key' => $_POST['developer_key'],
-                                              'secret_key' => $_POST['secret_key']);
+                                              'secret_key' => $_POST['secret_key'],
+                                              'ev_author' => $_POST['user'],
+                                              'ev_category' => $_POST['post_category'],
+                                              'ev_post_format' => $_POST['post_format'],
+                                              'ev_post_status' => $_POST['post_status']);
                 update_option('sp_external_videos_options', $options);
                 ?><div class="updated"><p><strong><?php echo __('Added author.', 'external-videos'); ?></strong></p></div><?php
             }
@@ -417,7 +425,7 @@ function sp_ev_settings_page() {
     }
     ?>
 
-    <h3><?php _e('Add Authors', 'external-videos'); ?></h3>
+    <h3><?php _e('Add Publishers', 'external-videos'); ?></h3>
     <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
         <input type="hidden" name="external_videos" value="Y" />
         <input type="hidden" name="action" value="add_author" />
@@ -431,16 +439,51 @@ function sp_ev_settings_page() {
             ?>
             </select>
         <p>
-            <?php _e('Author ID:', 'external-videos'); ?>
-            <input type="text" name="author_id" value="<?php echo $_POST['author_id'] ?>"/>
+            <?php _e('Publisher ID:', 'external-videos'); ?>
+            <input type="text" name="author_id" value="<?php echo sanitize_text_field($_POST['author_id']) ?>"/>
+            <?php _e('(the string in the URL behind the domain name)', 'external-videos')?>
         <p>
             <?php _e('Developer Key:', 'external-videos'); ?>
-            <input type="text" name="developer_key" value="<?php echo $_POST['developer_key'] ?>"/>
+            <input type="text" name="developer_key" value="<?php echo sanitize_text_field($_POST['developer_key']) ?>"/>
             <?php _e('(required for Vimeo, leave empty otherwise)', 'external-videos'); ?>
         <p>
             <?php _e('Secret Key:', 'external-videos'); ?>
-            <input type="text" name="secret_key" value="<?php echo $_POST['secret_key'] ?>"/>
+            <input type="text" name="secret_key" value="<?php echo sanitize_text_field($_POST['secret_key']) ?>"/>
             <?php _e('(required for Vimeo, leave empty otherwise)', 'external-videos'); ?>
+        </p>
+        <p>
+          <?php _e('Default WP User', 'external-videos'); ?>
+          <?php wp_dropdown_users(); ?>
+        </p>
+        <p>
+            <?php _e('Default Post Category'); ?>
+            <?php $selected_cats = array( get_cat_ID('External Videos', 'external-videos') ); ?>
+            <ul style="padding-left:20px;">
+            <?php wp_category_checklist(0, 0, $selected_cats, false, null, true); ?>
+            </ul>
+        </p>
+        <p>
+            <?php _e('Default Post Format'); ?>
+            <?php
+            $post_formats = get_post_format_strings();
+            unset( $post_formats['video'] );
+            ?>
+            <select name="post_format" id="ev_post_format">
+              <option value="video"><?php echo get_post_format_string( 'video' ); ?></option>
+            <?php foreach ( $post_formats as $format_slug => $format_name ): ?>
+              <option<?php selected( get_option( 'post_format' ), $format_slug ); ?> value="<?php echo esc_attr( $format_slug ); ?>"><?php echo esc_html( $format_name ); ?></option>
+            <?php endforeach; ?>
+            </select>
+        </p>
+        <p>
+          <?php _e('Set Post Status', 'external-videos'); ?>
+          <select name='post_status' id='ev_post_status'>
+            <option value='publish' selected><?php _e('Published') ?></option>
+            <option value='pending'><?php _e('Pending Review') ?></option>
+            <option value='draft'><?php _e('Draft') ?></option>
+            <option value='private'><?php _e('Privately Published') ?></option>
+            <option value='future'><?php _e('Scheduled') ?></option>
+          </select>
         </p>
         <p class="submit">
             <input type="submit" name="Submit" value="<?php _e('Add new author', 'external-videos'); ?>" />
@@ -494,7 +537,7 @@ function sp_ev_settings_page() {
 
 add_action('admin_menu', 'sp_external_videos_options');
 function sp_external_videos_options() {
-  add_options_page(__('External Videos Settings', 'external-videos'), __('External Videos', 'external-videos'), 10, __FILE__, 'sp_ev_settings_page');
+  add_options_page(__('External Videos Settings', 'external-videos'), __('External Videos', 'external-videos'), 'edit_posts', __FILE__, 'sp_ev_settings_page');
 }
 
 
@@ -615,8 +658,11 @@ function sp_external_videos_init() {
         'capability_type' => 'post',
         'hierarchical'    => false,
         'query_var'       => false,
-        'supports'        => array('title', 'editor', 'author', 'thumbnail', 'excerpts', 'custom-fields', 'comments', 'revisions', 'excerpt'),
-        'taxonomies'      => array('post_tag', 'category')
+        'supports'        => array('title', 'editor', 'author', 'thumbnail', 'excerpts', 'custom-fields', 'comments', 'revisions', 'excerpt', 'post-formats'),
+        'taxonomies'      => array('post_tag', 'category'),
+        'has_archive'       => true,
+        'rewrite'           => array('slug' => 'external-videos'),
+        'yarpp_support'     => true
     ));
 
     // Oembed support for dotsub
