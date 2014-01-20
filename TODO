@@ -15,7 +15,8 @@
 - Change the publication date of the post to be the date of the publication of the video and not the date of the import
 - Add tags from videos to post tags (well, this works, but a bug on youtube does not expose keywords)
 - Allow installer to configure the videos custom post types slug, e.g. from  website/external-videos/ to website/videos/ (might be identical to category change)
-- Add support for Blip & Dailymotion & Wistia
+- Add support for Blip & Dailymotion
+- Don't automatically delete videos when deleted on host site
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode, see http://wordpress.org/support/topic/plugin-external-videos-different-authot-for-each-page?replies=2
