@@ -56,11 +56,11 @@ function sp_ev_fetch_youtube_videos($author)
                   $video['keywords']    = $mediagroup->get_keywords();
                   $video['thumbnail']   = $mediagroup->get_thumbnail();
                   $video['duration']    = $mediagroup->get_duration($convert = true);
-                  $video['ev_author']   = $author['ev_author'];
-                  $video['ev_category'] = $author['ev_category'];
-                  $video['ev_post_format'] = $author['ev_post_format'];
-                  $video['ev_post_status'] = $author['ev_post_status'];
                 }
+                $video['ev_author']   = $author['ev_author'];
+                $video['ev_category'] = $author['ev_category'];
+                $video['ev_post_format'] = $author['ev_post_format'];
+                $video['ev_post_status'] = $author['ev_post_status'];
             
                 // add $video to the end of $new_videos
                 array_push($new_videos, $video);
@@ -72,7 +72,7 @@ function sp_ev_fetch_youtube_videos($author)
     }
 
     return $new_videos;
-}
+} // end sp_ev_fetch_youtube_videos()
 
 
 function sp_ev_fetch_vimeo_videos($author)
@@ -141,7 +141,8 @@ function sp_ev_fetch_vimeo_videos($author)
   } while ($videofeed->videos->on_this_page == $per_page);
 
   return $new_videos;
-}
+} // end sp_ev_fetch_vimeo_videos()
+
 
 function sp_ev_fetch_dotsub_videos($author)
 {
@@ -217,6 +218,85 @@ function sp_ev_fetch_dotsub_videos($author)
         }
     }
     return $new_videos;
-}
+} // end sp_ev_fetch_dotsub_videos()
+
+
+function sp_ev_fetch_wistia_videos($author)
+{
+  $author_id = $author['author_id'];
+  $developer_key = $author['developer_key'];
+
+  $url = "https://api.wistia.com/v1/medias.json";
+  $url .= '?sort_by=created&sort_direction=1';
+  $new_videos = array();
+
+  // set other options
+  $per_page = 100;	// max results Wistia will return per page
+  $max_pages_limit = 12;	// max number of pages to retrieve (to prevent infinite loop)
+  $wistia_default_image_size = '100x60';	// do not change, this is correct as of 10/2013
+  $wistia_requested_image_size = '180x135';
+
+  // loop through all author videos
+  $page = 1;	// Wistia video results pages begin with 1
+
+  while ($url != NULL) {
+    $wistia_url = $url . "&page=$page";
+
+    // send request; wistia is slow, so add extra long timeout
+    $headers = array( 'Authorization' => 'Basic ' . base64_encode( "api:$developer_key" ) );
+    $result = wp_remote_get( $wistia_url, array ( 'headers' => $headers, 'timeout' => 25 ) );
+
+    // return on error
+    if (!$result || is_wp_error( $result ) || preg_match('/^[45]/', $result['response']['code'])  ) {
+        return $new_videos;
+    }
+
+    // get list of videos
+    $videofeed = json_decode($result['body']);
+    $length = count($videofeed);
+
+    // loop through videos returned & extract fields
+    foreach ($videofeed as $vid) {
+      $video = array();
+      $video['host_id']     = 'wistia';
+      $video['author_id']   = strtolower($author_id);
+      $video['video_id']    = $vid->hashed_id;
+      $video['title']       = $vid->name;
+      $video['description'] = $vid->description;
+      $video['authorname']  = $author_id;
+      // wistia with activated oembed: http://wistia.com/doc/wordpress#using_the_oembed_embed_code
+      $video['videourl']    = "http://$author_id.wistia.com/medias/" . $vid->hashed_id . "?embedType=iframe&videoWidth=640";
+
+      $video['published']   = date("Y-m-d H:i:s", strtotime($vid->created));
+      $video['author_url']  = "http://$author_id.wistia.com";
+
+      $thumbnail_url	= $vid->thumbnail->url;
+      // check for default "not found" thumbnail (default_100x60.gif)
+      if (substr_count($thumbnail_url, 'default_') == 0) {
+        // replace default image size with specifi size we require
+        $thumbnail_url = str_replace($wistia_default_image_size, $wistia_requested_image_size, $thumbnail_url);
+      }
+      $video['thumbnail'] = $thumbnail_url;
+      $video['duration']    = $vid->duration;
+      $video['ev_author']   = $author['ev_author'];
+      $video['ev_category'] = $author['ev_category'];
+      $video['ev_post_format'] = $author['ev_post_format'];
+      $video['ev_post_status'] = $author['ev_post_status'];
+
+      // add $video to the end of $new_videos array
+      array_push($new_videos, $video);
+    }
+
+    // next page
+    if ($length > 0) {
+      $page += 1;
+    } else {
+      $url = NULL;
+    }
+
+  }
+  return $new_videos;
+
+} // end sp_ev_fetch_wistia_videos()
 
 ?>

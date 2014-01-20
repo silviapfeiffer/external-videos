@@ -77,7 +77,7 @@ function sp_ev_save_video($video) {
     $video_content .= "\n";
     $video_content .= $video['videourl'];
     $video_content .= "\n\n";
-    $video_content .= '<p>'.$video['description'].'</p>';
+    $video_content .= '<p>'.trim($video['description']).'</p>';
     $video_content .= '<p><small>';
     if ($video['category'] != '') {
       $video_content .= __('<i>Category:</i>', 'external-videos') . ' ' .$video['category'];
@@ -91,7 +91,7 @@ function sp_ev_save_video($video) {
     // prepare post
     $video_post = array();
     $video_post['post_type']      = 'external-videos';
-    $video_post['post_title']     = $video['title'] . ' [Video]';
+    $video_post['post_title']     = $video['title'];
     $video_post['post_content']   = $video_content;
     $video_post['post_status']    = $video['ev_post_status'];
     $video_post['post_author']    = $video['ev_author'];
@@ -108,6 +108,7 @@ function sp_ev_save_video($video) {
          post_type_supports( $post->post_type, 'post-formats' )) {
         set_post_format( $post, $video['ev_post_format'] );
     }
+
     // add post meta
     add_post_meta($post_id, 'host_id',       $video['host_id']);
     add_post_meta($post_id, 'author_id',     $video['author_id']);
@@ -118,7 +119,9 @@ function sp_ev_save_video($video) {
     add_post_meta($post_id, 'thumbnail_url', $video['thumbnail']);
     // Cheat here with a dummy image so we can show thumbnails properly
     add_post_meta($post_id, '_wp_attached_file', 'dummy.png');
-    add_post_meta($post_id, 'description',   $video['description']);
+    add_post_meta($post_id, 'description',   trim($video['description']));
+    // video embed code
+    add_post_meta($post_id, 'embed_code', sp_ev_embed_code($video['host_id'], $video['video_id']));
 
     // category id & tag attribution
     wp_set_post_categories($post_id, $video['ev_category']);
@@ -163,7 +166,6 @@ function sp_ev_update_videos($authors) {
   $num_videos = 0;
   $video_ids = array();
   foreach ($current_videos as $video) {
-//echo print_r($video);
     array_push($video_ids, $video['video_id']);
     $is_new = sp_ev_save_video($video);
     if ($is_new) {
@@ -190,6 +192,29 @@ function sp_ev_update_videos($authors) {
   return $num_videos;
 }
 
+function sp_ev_embed_code($site, $video_id) {
+  $width = 560;
+  $height = 315;
+  $url = "";
+  switch ($site) {
+    case 'youtube':
+      $url = "//www.youtube.com/embed/$video_id";
+      break;
+    case 'vimeo':
+      $url = "//player.vimeo.com/video/$video_id";
+      break;
+    case 'dotsub':
+      $url = "//dotsub.com/media/$video_id/embed/";
+      break;
+    case 'wistia':
+      $url = "//fast.wistia.net/embed/iframe/$video_id";
+      break;
+    default:
+      return "";
+  }
+  return "<iframe src='$url' frameborder='0' width='$width' height='$height' allowfullscreen></iframe>";
+}
+
 function sp_ev_get_all_videos($authors) {
     $new_videos = array();
     foreach ($authors as $author) {
@@ -203,9 +228,14 @@ function sp_ev_get_all_videos($authors) {
             case 'dotsub':
                 $videos = sp_ev_fetch_dotsub_videos($author);
                 break;
+            case 'wistia':
+                $videos = sp_ev_fetch_wistia_videos($author);
+                break;
         }
         // append $videos to the end of $new_videos
-        array_splice($new_videos, count($new_array), 0, $videos);
+        if ($videos) {
+          array_splice($new_videos, count($new_array), 0, $videos);
+        }
     }
 
     return $new_videos;
@@ -238,8 +268,9 @@ function sp_ev_feed_request($qv) {
 
 /// ***   Admin Settings Page   *** ///
 
-function sp_ev_remote_author_exists($host_id, $author_id) {
+function sp_ev_remote_author_exists($host_id, $author_id, $developer_key) {
     $url = null;
+    $args = array();
     switch ($host_id) {
         case 'youtube':
             $url = "http://www.youtube.com/$author_id";
@@ -250,16 +281,31 @@ function sp_ev_remote_author_exists($host_id, $author_id) {
         case 'dotsub':
             $url = "http://dotsub.com/view/user/$author_id";
             break;
+        case 'wistia':
+            $url = "https://api.wistia.com/v1/account.json";
+            $headers = array( 'Authorization' => 'Basic ' . base64_encode( "api:$developer_key" ) );
+            $args['headers'] = $headers;
+            break;
     }
-    $headers = wp_remote_request($url);
-    
-    if( is_wp_error( $headers ) ) {
+    $result = wp_remote_request($url, $args);
+
+    if( is_wp_error( $result ) ) {
       // return false on error
       return false;
     }
 
-    if (!$headers || preg_match('/^[45]/', $headers['response']['code'])  ) {
+    if (!$result || preg_match('/^[45]/', $result['response']['code'])  ) {
         return false;
+    }
+
+    // for wistia: also check that api key belongs to user account
+    if ($host_id == 'wistia') {
+      $userUrl = json_decode($result['body'])->url;
+      $expectUrl = "http://$author_id.wistia.com";
+      if ($userUrl != $expectUrl) {
+        return false;
+      }
+      echo "<div class='updated'><p><strong>Wistia account: make sure to <a href='http://wistia.com/doc/wordpress#using_the_oembed_embed_code'>activate oEmbed</a>.</strong></p></div>";
     }
 
     return true;
@@ -285,6 +331,10 @@ function sp_ev_authorization_exists($host_id, $developer_key, $secret_key) {
           }
       case 'dotsub':
           return true;
+      case 'wistia':
+          if ($developer_key == "") {
+            return false;
+          }
   }
   
   return true;
@@ -323,6 +373,7 @@ function sp_ev_settings_page() {
         'youtube' => 'YouTube',
         'vimeo'   => 'Vimeo',
         'dotsub'  => 'DotSub',
+        'wistia'  => 'Wistia'
     );
 
     $raw_options = get_option('sp_external_videos_options');
@@ -342,11 +393,11 @@ function sp_ev_settings_page() {
             elseif (sp_ev_local_author_exists($_POST['host_id'], $_POST['author_id'], $options['authors'])) {
                 ?><div class="error"><p><strong><?php echo __('Author already exists.', 'external-videos'); ?></strong></p></div><?php
             }
-            elseif (!sp_ev_remote_author_exists($_POST['host_id'], $_POST['author_id'])) {
-                ?><div class="error"><p><strong><?php echo __('Invalid author.', 'external-videos'); ?></strong></p></div><?php
-            }
             elseif (!sp_ev_authorization_exists($_POST['host_id'],$_POST['developer_key'],$_POST['secret_key'])) {
               ?><div class="error"><p><strong><?php echo __('Missing developer key.', 'external-videos'); ?></strong></p></div><?php
+            }
+            elseif (!sp_ev_remote_author_exists($_POST['host_id'], $_POST['author_id'], $_POST['developer_key'])) {
+                ?><div class="error"><p><strong><?php echo __('Invalid author - check spelling.', 'external-videos'); ?></strong></p></div><?php
             }
             else {
                 $options['authors'][] = array('host_id' => $_POST['host_id'], 
@@ -441,11 +492,11 @@ function sp_ev_settings_page() {
         <p>
             <?php _e('Publisher ID:', 'external-videos'); ?>
             <input type="text" name="author_id" value="<?php echo sanitize_text_field($_POST['author_id']) ?>"/>
-            <?php _e('(the string in the URL behind the domain name)', 'external-videos')?>
+            <?php _e('(the identifier at the end of the URL; for wistia: domain prefix)', 'external-videos')?>
         <p>
             <?php _e('Developer Key:', 'external-videos'); ?>
             <input type="text" name="developer_key" value="<?php echo sanitize_text_field($_POST['developer_key']) ?>"/>
-            <?php _e('(required for Vimeo, leave empty otherwise)', 'external-videos'); ?>
+            <?php _e('(required for Vimeo/Wistia, leave empty otherwise)', 'external-videos'); ?>
         <p>
             <?php _e('Secret Key:', 'external-videos'); ?>
             <input type="text" name="secret_key" value="<?php echo sanitize_text_field($_POST['secret_key']) ?>"/>
