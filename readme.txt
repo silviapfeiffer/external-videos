@@ -80,7 +80,7 @@ You can add a link like this to your theme layout.
 == Changelog ==
 
 = 0.23 =
-* Added wistia site support
+* Added wistia site support with patches from Dan Baritchi
 * Added embed_code meta field for other plugins
 * Update todo file
 
