@@ -264,9 +264,7 @@ function sp_ev_fetch_wistia_videos($author)
       $video['title']       = $vid->name;
       $video['description'] = $vid->description;
       $video['authorname']  = $author_id;
-      // wistia with activated oembed: http://wistia.com/doc/wordpress#using_the_oembed_embed_code
-      $video['videourl']    = "http://$author_id.wistia.com/medias/" . $vid->hashed_id . "?embedType=iframe&videoWidth=640";
-
+      $video['videourl']    = "http://$author_id.wistia.com/medias/" . $vid->hashed_id;
       $video['published']   = date("Y-m-d H:i:s", strtotime($vid->created));
       $video['author_url']  = "http://$author_id.wistia.com";
 

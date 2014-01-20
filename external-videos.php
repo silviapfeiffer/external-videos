@@ -718,7 +718,8 @@ function sp_external_videos_init() {
 
     // Oembed support for dotsub
     wp_oembed_add_provider('#http://(www\.)?dotsub\.com/view/.*#i', 'http://api.embed.ly/v1/api/oembed', true);
-    
+    // Oembed support for wistia
+    wp_oembed_add_provider( '/https?:\/\/(.+)?(wistia\.(com|net)|wi\.st)\/.*/', 'http://fast.wistia.net/oembed', true );
 
     // enable thickbox use for gallery
     wp_enqueue_style('thickbox');
