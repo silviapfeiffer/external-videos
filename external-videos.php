@@ -469,7 +469,7 @@ function sp_ev_settings_page() {
             ?><div class="deleted"><p><strong><?php printf(__('Moved %d video into trash.', 'Moved %d videos into trash.', $num_videos, 'external-videos'), $num_videos); ?></strong></p></div><?php
         }
         elseif ($_POST['action'] == 'ev_settings') {
-            ?><div class="update"><p><strong><?php
+            ?><div class="updated"><p><strong><?php
 
             if ($_POST['ev-rss'] == "rss") {
               _e('Video pages will appear in RSS feed.','external-videos');
