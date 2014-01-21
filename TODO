@@ -1,7 +1,6 @@
 - allow pulling in playlists
 - allow filtering display based on a tag and channel (shortcode)
 - allow to add single videos, too
-- when removing an author, ask if their videos should be removed
 - update to videos of a single author only
 - add option to extract comments for videos from sites
 - introduce next/prev buttons into thickbox with videos
@@ -14,9 +13,8 @@
 - display date below latest video when using latest video shortcode like the full list shows
 - Change the publication date of the post to be the date of the publication of the video and not the date of the import
 - Add tags from videos to post tags (well, this works, but a bug on youtube does not expose keywords)
-- Allow installer to configure the videos custom post types slug, e.g. from  website/external-videos/ to website/videos/ (might be identical to category change)
+- Allow installer to configure the videos custom post types slug, e.g. from  website/external-videos/ to website/videos/ (rewrite slug in register_post_type)
 - Add support for Blip & Dailymotion
-- Don't automatically delete videos when deleted on host site
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode, see http://wordpress.org/support/topic/plugin-external-videos-different-authot-for-each-page?replies=2

@@ -4,7 +4,7 @@
  * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
  * Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
  * Author: Silvia Pfeiffer
- * Version: 0.23
+ * Version: 0.24
  * Author URI: http://www.gingertech.net/
  * License: GPL2
  */
@@ -30,7 +30,7 @@
   @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
   @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    0.23
+  @version    0.24
   @link       http://wordpress.org/extend/plugins/external-videos/
 
 */
@@ -98,6 +98,7 @@ function sp_ev_save_video($video) {
     $video_post['post_date']      = $video['published'];
     $video_post['tags_input']     = $video['keywords'];
     $video_post['post_mime_type'] = 'import';
+    $video_post['post_excerpt']   = trim( strip_tags( $video['description'] ) );
 
     // save to DB
     $post_id = wp_insert_post($video_post);
@@ -134,7 +135,7 @@ function sp_ev_save_video($video) {
 // by Chris Jean, chris@ithemes.com
 add_filter( 'pre_get_posts', 'sp_ev_filter_query_post_type' );
 function sp_ev_filter_query_post_type( $query ) {
-    if ( ( isset($query->query_vars['suppress_filters']) && $query->query_vars['suppress_filters'] )  || ( ! is_category() && ! is_tag() ) )
+    if ( ( isset($query->query_vars['suppress_filters']) && $query->query_vars['suppress_filters'] )  || ( ! is_category() && ! is_tag() && ! is_author() ) )
         return $query;
    
     $post_type = get_query_var( 'post_type' );
@@ -157,7 +158,7 @@ function sp_ev_filter_query_post_type( $query ) {
     return $query;
 }
 
-function sp_ev_update_videos($authors) {
+function sp_ev_update_videos($authors, $delete) {
   $current_videos = sp_ev_get_all_videos($authors);
   
   if (!$current_videos) return 0;
@@ -172,7 +173,12 @@ function sp_ev_update_videos($authors) {
         $num_videos++;
     }
   }
-  
+
+  // want to delete externally deleted videos?
+  if (!$delete) {
+    return $num_videos;
+  }
+
   // remove deleted videos
   $del_videos = 0;
   $all_videos = new WP_Query(array('post_type'  => 'external-videos',
@@ -181,12 +187,17 @@ function sp_ev_update_videos($authors) {
     $old_video = $all_videos->next_post();
     $video_id  = get_post_meta($old_video->ID, 'video_id', true);
     if ($video_id != NULL && !in_array($video_id, $video_ids)) {
-      wp_delete_post($old_video->ID, false);
+      $post = get_post( $query_video->ID );
+      $post->post_status = 'trash';
+      wp_update_post($post);
+      // WP thinks it can just delete it and not move it to trash
+      // if below worked, it could replace above three lines of code
+      //wp_delete_post($old_video->ID, false);
       $del_videos += 1;      
     }
   }
   if ($del_videos > 0) {
-    echo sprintf(_n('Note: %d video was deleted on external host and thus removed from this collection.', 'Note: %d videos were deleted on external host and thus removed from this collection.', $del_videos, 'external-videos'), $del_videos);
+    echo sprintf(_n('Note: %d video was deleted on external host and moved to trash in this collection.', 'Note: %d videos were deleted on external host and moved to trash in this collection.', $del_videos, 'external-videos'), $del_videos);
   }
   
   return $num_videos;
@@ -247,7 +258,9 @@ function sp_ev_delete_videos() {
     $ev_posts = new WP_Query(array('post_type' => 'external-videos',
                                    'nopaging' => 1));
     while ($ev_posts->have_posts()) : $ev_posts->the_post();
-      wp_delete_post(get_the_ID(), false);
+      $post = get_post( get_the_ID() );
+      $post->post_status = 'trash';
+      wp_update_post($post);
       $del_videos += 1;
     endwhile;
     
@@ -258,7 +271,7 @@ function sp_ev_delete_videos() {
 add_filter('request', 'sp_ev_feed_request');
 function sp_ev_feed_request($qv) {
   $raw_options = get_option('sp_external_videos_options');
-  $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
+  $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false, 'delete' => true) : $raw_options;
   if ($options['rss'] == true) {
   	if (isset($qv['feed']) && !isset($qv['post_type']))
   		$qv['post_type'] = array('external-videos', 'post');
@@ -378,7 +391,7 @@ function sp_ev_settings_page() {
 
     $raw_options = get_option('sp_external_videos_options');
 
-    $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
+    $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false, 'delete' => true) : $raw_options;
 
     // clean up entered data from surplus white space
     $_POST['author_id'] = trim(sanitize_text_field($_POST['author_id']));
@@ -434,7 +447,9 @@ function sp_ev_settings_page() {
                   $query_video = $author_posts->next_post();
                   $host = get_post_meta($query_video->ID, 'host_id', true);
                   if ($host == $_POST['host_id']) {
-                    wp_delete_post($query_video->ID, false);
+                    $post = get_post( $query_video->ID );
+                    $post->post_status = 'trash';
+                    wp_update_post($post);
                     $del_videos += 1;
                   }
                 }
@@ -442,26 +457,34 @@ function sp_ev_settings_page() {
                 update_option('sp_external_videos_options', $options);
                 unset($_POST['host_id'], $_POST['author_id']);
 
-                ?><div class="updated"><p><strong><?php printf(__('Deleted author and its %d video.', 'Deleted author and his %d videos.', $del_videos, 'external-videos'), $del_videos); ?></strong></p></div><?php
+                ?><div class="updated"><p><strong><?php printf(__('Deleted author and moved its %d video to trash.', 'Deleted author and its %d videos to trash.', $del_videos, 'external-videos'), $del_videos); ?></strong></p></div><?php
             }
         }
         elseif ($_POST['action'] == 'sp_ev_update_videos') {
-            $num_videos = sp_ev_update_videos($options['authors']);
+            $num_videos = sp_ev_update_videos($options['authors'], $options['delete']);
             ?><div class="updated"><p><strong><?php printf(__('Found %d video.', 'Found %d videos.', $num_videos, 'external-videos'), $num_videos); ?></strong></p></div><?php
         }
         elseif ($_POST['action'] == 'sp_ev_delete_videos') {
             $num_videos = sp_ev_delete_videos();
-            ?><div class="deleted"><p><strong><?php printf(__('Deleted %d video.', 'Deleted %d videos.', $num_videos, 'external-videos'), $num_videos); ?></strong></p></div><?php
+            ?><div class="deleted"><p><strong><?php printf(__('Moved %d video into trash.', 'Moved %d videos into trash.', $num_videos, 'external-videos'), $num_videos); ?></strong></p></div><?php
         }
         elseif ($_POST['action'] == 'ev_settings') {
             ?><div class="update"><p><strong><?php
-            
+
             if ($_POST['ev-rss'] == "rss") {
-              _e('Added video pages to RSS feed.','external-videos');
+              _e('Video pages will appear in RSS feed.','external-videos');
               $options['rss'] = true;
             } else {
-              _e('Removed video pages from RSS feed.','external-videos');
+              _e('Video pages will not appear in RSS feed.','external-videos');
               $options['rss'] = false;
+            }
+            ?><br/><?php
+            if ($_POST['ev-delete'] == "delete") {
+              _e('Externally removed videos will be trashed.','external-videos');
+              $options['delete'] = true;
+            } else {
+              _e('Externally removed videos will be kept.','external-videos');
+              $options['delete'] = false;
             }
             update_option('sp_external_videos_options', $options);
             ?></strong></p></div><?php
@@ -545,13 +568,17 @@ function sp_ev_settings_page() {
     <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
       <input type="hidden" name="external_videos" value="Y" />
       <input type="hidden" name="action" value="ev_settings" />
+      <?php
+      $ev_rss = $options['rss'];
+      $ev_del = $options['delete'];
+      ?>
       <p>
-        <?php
-        $ev_rss = $options['rss'];
-        ?>
-        
         <input type="checkbox" name="ev-rss" value="rss" <?php if ($ev_rss == true) echo "checked"; ?>/>
         <?php _e('Add video posts to Website RSS feed', 'external-videos'); ?>
+      </p>
+      <p>
+        <input type="checkbox" name="ev-delete" value="delete" <?php if ($ev_del == true) echo "checked"; ?>/>
+        <?php _e('Move videos locally to trash when deleted on external site', 'external-videos'); ?>
       </p>
       <p class="submit">
           <input type="submit" name="Submit" value="<?php _e('Save'); ?>" />
@@ -683,8 +710,8 @@ function sp_ev_deactivation() {
 add_action('ev_daily_event', 'sp_ev_daily_function');
 function sp_ev_daily_function() {
   $raw_options = get_option('sp_external_videos_options');
-  $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false) : $raw_options;
-  sp_ev_update_videos($options['authors']);
+  $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false, 'delete' => true) : $raw_options;
+  sp_ev_update_videos($options['authors'], $options['delete']);
 }
 
 
@@ -709,7 +736,7 @@ function sp_external_videos_init() {
         'capability_type' => 'post',
         'hierarchical'    => false,
         'query_var'       => false,
-        'supports'        => array('title', 'editor', 'author', 'thumbnail', 'excerpts', 'custom-fields', 'comments', 'revisions', 'excerpt', 'post-formats'),
+        'supports'        => array('title', 'editor', 'author', 'thumbnail', 'excerpt', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'post-formats'),
         'taxonomies'      => array('post_tag', 'category'),
         'has_archive'       => true,
         'rewrite'           => array('slug' => 'external-videos'),
