@@ -25,9 +25,9 @@
 
 class WP_Widget_SP_External_Videos extends WP_Widget {
 
-  function WP_Widget_SP_External_Videos() {
+  function __construct() {
     $widget_ops = array('classname' => 'widget_recent_videos', 'description' => __( "The most recent external videos on your blog", 'external-videos') );
-    $this->WP_Widget('recent-videos', __('Recent Videos'), $widget_ops);
+    parent::__construct('recent-videos', __('Recent Videos'), $widget_ops);
     $this->alt_option_name = 'widget_recent_entries';
 
     add_action( 'save_post', array(&$this, 'flush_widget_cache') );
