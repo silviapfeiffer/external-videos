@@ -60,6 +60,7 @@ function sp_external_videos_gallery($atts, $content = null) {
     if ( have_posts() ) {
       // extract the video for the feature
       the_post();
+
       $videourl  = get_post_meta(get_the_ID(), 'video_url');
       $video = trim($videourl[0]);
       // get oEmbed code

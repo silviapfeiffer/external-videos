@@ -32,7 +32,11 @@ function sp_ev_fetch_youtube_videos($author)
     // loop through all feed pages
     while ($url != NULL) {
         $videofeed = fetch_feed($url);
-        $length = $videofeed->get_item_quantity();
+        if (!is_wp_error( $videofeed )) {
+            $length = $videofeed->get_item_quantity();
+        } else {
+            echo $videofeed->get_error_message();
+        }
         if ($length != 0) {
             $items = $videofeed->get_items(0,$length);
 

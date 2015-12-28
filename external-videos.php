@@ -735,7 +735,7 @@ function sp_external_videos_init() {
         'show_ui'         => true,
         'capability_type' => 'post',
         'hierarchical'    => false,
-        'query_var'       => false,
+        'query_var'       => true,
         'supports'        => array('title', 'editor', 'author', 'thumbnail', 'excerpt', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'post-formats'),
         'taxonomies'      => array('post_tag', 'category'),
         'has_archive'       => true,
@@ -752,6 +752,18 @@ function sp_external_videos_init() {
     wp_enqueue_style('thickbox');
     wp_enqueue_script('thickbox');
 }
+
+/// *** Flush rewrite on activiation
+register_activation_hook( __FILE__, 'my_rewrite_flush' );
+function my_rewrite_flush() {
+    // First, we "add" the custom post type via the above written function.
+    sp_external_videos_init();
+
+    // ATTENTION: This is *only* done during plugin activation hook in this example!
+    // You should *NEVER EVER* do this on every page load!!
+    flush_rewrite_rules();
+}
+
 
 /// *** Setup of Videos Gallery: implemented in ev-media-gallery.php *** ///
 add_shortcode('external-videos', 'sp_external_videos_gallery');
