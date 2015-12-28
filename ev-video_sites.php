@@ -25,35 +25,32 @@ function sp_ev_fetch_youtube_videos($author)
 {
     $author_id = $author['author_id'];
 
+    // setup YouTube API access
     $client = new Google_Client();
     $client->setDeveloperKey($author['developer_key']);
     $client->setApplicationName($author['secret_key']);
 
+    // get channel ID for author
     $service = new Google_Service_YouTube($client);
-
     $results = $service->channels->listChannels('contentDetails',
                 array('forUsername' => $author_id ));
-
     $channel_id = $results->items[0]->contentDetails->relatedPlaylists->uploads;
 
-    echo $channel_id;
-
+    // get first lot of 50 videos
     $results = $service->playlistItems->listPlaylistItems('contentDetails,snippet',
-                array('playlistId' => $channel_id ));
-
+                array('playlistId' => $channel_id,
+                      'maxResults' => 50 )
+                );
 
     print '<pre>';
     print_r ($results);
     print '</pre>';
     
-    return;
-
-    $url = "http://gdata.youtube.com/feeds/api/users/$author_id/uploads/";
     $date = date(DATE_RSS);
     $new_videos = array();
 
     // loop through all feed pages
-    while ($url != NULL) {
+    while ($results != NULL) {
         $videofeed = fetch_feed($url);
         if (!is_wp_error( $videofeed )) {
             $length = $videofeed->get_item_quantity();
