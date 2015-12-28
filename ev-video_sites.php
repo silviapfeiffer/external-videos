@@ -25,6 +25,29 @@ function sp_ev_fetch_youtube_videos($author)
 {
     $author_id = $author['author_id'];
 
+    $client = new Google_Client();
+    $client->setDeveloperKey($author['developer_key']);
+    $client->setApplicationName($author['secret_key']);
+
+    $service = new Google_Service_YouTube($client);
+
+    $results = $service->channels->listChannels('contentDetails',
+                array('forUsername' => $author_id ));
+
+    $channel_id = $results->items[0]->contentDetails->relatedPlaylists->uploads;
+
+    echo $channel_id;
+
+    $results = $service->playlistItems->listPlaylistItems('contentDetails,snippet',
+                array('playlistId' => $channel_id ));
+
+
+    print '<pre>';
+    print_r ($results);
+    print '</pre>';
+    
+    return;
+
     $url = "http://gdata.youtube.com/feeds/api/users/$author_id/uploads/";
     $date = date(DATE_RSS);
     $new_videos = array();

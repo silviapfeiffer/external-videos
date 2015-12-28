@@ -48,7 +48,13 @@ require_once(WP_PLUGIN_DIR . '/external-videos/ev-video_sites.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/ev-widget.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/ev-shortcode.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/simple_html_dom.php');
+
+/// *** vendor includes
+
+set_include_path(WP_PLUGIN_DIR . '/external-videos/google-api-php-client/src/Google');
+require_once(WP_PLUGIN_DIR . '/external-videos/google-api-php-client/src/Google/autoload.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/vimeo_library.php');
+
 
 if ($features_3_0) {
     require_once(WP_PLUGIN_DIR . '/external-videos/ev-media-gallery.php');
@@ -519,11 +525,11 @@ function sp_ev_settings_page() {
         <p>
             <?php _e('Developer Key:', 'external-videos'); ?>
             <input type="text" name="developer_key" value="<?php echo sanitize_text_field($_POST['developer_key']) ?>"/>
-            <?php _e('(required for Vimeo/Wistia, leave empty otherwise)', 'external-videos'); ?>
+            <?php _e('(required for Vimeo/Wistia/YouTube, leave empty otherwise)', 'external-videos'); ?>
         <p>
-            <?php _e('Secret Key:', 'external-videos'); ?>
+            <?php _e('Secret Key/Application Name:', 'external-videos'); ?>
             <input type="text" name="secret_key" value="<?php echo sanitize_text_field($_POST['secret_key']) ?>"/>
-            <?php _e('(required for Vimeo, leave empty otherwise)', 'external-videos'); ?>
+            <?php _e('(required for Vimeo/YouTube, leave empty otherwise)', 'external-videos'); ?>
         </p>
         <p>
           <?php _e('Default WP User', 'external-videos'); ?>
