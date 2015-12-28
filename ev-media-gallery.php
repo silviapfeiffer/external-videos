@@ -141,7 +141,7 @@ foreach ($arc_result as $arc_row) {
 </div>
 </form>
 
-<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="ev-media-upload-form validate" id="library-form">
+<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="ev-media-upload-form" id="library-form">
 
 <?php wp_nonce_field('media-form'); ?>
 <?php //media_upload_form( $errors ); ?>
@@ -201,7 +201,7 @@ function external_videos_image_downsize($var, $id, $size) {
     // TODO provide a different thumbnail based on $size
 
     $id = (int) $id;
-    if ( !$video =& get_post( $id ) )
+    if ( !$video = get_post( $id ) )
         return false;
 
     if ( $video->post_type != 'external-videos' )
