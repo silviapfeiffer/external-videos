@@ -37,63 +37,53 @@ function sp_ev_fetch_youtube_videos($author)
     $channel_id = $results->items[0]->contentDetails->relatedPlaylists->uploads;
 
     // get first lot of 50 videos
-    $results = $service->playlistItems->listPlaylistItems('contentDetails,snippet',
-                array('playlistId' => $channel_id,
-                      'maxResults' => 50 )
-                );
 
-    print '<pre>';
-    print_r ($results);
-    print '</pre>';
+
     
     $date = date(DATE_RSS);
     $new_videos = array();
 
     // loop through all feed pages
-    while ($results != NULL) {
-        $videofeed = fetch_feed($url);
-        if (!is_wp_error( $videofeed )) {
-            $length = $videofeed->get_item_quantity();
-        } else {
-            echo $videofeed->get_error_message();
-        }
-        if ($length != 0) {
-            $items = $videofeed->get_items(0,$length);
+    $per_page = 50;
+    $pageToken = '';
+    do {
+      // fetch videos
+      $videofeed = $service->playlistItems->listPlaylistItems('snippet',
+                    array('playlistId' => $channel_id,
+                          'maxResults' => $per_page,
+                          'pageToken' => $pageToken,
+                          )
+                    );
 
-            for ($i = 0; $i < $length; $i++) {
-                // media:group mediaRSS subpart
-                $mediagroup = $items[$i]->get_enclosure();
+      foreach ($videofeed->items as $vid)
+      {
+        // extract fields
+        $video = array();
+        $video['host_id']     = 'youtube';
+        $video['author_id']   = strtolower($author_id);
+        $video['video_id']    = $vid->id;
+        $video['title']       = $vid->snippet->title;
+        $video['description'] = $vid->snippet->description;
+        $video['authorname']  = $vid->snippet->channelTitle;
+        $video['videourl']    = 'https://www.youtube.com/watch?v='.$vid->snippet->resourceId->videoId;
+        $video['published']   = date("Y-m-d H:i:s", strtotime($vid->snippet->publishedAt));
+        $video['author_url']  = "http://www.youtube.com/user/".$video['author_id'];
+        $video['category']    = '';
+        $video['keywords']    = array();
+        $video['thumbnail']   = $vid->snippet->thumbnails->default->url;
+        $video['duration']    = '';
+        $video['ev_author']   = $author['ev_author'];
+        $video['ev_category'] = $author['ev_category'];
+        $video['ev_post_format'] = $author['ev_post_format'];
+        $video['ev_post_status'] = $author['ev_post_status'];
 
-                // extract fields
-                $video = array();
-                $video['host_id']     = 'youtube';
-                $video['author_id']   = strtolower($author_id);
-                $video['video_id']    = preg_replace('/http:\/\/gdata.youtube.com\/feeds\/api\/videos\//', '', $items[$i]->get_id());
-                $video['title']       = $items[$i]->get_title();
-                $video['description'] = $items[$i]->get_content();
-                $video['authorname']  = $items[$i]->get_author()->get_name();
-                $video['videourl']    = preg_replace('/\&amp;feature=youtube_gdata/','', $items[$i]->get_link());
-                $video['published']   = date("Y-m-d H:i:s", strtotime($items[$i]->get_date()));
-                $video['author_url']  = "http://www.youtube.com/user/".$video['author_id'];
-                if ($mediagroup != NULL) {
-                  $video['category']    = $mediagroup->get_category()->get_label();
-                  $video['keywords']    = $mediagroup->get_keywords();
-                  $video['thumbnail']   = $mediagroup->get_thumbnail();
-                  $video['duration']    = $mediagroup->get_duration($convert = true);
-                }
-                $video['ev_author']   = $author['ev_author'];
-                $video['ev_category'] = $author['ev_category'];
-                $video['ev_post_format'] = $author['ev_post_format'];
-                $video['ev_post_status'] = $author['ev_post_status'];
-            
-                // add $video to the end of $new_videos
-                array_push($new_videos, $video);
-            }
-        }       
-        // next feed page, if available
-        $next_url = $videofeed->get_links($rel = 'next');
-        $url = $next_url[0];
-    }
+        // add $video to the end of $new_videos
+        array_push($new_videos, $video);
+
+      }
+      // next page
+      $pageToken = $videofeed->nextPageToken;
+    } while ($pageToken);
 
     return $new_videos;
 } // end sp_ev_fetch_youtube_videos()
