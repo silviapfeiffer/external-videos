@@ -4,13 +4,13 @@
  * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
  * Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
  * Author: Silvia Pfeiffer
- * Version: 0.24
+ * Version: 0.25
  * Author URI: http://www.gingertech.net/
  * License: GPL2
  */
 
 /*
-  Copyright 2010  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
+  Copyright 2010+  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@
   @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
   @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    0.24
+  @version    0.25
   @link       http://wordpress.org/extend/plugins/external-videos/
 
 */
