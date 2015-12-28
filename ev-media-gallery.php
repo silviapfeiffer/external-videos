@@ -62,6 +62,7 @@ function sp_ev_media_upload_external_videos_form($errors) {
 
     $form_action_url = admin_url("media-upload.php?type=$type&tab=external_videos&post_id=$post_id");
     $form_action_url = apply_filters('media_upload_form_url', $form_action_url, $type);
+    $form_class = 'media-upload-form validate';
 
     $_GET['paged'] = isset( $_GET['paged'] ) ? intval($_GET['paged']) : 0;
     if ( $_GET['paged'] < 1 )
@@ -81,8 +82,8 @@ function sp_ev_media_upload_external_videos_form($errors) {
 <input type="hidden" name="post_id" value="<?php echo (int) $post_id; ?>" />
 <input type="hidden" name="post_mime_type" value="<?php echo isset( $_GET['post_mime_type'] ) ? esc_attr( $_GET['post_mime_type'] ) : ''; ?>" />
 
-<p id="media-search" class="ev-search-box">
-    <label class="ev-screen-reader-text" for="media-search-input"><?php _e('Search Media');?>:</label>
+<p id="media-search" class="search-box">
+    <label class="screen-reader-text" for="media-search-input"><?php _e('Search Media');?>:</label>
     <input type="text" id="media-search-input" name="s" value="<?php the_search_query(); ?>" />
     <input type="submit" value="<?php esc_attr_e( 'Search Media' ); ?>" class="button" />
 </p>
@@ -133,7 +134,8 @@ foreach ($arc_result as $arc_row) {
 ?>
 </select>
 <?php } ?>
-<?php submit_button( __( 'Filter &#187;' ), 'secondary', 'post-query-submit', false ); ?>
+
+<?php submit_button( __( 'Filter &#187;' ), 'button', 'post-query-submit', false ); ?>
 
 </div>
 
@@ -141,7 +143,7 @@ foreach ($arc_result as $arc_row) {
 </div>
 </form>
 
-<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="ev-media-upload-form" id="library-form">
+<form enctype="multipart/form-data" method="post" action="<?php echo esc_attr($form_action_url); ?>" class="media-upload-form" id="library-form">
 
 <?php wp_nonce_field('media-form'); ?>
 <?php //media_upload_form( $errors ); ?>
@@ -151,21 +153,22 @@ foreach ($arc_result as $arc_row) {
 jQuery(function($){
     var preloaded = $(".media-item.preloaded");
     if ( preloaded.length > 0 ) {
-        preloaded.each(function(){prepareMediaItem({id:this.id.replace(/[^0-9]/g, '')},'');});
+        preloaded.each(function(){
+                    console.log(this.id);
+
+            prepareMediaItem({id:this.id.replace(/[^0-9]/g, '')},'');
+        });
         updateMediaForm();
     }
 });
+
 -->
 </script>
 
-<div id="ev-media-items">
+<div id="media-items">
 <?php add_filter('attachment_fields_to_edit', 'media_post_single_attachment_fields_to_edit', 10, 2); ?>
 <?php echo get_media_items(null, $errors); ?>
 </div>
-<p class="ml-submit">
-<?php submit_button( __( 'Save all changes' ), 'button savebutton', 'save', false ); ?>
-<input type="hidden" name="post_id" id="post_id" value="<?php echo (int) $post_id; ?>" />
-</p>
 </form>
 <?php
 }
