@@ -7,6 +7,8 @@
  * Version: 0.25
  * Author URI: http://www.gingertech.net/
  * License: GPL2
+ * Text Domain: external-videos
+ * Domain Path: /localization
  */
 
 /*
