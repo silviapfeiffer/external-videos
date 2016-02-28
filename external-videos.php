@@ -145,32 +145,32 @@ add_filter( 'pre_get_posts', 'sp_ev_filter_query_post_type' );
 function sp_ev_filter_query_post_type( $query ) {
     if ( ( isset($query->query_vars['suppress_filters']) && $query->query_vars['suppress_filters'] )  || ( ! is_category() && ! is_tag() && ! is_author() ) )
         return $query;
-   
+
     $post_type = get_query_var( 'post_type' );
-   
+
     if ( 'any' == $post_type )
         return $query;
-   
+
     if ( empty( $post_type ) ) {
         $post_type = 'any';
     }
     else {
         if ( ! is_array( $post_type ) )
             $post_type = array( $post_type );
-       
+
         $post_type[] = 'external-videos';
     }
-   
+
     $query->set( 'post_type', $post_type );
-   
+
     return $query;
 }
 
 function sp_ev_update_videos($authors, $delete) {
   $current_videos = sp_ev_get_all_videos($authors);
-  
+
   if (!$current_videos) return 0;
-  
+
   // save new videos & determine list of all current video_ids
   $num_videos = 0;
   $video_ids = array();
@@ -201,13 +201,13 @@ function sp_ev_update_videos($authors, $delete) {
       // WP thinks it can just delete it and not move it to trash
       // if below worked, it could replace above three lines of code
       //wp_delete_post($old_video->ID, false);
-      $del_videos += 1;      
+      $del_videos += 1;
     }
   }
   if ($del_videos > 0) {
     echo sprintf(_n('Note: %d video was deleted on external host and moved to trash in this collection.', 'Note: %d videos were deleted on external host and moved to trash in this collection.', $del_videos, 'external-videos'), $del_videos);
   }
-  
+
   return $num_videos;
 }
 
@@ -271,7 +271,7 @@ function sp_ev_delete_videos() {
       wp_update_post($post);
       $del_videos += 1;
     endwhile;
-    
+
     return $del_videos;
 }
 
@@ -357,14 +357,14 @@ function sp_ev_authorization_exists($host_id, $developer_key, $secret_key) {
             return false;
           }
   }
-  
+
   return true;
 }
 
 function sp_ev_settings_page() {
     // activate cron hook if not active
     sp_ev_activation();
-    
+
     wp_enqueue_script('jquery');
     ?>
     <form id="delete_author" method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>" style="display: none">
@@ -385,7 +385,7 @@ function sp_ev_settings_page() {
           jQuery('#delete_author').submit();
         }
     </script>
- 
+
     <div class="wrap">
         <h2><?php _e('External Videos Settings', 'external-videos'); ?></h2>
     <?php
@@ -421,7 +421,7 @@ function sp_ev_settings_page() {
                 ?><div class="error"><p><strong><?php echo __('Invalid author - check spelling.', 'external-videos'); ?></strong></p></div><?php
             }
             else {
-                $options['authors'][] = array('host_id' => $_POST['host_id'], 
+                $options['authors'][] = array('host_id' => $_POST['host_id'],
                                               'author_id' => $_POST['author_id'],
                                               'developer_key' => $_POST['developer_key'],
                                               'secret_key' => $_POST['secret_key'],
@@ -444,7 +444,7 @@ function sp_ev_settings_page() {
                     }
                 }
                 $options['authors'] = array_values($options['authors']);
-                
+
                 // also remove the author's videos from the posts table
                 $del_videos = 0;
                 $author_posts = new WP_Query(array('post_type'  => 'external-videos',
@@ -461,7 +461,7 @@ function sp_ev_settings_page() {
                     $del_videos += 1;
                   }
                 }
-                
+
                 update_option('sp_external_videos_options', $options);
                 unset($_POST['host_id'], $_POST['author_id']);
 
@@ -592,7 +592,7 @@ function sp_ev_settings_page() {
           <input type="submit" name="Submit" value="<?php _e('Save'); ?>" />
       </p>
     </form>
-    
+
     <h3><?php _e('Update Videos (newly added/deleted videos)', 'external-videos'); ?></h3>
     <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
         <input type="hidden" name="external_videos" value="Y" />
@@ -652,6 +652,9 @@ function sp_external_videos_custom_columns($column_name)
     $duration  = get_post_meta($post->ID, 'duration');
     $host      = get_post_meta($post->ID, 'host_id');
     $thumbnail = get_post_meta($post->ID, 'thumbnail_url');
+    if( is_array( $duration ) ) $duration = array_shift( $duration );
+    if( is_array( $host ) ) $host = array_shift( $host );
+    if( is_array( $thumbnail ) ) $thumbnail = array_shift( $thumbnail );
 
     switch($column_name) {
     case 'ID':
@@ -659,11 +662,11 @@ function sp_external_videos_custom_columns($column_name)
         break;
 
     case 'thumbnail':
-        echo "<img src='".$thumbnail[0]."' width='120px' height='90px'/>";
+        echo "<img src='".$thumbnail."' width='120px' height='90px'/>";
         break;
 
     case 'duration':
-        echo $duration[0];
+        echo $duration;
         break;
 
     case 'published':
@@ -671,7 +674,7 @@ function sp_external_videos_custom_columns($column_name)
         break;
 
     case 'host':
-        echo $host[0];
+        echo $host;
         break;
 
     case 'tags':
@@ -778,4 +781,3 @@ add_shortcode('external-videos', 'sp_external_videos_gallery');
 
 /// *** Setup of Widget: implemented in ev-widget.php file *** ///
 add_action('widgets_init', 'sp_external_videos_load_widget');
-
