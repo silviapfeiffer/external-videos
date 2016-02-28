@@ -53,7 +53,8 @@ require_once(WP_PLUGIN_DIR . '/external-videos/simple_html_dom.php');
 
 /// *** vendor includes
 
-set_include_path(WP_PLUGIN_DIR . '/external-videos/google-api-php-client/src/Google');
+$path = WP_PLUGIN_DIR . '/external-videos/google-api-php-client/src/Google';
+set_include_path(get_include_path() . PATH_SEPARATOR . $path);
 require_once(WP_PLUGIN_DIR . '/external-videos/google-api-php-client/src/Google/autoload.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/vimeo_library.php');
 
