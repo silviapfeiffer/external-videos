@@ -80,8 +80,7 @@ function sp_external_videos_gallery($atts, $content = null) {
       'post_type'      => 'external-videos',
       'post_status'    => 'publish',
     );
-    $old_params = $wp_query->query;
-    $params['paged'] = $old_params['paged'];
+    $params['paged'] = ( get_query_var('paged') ) ? get_query_var('paged') : 1;
     query_posts($params);
     
     // display the gallery
