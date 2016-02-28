@@ -465,7 +465,7 @@ function sp_ev_settings_page() {
                 update_option('sp_external_videos_options', $options);
                 unset($_POST['host_id'], $_POST['author_id']);
 
-                ?><div class="updated"><p><strong><?php printf(__('Deleted author and moved its %d video to trash.', 'Deleted author and its %d videos to trash.', $del_videos, 'external-videos'), $del_videos); ?></strong></p></div><?php
+                ?><div class="updated"><p><strong><?php printf(__('Deleted author and moved its %d video to trash.', 'Deleted author and moved its %d videos to trash.', $del_videos, 'external-videos'), $del_videos); ?></strong></p></div><?php
             }
         }
         elseif ($_POST['action'] == 'sp_ev_update_videos') {
