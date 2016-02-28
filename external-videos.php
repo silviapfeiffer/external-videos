@@ -82,7 +82,7 @@ function sp_ev_save_video($video) {
     }
 
     // put content together
-    $video_content .= "\n";
+    $video_content = "\n";
     $video_content .= $video['videourl'];
     $video_content .= "\n\n";
     $video_content .= '<p>'.trim($video['description']).'</p>';
@@ -253,7 +253,7 @@ function sp_ev_get_all_videos($authors) {
         }
         // append $videos to the end of $new_videos
         if ($videos) {
-          array_splice($new_videos, count($new_array), 0, $videos);
+          array_merge($new_videos, $videos);
         }
     }
 
@@ -402,11 +402,11 @@ function sp_ev_settings_page() {
     $options = $raw_options == "" ? array('version' => 1, 'authors' => array(), 'rss' => false, 'delete' => true) : $raw_options;
 
     // clean up entered data from surplus white space
-    $_POST['author_id'] = trim(sanitize_text_field($_POST['author_id']));
-    $_POST['secret_key'] = trim(sanitize_text_field($_POST['secret_key']));
-    $_POST['developer_key'] = trim(sanitize_text_field($_POST['developer_key']));
+    $_POST['author_id'] = isset($_POST['author_id']) ? trim(sanitize_text_field($_POST['author_id'])) : '';
+    $_POST['secret_key'] = isset($_POST['secret_key']) ? trim(sanitize_text_field($_POST['secret_key'])) : '';
+    $_POST['developer_key'] = isset($_POST['developer_key']) ? trim(sanitize_text_field($_POST['developer_key'])) : '';
 
-    if ($_POST['external_videos'] == 'Y' ) {
+    if (isset($_POST['external_videos']) && $_POST['external_videos'] == 'Y' ) {
         if ($_POST['action'] == 'add_author') {
             if (!array_key_exists($_POST['host_id'], $VIDEO_HOSTS)) {
                 ?><div class="error"><p><strong><?php echo __('Invalid video host.', 'external-videos'); ?></strong></p></div><?php
@@ -520,6 +520,7 @@ function sp_ev_settings_page() {
             }
             ?>
             </select>
+            <?php _e('(DotSub is currently broken)'); ?>
         <p>
             <?php _e('Publisher ID:', 'external-videos'); ?>
             <input type="text" name="author_id" value="<?php echo sanitize_text_field($_POST['author_id']) ?>"/>
