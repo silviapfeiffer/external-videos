@@ -36,7 +36,7 @@ class ev_html_dom_parser {
   // helper functions
   // -----------------------------------------------------------------------------
   // get html dom form file
-  function file_get_html() {
+  static function file_get_html() {
       $dom = new ev_simple_html_dom;
       $args = func_get_args();
       $dom->load(call_user_func_array('file_get_contents', $args), true);

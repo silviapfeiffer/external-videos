@@ -177,7 +177,7 @@ function sp_ev_fetch_dotsub_videos($author)
 
         $length = $length_pcs[3]-$length_pcs[1]+1;
         $current = $length_pcs[3];
-        $items = $length_pcs[5];
+        $items = isset($length_pcs[5]) ? $length_pcs[5] : 0;
 
         for ($i = 0; $i < $length; $i++) {
             // get video item at position i
