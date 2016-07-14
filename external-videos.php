@@ -254,7 +254,7 @@ function sp_ev_get_all_videos($authors) {
         }
         // append $videos to the end of $new_videos
         if ($videos) {
-          array_merge($new_videos, $videos);
+          $new_videos = array_merge($new_videos, $videos);
         }
     }
 
