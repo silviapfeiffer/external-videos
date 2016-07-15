@@ -558,22 +558,22 @@ function sp_ev_settings_page() {
             <?php _e('(DotSub is currently broken)'); ?>
         </p>
         <p>
-            <?php _e('Publisher ID:', 'external-videos'); ?>
+            <?php _e('Publisher ID/Author ID (Vimeo):', 'external-videos'); ?>
             <input type="text" name="author_id" value="<?php echo sanitize_text_field($_POST['author_id']) ?>"/>
             <?php _e('(the identifier at the end of the URL; for wistia: domain prefix)', 'external-videos')?>
         </p>
         <p>
-            <?php _e('Developer Key:', 'external-videos'); ?>
+            <?php _e('Developer Key/Client Identifier (Vimeo):', 'external-videos'); ?>
             <input type="text" name="developer_key" value="<?php echo sanitize_text_field($_POST['developer_key']) ?>"/>
             <?php _e('(required for Vimeo/Wistia/YouTube, leave empty otherwise)', 'external-videos'); ?>
         </p>
         <p>
-            <?php _e('Secret Key/Application Name:', 'external-videos'); ?>
+            <?php _e('Secret Key/Application Name/Client Secret (Vimeo):', 'external-videos'); ?>
             <input type="text" name="secret_key" value="<?php echo sanitize_text_field($_POST['secret_key']) ?>"/>
             <?php _e('(required for Vimeo/YouTube, leave empty otherwise)', 'external-videos'); ?>
         </p>
         <p>
-            <?php _e('Personal Access Token:', 'external-videos'); ?>
+            <?php _e('Personal Access Token (Vimeo):', 'external-videos'); ?>
             <input type="text" name="auth_token" value="<?php echo sanitize_text_field($_POST['auth_token']) ?>"/>
             <?php _e('(Now required for Vimeo, leave empty otherwise)', 'external-videos'); ?>
         </p>
