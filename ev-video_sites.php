@@ -39,7 +39,7 @@ function sp_ev_fetch_youtube_videos($author)
     // get first lot of 50 videos
 
 
-    
+
     $date = date(DATE_RSS);
     $new_videos = array();
 
@@ -88,14 +88,34 @@ function sp_ev_fetch_youtube_videos($author)
     return $new_videos;
 } // end sp_ev_fetch_youtube_videos()
 
+/*
+ * NEW VIMEO API 3.0
+ */
 
 function sp_ev_fetch_vimeo_videos($author)
 {
   $author_id = $author['author_id'];
   $developer_key = $author['developer_key'];
   $secret_key = $author['secret_key'];
+  $access_token = $author['auth_token'];
 
-  $vimeo = new spEvPhpVimeo($developer_key, $secret_key);
+  // Limit this sucker. New API returns hella fields
+  $fields_desired = array(
+                  'uri',
+                  'name',
+                  'link',
+                  'description',
+                  'duration',
+                  'pictures',
+                  'user.name',
+                  'user.link',
+                  'privacy',
+                  'tags',
+                  'release_time',
+                  );
+  $fields_desired = implode(',', $fields_desired);
+
+  $vimeo = new \Vimeo\Vimeo($developer_key, $secret_key, $access_token);
   $per_page = 50;
   $date = date(DATE_RSS);
   $new_videos = array();
@@ -105,42 +125,53 @@ function sp_ev_fetch_vimeo_videos($author)
   do {
     // Do an authenticated call
     try {
-      $videofeed = $vimeo->call('vimeo.videos.getUploaded',
-                                array('user_id' => $author_id, 
-                                      'full_response' => 'true',
-                                      'page' => $page,
-                                      'per_page' => $per_page), 
-                                      'GET', 
-                                spEvPhpVimeo::API_REST_URL, 
-                                false, 
-                                true);  
+      $videofeed = $vimeo->request('/users/'.$author_id.'/videos',
+                                    array(//'fields' => $fields_desired,
+                                          // 'privacy.view' => 'anybody',
+                                          'sort' => 'date',
+                                          'filter' => 'embeddable',
+                                          'filter_embeddable' => 'true',
+                                          'page' => $page,
+                                          'per_page' => $per_page),
+                                    'GET',
+                                    true,
+                                    $fields_desired); //nimmo hack for lame Vimeo library inability to process nested arrays
     }
-    catch (spEvVimeoAPIException $e) {
+    catch (\Vimeo\Exceptions\VimeoRequestException $e) {
       echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
     }
+    // Test this mofo
+    // echo '<pre>$videofeed full: <br />'; print_r(($videofeed['body'])); echo '</pre>';
+    // echo '<pre>'; print_r($videofeed['body']['data'])); echo '</pre>';
 
-    foreach ($videofeed->videos->video as $vid)
+    // Adjust array to get to the data
+    $pagefeed = $videofeed['body']['data'];
+    // how many we got?
+    $count = count($pagefeed);
+    // echo '<pre>$pagefeed: '.$count.'<br />'; print_r($pagefeed); echo '</pre>';
+
+    foreach ($pagefeed as $vid)
     {
       // extract fields
       $video = array();
       $video['host_id']     = 'vimeo';
       $video['author_id']   = strtolower($author_id);
-      $video['video_id']    = $vid->id;
-      $video['title']       = $vid->title;
-      $video['description'] = $vid->description;
-      $video['authorname']  = $vid->owner->display_name;
-      $video['videourl']    = $vid->urls->url[0]->_content;
-      $video['published']   = $vid->upload_date;
-      $video['author_url']  = "http://www.vimeo.com/".$video['author_id'];
+      $video['video_id']    = $vid['uri'];
+      $video['title']       = $vid['name'];
+      $video['description'] = $vid['description'];
+      $video['authorname']  = $vid['user']['name'];
+      $video['videourl']    = $vid['link'];
+      $video['published']   = $vid['release_time'];
+      $video['author_url']  = $vid['user']['link'];
       $video['category']    = '';
       $video['keywords']    = array();
-      if ($vid->tags) {
-        foreach ($vid->tags->tag as $tag) {
-          array_push($video['keywords'], $tag->_content);
+      if ($vid['tags']) {
+        foreach ($vid['tags'] as $tag) {
+          array_push($video['keywords'], $tag['tag']);
         }
       }
-      $video['thumbnail']   = $vid->thumbnails->thumbnail[0]->_content;
-      $video['duration']    = sp_ev_sec2hms($vid->duration);
+      $video['thumbnail']   = $vid['pictures']['sizes'][2]['link'];
+      $video['duration']    = sp_ev_sec2hms($vid['duration']);
       $video['ev_author']   = $author['ev_author'];
       $video['ev_category'] = $author['ev_category'];
       $video['ev_post_format'] = $author['ev_post_format'];
@@ -152,8 +183,9 @@ function sp_ev_fetch_vimeo_videos($author)
 
     // next page
     $page += 1;
-  } while ($videofeed->videos->on_this_page == $per_page);
+  } while ($videofeed['body']['paging']['next']);
 
+  // echo '<pre>sp_ev_fetch_vimeo_videos: <br />'; print_r($new_videos); echo '</pre>';
   return $new_videos;
 } // end sp_ev_fetch_vimeo_videos()
 
@@ -171,7 +203,7 @@ function sp_ev_fetch_dotsub_videos($author)
     // loop through all feed pages
     while ($url != NULL) {
         $html = ev_html_dom_parser::file_get_html($url);
-        
+
         $length_str = $html->find('div[class=pagercontext]',0);
         $length_pcs = explode(" ", str_replace($newlines, "",$length_str->plaintext));
 
@@ -184,7 +216,7 @@ function sp_ev_fetch_dotsub_videos($author)
             $item = $html->find('div[class=mediaBox]',$i);
             $metadata = $item->find('div[class=mediaMetadata]',0);
             $next=$i+1;
-            
+
             // extract fields
             $video = array();
             $video['host_id']     = 'dotsub';
@@ -194,7 +226,7 @@ function sp_ev_fetch_dotsub_videos($author)
             $video['description'] = $metadata->find('p[id=description'.$next.'p]',0)->innertext;
             $video['authorname']  = $author_id;
             $video['videourl']    = 'http://dotsub.com'.$metadata->find('a',0)->href;
-            
+
             // need to retrieve videourl to gain upload date
             $html_video = ev_html_dom_parser::file_get_html($video['videourl']);
             $published_div = $html_video->find('div[class=moduleBody]',0)->find('div',6);
@@ -209,7 +241,7 @@ function sp_ev_fetch_dotsub_videos($author)
             $video['category']    = $metadata->find('div[class=mediaLinks]',0)->find('a',2)->plaintext;
             $video['keywords']    = NULL;
             $video['thumbnail']   = $item->find('div[class=thumbnail]',0)->find('img',0)->src;
-            
+
             // parse the seconds out of the duration string
             $duration_str = $metadata->find('li[class=first-metadataItem]',0)->find('h4',0)->plaintext;
             $duration_pcs = explode(" ", str_replace($newlines, "",$duration_str));
