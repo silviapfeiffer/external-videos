@@ -1,10 +1,10 @@
 === External Videos ===
-Contributors: silviapfeiffer1, johnfjohnf
+Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub
 Requires at least: 2.9
-Tested up to: 4.4
-Stable Tag: 0.27
+Tested up to: 4.6
+Stable Tag: 0.28
 
 This is a WordPress post types plugin for videos posted to external social networking sites.
 
@@ -35,11 +35,13 @@ To install the External Videos plugin simply:
 
 = What sites are supported? =
 
-Currently supported sites are: YouTube, Vimeo, DotSub
+Currently supported sites are: YouTube, Vimeo
 
 = How do I register another user account to draw videos from? =
 
-Go into the admin interface and add the site and user name. For Vimeo you will also have to add a developer key, which you can get from http://vimeo.com/api/docs/getting-started .
+Go into the admin interface and add the site and user name.
+
+Note that Vimeo has changed their API - this means for Vimeo you will have to create an "app" including a client identifier, client secret *and an access token*, which you can do at https://developer.vimeo.com/apps.
 
 = How often does the plugin pull videos from the registered publishers? =
 
@@ -65,7 +67,7 @@ And you can specify [external-videos link="page"] if you want to get the links o
 
 Just add the following to your Website URL: ?feed=rss2&post_type=external-videos .
 You can add a link like this to your theme layout.
- 
+
 
 == Screenshots ==
 
@@ -79,8 +81,13 @@ You can add a link like this to your theme layout.
 
 == Changelog ==
 
+= 0.28 =
+* updated to Vimeo API 3.0
+* automatically appending categories, author and hosting site to external-video post_content is now a settings option
+* fixed some php errors
+
 = 0.27 =
-* fixed use of set_include_path to be non-distructive
+* fixed use of set_include_path to be non-destructive
 
 = 0.26 =
 * Fixed some php errors and warnings
@@ -191,4 +198,3 @@ You can add a link like this to your theme layout.
 
 = 0.1 =
 * Initial version
-
