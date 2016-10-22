@@ -27,14 +27,25 @@ function sp_ev_fetch_youtube_videos($author)
 
     // setup YouTube API access
     $client = new Google_Client();
-    $client->setDeveloperKey($author['developer_key']);
-    $client->setApplicationName($author['secret_key']);
+    // $client->setDeveloperKey($author['developer_key']);
+    $client->setApplicationName('externalvideos');
+    $client->setDeveloperKey('AIzaSyBz5qNo9CkdmhwRmL2IhwzUdJGxpQZ6BJQ');
 
     // get channel ID for author
-    $service = new Google_Service_YouTube($client);
-    $results = $service->channels->listChannels('contentDetails',
-                array('forUsername' => $author_id ));
-    $channel_id = $results->items[0]->contentDetails->relatedPlaylists->uploads;
+    $youtube = new Google_Service_YouTube($client);
+    // echo '<pre>service full: <br />'; print_r(($service->channels)); echo '</pre>';
+    $optParams = array('id' => 'UCwb4eAJ2HbpOO3rYUQF7b5g');
+
+    $results = $youtube->channels->listChannels(
+                // array('channelId' => 'UCwb4eAJ2HbpOO3rYUQF7b5g' ));
+                'contentDetails', $optParams);
+    // $channel_id = $results->items[0]->contentDetails->relatedPlaylists->uploads;
+    // echo '<pre>results full: <br />'; print_r(($results)); echo '</pre>';
+    $uploadsListId = $results['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+    // echo '<pre>uploads ID: <br />'; print_r(($uploadsListId)); echo '</pre>';
+    // $playlistItemsResponse = $youtube->playlistItems->listPlaylistItems('snippet', array(
+    //   'playlistId' => $uploadsListId
+    // ));
 
     // get first lot of 50 videos
 
@@ -48,12 +59,15 @@ function sp_ev_fetch_youtube_videos($author)
     $pageToken = '';
     do {
       // fetch videos
-      $videofeed = $service->playlistItems->listPlaylistItems('snippet',
-                    array('playlistId' => $channel_id,
+      $videofeed = $youtube->playlistItems->listPlaylistItems('snippet',
+                    array('playlistId' => $uploadsListId,
                           'maxResults' => $per_page,
                           'pageToken' => $pageToken,
                           )
                     );
+      // Test this mofo
+      // echo '<pre>$videofeed full: <br />'; print_r(($videofeed)); echo '</pre>';
+      // echo '<pre>'; print_r($videofeed['body']['data'])); echo '</pre>';
 
       foreach ($videofeed->items as $vid)
       {

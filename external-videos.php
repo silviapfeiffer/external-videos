@@ -55,7 +55,7 @@ require_once(WP_PLUGIN_DIR . '/external-videos/simple_html_dom.php');
 
 $path = WP_PLUGIN_DIR . '/external-videos/google-api-php-client/src/Google';
 set_include_path(get_include_path() . PATH_SEPARATOR . $path);
-require_once(WP_PLUGIN_DIR . '/external-videos/google-api-php-client/src/Google/autoload.php');
+require_once(WP_PLUGIN_DIR . '/external-videos/google-api-php-client/vendor/autoload.php');
 require_once(WP_PLUGIN_DIR . '/external-videos/vimeo.php/autoload.php');
 
 
@@ -563,7 +563,7 @@ function sp_ev_settings_page() {
             <?php _e('(the identifier at the end of the URL; for wistia: domain prefix)', 'external-videos')?>
         </p>
         <p>
-            <?php _e('Developer Key/Client Identifier (Vimeo):', 'external-videos'); ?>
+            <?php _e('Application Name (YouTube)/Client Identifier (Vimeo):', 'external-videos'); ?>
             <input type="text" name="developer_key" value="<?php echo sanitize_text_field($_POST['developer_key']) ?>"/>
             <?php _e('(required for Vimeo/Wistia/YouTube, leave empty otherwise)', 'external-videos'); ?>
         </p>
