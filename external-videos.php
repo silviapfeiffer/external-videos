@@ -4,7 +4,7 @@
  * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
  * Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
  * Author: Silvia Pfeiffer
- * Version: 0.28
+ * Version: 0.29
  * Author URI: http://www.gingertech.net/
  * License: GPL2
  * Text Domain: external-videos
@@ -38,6 +38,7 @@
 */
 
 global $features_3_0;
+global $wp_version;
 $features_3_0 = false;
 
 if (version_compare($wp_version,"3.0",">=")) {
@@ -558,17 +559,17 @@ function sp_ev_settings_page() {
             <?php _e('(DotSub is currently broken)'); ?>
         </p>
         <p>
-            <?php _e('Publisher ID/Author ID (Vimeo):', 'external-videos'); ?>
+            <?php _e('Publisher ID (YouTube)/Author ID (Vimeo):', 'external-videos'); ?>
             <input type="text" name="author_id" value="<?php echo sanitize_text_field($_POST['author_id']) ?>"/>
             <?php _e('(the identifier at the end of the URL; for wistia: domain prefix)', 'external-videos')?>
         </p>
         <p>
-            <?php _e('Application Name (YouTube)/Client Identifier (Vimeo):', 'external-videos'); ?>
+            <?php _e('Application Name (YouTube)/Developer Key (Wistia)/Client Identifier (Vimeo):', 'external-videos'); ?>
             <input type="text" name="developer_key" value="<?php echo sanitize_text_field($_POST['developer_key']) ?>"/>
-            <?php _e('(required for Vimeo/Wistia/YouTube, leave empty otherwise)', 'external-videos'); ?>
+            <?php _e('(required for some, leave empty otherwise)', 'external-videos'); ?>
         </p>
         <p>
-            <?php _e('Secret Key/Application Name/Client Secret (Vimeo):', 'external-videos'); ?>
+            <?php _e('API Key (YouTube)/Secret Key/Application Name/Client Secret (Vimeo):', 'external-videos'); ?>
             <input type="text" name="secret_key" value="<?php echo sanitize_text_field($_POST['secret_key']) ?>"/>
             <?php _e('(required for Vimeo/YouTube, leave empty otherwise)', 'external-videos'); ?>
         </p>
