@@ -16,8 +16,8 @@ A WordPress post types plugin for videos posted to external social networking si
 - Donate link: http://www.gingertech.net/
 - Tags: videos, YouTube, Vimeo, DotSub, Wistia
 - Requires at least: 2.9
-- Tested up to: 4.6.1
-- Stable Tag: 0.28
+- Tested up to: 4.7.1
+- Stable Tag: 1.0
 
 
 # Description
@@ -97,14 +97,15 @@ You can add a link like this to your theme layout.
 # Changelog
 
 ### 1.0
-* updated to Vimeo API 3.0
-* updated Dotsub API
-* updated YouTube API v3 (php API library 2.0.3)
-* updated Wistia API
+* Major refactor - all video sites work again
+* YouTube API v3
+* Vimeo API 3.0
+* Dotsub API
+* Wistia API
+* AJAX admin forms for live updates of plugin settings and external video posts; no page-reloading.
 * new settings option: automatically (or not) append categories, author and hosting site to external-video post_content
-* new admin column for external-videos: categories
-* fixed some php errors
-* plugin refactored using class objects
+* new admin column to sort by external-videos: categories
+* fixed many php errors
 
 ### 0.27
 * fixed use of set_include_path to be non-destructive
