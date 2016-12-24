@@ -416,7 +416,7 @@ class SP_External_Videos {
         ),
         'introduction' => "DotSub only requires a User ID in order to access your videos from another site.",
         'url' => 'https://dotsub.com',
-        'link_text' => 'DotSub'
+        'link_title' => 'DotSub'
       ),
 
       // WISTIA
@@ -439,7 +439,7 @@ class SP_External_Videos {
         ),
         'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
         'url' => 'https://wistia.com',
-        'link_text' => 'Wistia'
+        'link_title' => 'Wistia'
       )
     );
 
