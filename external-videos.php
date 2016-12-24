@@ -132,6 +132,7 @@ class SP_External_Videos {
 
 		// create a "video" category to store posts against
 		wp_create_category(__( 'External Videos', 'external-videos' ) );
+    $this->admin_set_hosts();
 
 		// create "external videos" post type
 		register_post_type( 'external-videos', array(
@@ -277,53 +278,174 @@ class SP_External_Videos {
 			// below is needed, because if anything gets unset it throws an error
 			if( !array_key_exists( 'version', $options ) ) $options['version'] = 1;
 			if( !array_key_exists( 'authors', $options ) ) $options['authors'] = array();
+      if( !array_key_exists( 'hosts', $options ) ) $options['hosts'] = array();
 			if( !array_key_exists( 'rss', $options ) ) $options['rss'] = false;
 			if( !array_key_exists( 'delete', $options ) ) $options['delete'] = false;
 			if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
 		};
 		// echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
 
-    // Set up the host options
+		return $options;
+
+	}
+
+  /*
+	*  admin_get_hosts
+	*
+	*  Settings page
+	*  Used by ev-settings-forms.php and AJAX handlers
+	*  Returns quick associative array of host_id => name from options['hosts'];
+	*
+	*  @type	function
+	*  @date	31/10/16
+	*  @since	1.0
+	*
+	*  @param
+	*  @return
+	*/
+
+  static function admin_get_hosts(){
+
+    $options = SP_External_Videos::admin_get_options();
+    $VIDEO_HOSTS = array();
+
+    foreach( $options['hosts'] as $host ){
+      $id=$host['host_id'];
+      $VIDEO_HOSTS[$id] = $host['host_name'];
+    }
+
+    return $VIDEO_HOSTS;
+
+  }
+
+  /*
+	*  admin_set_hosts
+	*
+  *  Establishes host options array
+	*
+	*  @type	function
+	*  @date	31/10/16
+	*  @since	1.0
+	*
+	*  @param
+	*  @return
+	*/
+
+	function admin_set_hosts(){
+
+    $options = $this->admin_get_options();
+    // EXPERIMENTAL. THIS MUST BE IN DESIRED ORDER OF TABS
+    // Set up some host options
     $options['hosts'] = array(
+
+      // YOUTUBE
       array(
         'host_id' => 'youtube',
         'host_name' => 'YouTube',
         'api_keys' => array(
-          'author_id' => 'Channel Name',
-          'developer_key' => 'API Key',
-          'secret_key' => 'Application Name'
-        )
+          array(
+            'id' => 'author_id',
+            'label' => 'Channel Name',
+            'required' => true,
+            'explanation' => 'Required'
+          ),
+          array(
+            'id' => 'developer_key',
+            'label' => 'API Key',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your API console at YouTube'
+          ),
+          array(
+            'id' => 'secret_key',
+            'label' => 'Application Name',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your API console at YouTube'
+          )
+        ),
+        'introduction' => "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).",
+        'url' => 'https://console.developers.google.com/apis/credentials',
+        'link_title' => 'YouTube API'
       ),
+
+      // VIMEO
       array(
         'host_id' => 'vimeo',
         'host_name' => 'Vimeo',
         'api_keys' => array(
-          'author_id' => 'User ID',
-          'developer_key' => 'Client Identifier',
-          'secret_key' => 'Client Secret',
-          'auth_token' => 'Personal Access Token'
-        )
+          array(
+            'id' => 'author_id',
+            'label' => 'User ID',
+            'required' => true,
+            'explanation' => 'Required'
+          ),
+          array(
+            'id' => 'developer_key',
+            'label' => 'Client Identifier',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+          ),
+          array(
+            'id' => 'secret_key',
+            'label' => 'Client Secret',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+          ),
+          array(
+            'id' => 'auth_token',
+            'label' => 'Personal Access Token',
+            'required' => false,
+            'explanation' => 'Optional - this needs to be generated in your Vimeo API Apps. It gives you access to both your public and private videos.'
+          )
+        ),
+        'introduction' => "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier, Client Secret and Personal Access Token from your account, in order to access your videos from another site (like this one). ",
+        'url' => 'https://developer.vimeo.com/apps',
+        'link_title' => 'Vimeo API'
       ),
+
+      // DOTSUB
       array(
         'host_id' => 'dotsub',
         'host_name' => 'DotSub',
         'api_keys' => array(
-          'author_id' => 'User ID'
-        )
+          array(
+            'id' => 'author_id',
+            'label' => 'User ID',
+            'required' => true,
+            'explanation' => ''
+          )
+        ),
+        'introduction' => "DotSub only requires a User ID in order to access your videos from another site.",
+        'url' => 'https://dotsub.com',
+        'link_text' => 'DotSub'
       ),
+
+      // WISTIA
       array(
         'host_id' => 'wistia',
         'host_name' => 'Wistia',
         'api_keys' => array(
-          'author_id' => 'Account Name',
-          'developer_key' => 'API Token'
-        )
+          array(
+            'id' => 'author_id',
+            'label' => 'Account Name',
+            'required' => true,
+            'explanation' => ''
+          ),
+          array(
+            'id' => 'developer_key',
+            'label' => 'API Token',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your Wistia account'
+          )
+        ),
+        'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
+        'url' => 'https://wistia.com',
+        'link_text' => 'Wistia'
       )
     );
 
-		return $options;
+    update_option( 'sp_external_videos_options', $options );
 
-	}
+  }
 
 	/*
 	*  plugin_settings_handler

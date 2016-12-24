@@ -1,9 +1,4 @@
 <?php
-/* This function is being tested in a Kiteboat page template first */
-// [21-Dec-2016 19:26:05 UTC] PHP Notice:  Undefined variable: page_token in /Applications/MAMP/htdocs/projectkiteboat/wp-content/plugins/external-videos/hosts/ev-youtube.php on line 73
-// [21-Dec-2016 19:26:06 UTC] PHP Notice:  Trying to get property of non-object in /Applications/MAMP/htdocs/projectkiteboat/wp-content/plugins/external-videos/hosts/ev-youtube.php on line 86
-// [21-Dec-2016 19:26:06 UTC] PHP Warning:  Invalid argument supplied for foreach() in /Applications/MAMP/htdocs/projectkiteboat/wp-content/plugins/external-videos/hosts/ev-youtube.php on line 86
-// [21-Dec-2016 19:26:06 UTC] PHP Notice:  Trying to get property of non-object in /Applications/MAMP/htdocs/projectkiteboat/wp-content/plugins/external-videos/hosts/ev-youtube.php on line 112
 
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
@@ -30,8 +25,8 @@ class SP_EV_YouTube {
 		$developer_key = $author['developer_key'];
 		$app_name = $author['secret_key'];
 
-		// Setup YouTube API access. Ultimately we need a playlist ID,
-    // which is hard for a user to find, and to even get that we need the user's
+		// Setup YouTube API access. Ultimately we need a YouTube playlist_id,
+    // which is hard for a user to find, and to get that we need the user's
     // channelId, which they're also unlikely to know. So we start by getting
 		// the channelId from the username, through a search query. Incredible!
 		// http://stackoverflow.com/questions/14925851/how-do-i-use-youtube-data-api-v3-to-fetch-channel-uploads-using-chanels-usernam?rq=1

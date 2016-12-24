@@ -144,7 +144,7 @@ class SP_EV_Vimeo {
 
       // update request url to next page
       $url = $baseurl . $next;
-      $page += 1;
+      
     } while ( $next );
 
     // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($new_videos); echo '</pre>';

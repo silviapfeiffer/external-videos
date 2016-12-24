@@ -69,6 +69,8 @@ class SP_EV_Wistia {
         $video['videourl']    = "https://$author_id.wistia.com/medias/" . $vid->hashed_id;
         $video['published']   = date( "Y-m-d H:i:s", strtotime( $vid->created ));
         $video['author_url']  = "https://$author_id.wistia.com/projects";
+        $video['category']    = '';
+        $video['keywords']    = array();
         // $video['thumbnail']   = $vid->thumbnail->url;
 
         // WISTIA DELIVERS HUGE THUMBNAILS AUTO CROPPED FROM THEIR API.

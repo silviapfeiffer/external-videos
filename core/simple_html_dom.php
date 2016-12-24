@@ -11,6 +11,7 @@ Contributions by:
 Licensed under The MIT License
 Redistributions of files must retain the above copyright notice.
 *******************************************************************************/
+if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 define('HDOM_TYPE_ELEMENT', 1);
 define('HDOM_TYPE_COMMENT', 2);
@@ -114,7 +115,7 @@ class ev_simple_html_dom_node {
         $this->parent = null;
         $this->children = null;
     }
-  
+
     // dump node's tree
     function dump($show_attr=true) {
         dump_html_tree($this, $show_attr);
@@ -144,7 +145,7 @@ class ev_simple_html_dom_node {
         return null;
     }
 
-    // returns the next sibling of node    
+    // returns the next sibling of node
     function next_sibling() {
         if ($this->parent===null) return null;
         $idx = 0;
@@ -221,7 +222,7 @@ class ev_simple_html_dom_node {
             $ret .= $n->text();
         return $ret;
     }
-  
+
     function xmltext() {
         $ret = $this->innertext();
         $ret = str_ireplace('<![CDATA[', '', $ret);
@@ -317,7 +318,7 @@ class ev_simple_html_dom_node {
                         return;
                     }
                 }
-            } 
+            }
             return;
         }
 
@@ -441,7 +442,7 @@ class ev_simple_html_dom_node {
                 return $this->_[HDOM_INFO_INNER] = $value;
         }
         if (!isset($this->attr[$name])) {
-            $this->_[HDOM_INFO_SPACE][] = array(' ', '', ''); 
+            $this->_[HDOM_INFO_SPACE][] = array(' ', '', '');
             $this->_[HDOM_INFO_QUOTE][] = HDOM_QUOTE_DOUBLE;
         }
         $this->attr[$name] = $value;
@@ -515,8 +516,8 @@ class ev_simple_html_dom {
 
     function __construct($str=null) {
         if ($str) {
-            if (preg_match("/^http:\/\//i",$str) || is_file($str)) 
-                $this->load_file($str); 
+            if (preg_match("/^http:\/\//i",$str) || is_file($str))
+                $this->load_file($str);
             else
                 $this->load($str);
         }
@@ -589,7 +590,7 @@ class ev_simple_html_dom {
         unset($this->doc);
         unset($this->noise);
     }
-  
+
     function dump($show_attr=true) {
         $this->root->dump($show_attr);
     }

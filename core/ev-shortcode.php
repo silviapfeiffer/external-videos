@@ -28,6 +28,7 @@
  *        for new newest video to feature as an embed
  */
 
+ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 /// ***   Short Code   *** ///
 
