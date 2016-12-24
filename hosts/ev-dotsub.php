@@ -43,12 +43,12 @@ class SP_EV_Dotsub {
   *  DOTSUB API v1
   *  check https://github.com/dotsub/api-samples
   *
-  *  @type	function
-  *  @date	31/10/16
-  *  @since	1.0
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
   *
-  *  @param	 $author
-  *  @return	$new_videos
+  *  @param   $author
+  *  @return  $new_videos
   */
 
   static function fetch( $author ) {
@@ -56,7 +56,7 @@ class SP_EV_Dotsub {
     $author_id = $author['author_id'];
 
     $baseurl = "https://dotsub.com/api/user/" . $author_id . "/media";
-    $pagesize = 20;	// pagesize is automatically 20 at dotsub
+    $pagesize = 20;  // pagesize is automatically 20 at dotsub
     $offset = 0; // which is fine, because the API is slow. Don't increase
     $currentPage = 1;
     $url = $baseurl . '?pagesize=' . $pagesize .'&offset=' . $offset; // At first. Then we start adding offsets

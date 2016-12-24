@@ -55,27 +55,27 @@ class SP_EV_Vimeo {
 
   }
 
-	/*
-	*  fetch
-	*
-	*  NEW VIMEO API 3.0 oAuth2
-	*  Requires client identifier (developer_key) and client secret (secret_key)
+  /*
+  *  fetch
+  *
+  *  NEW VIMEO API 3.0 oAuth2
+  *  Requires client identifier (developer_key) and client secret (secret_key)
   *  Optional personal access token gives you access to private videos
-	*
-	*  @type	function
-	*  @date	31/10/16
-	*  @since	1.0
-	*
-	*  @param	 $author
-	*  @return	$new_videos
-	*/
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param   $author
+  *  @return  $new_videos
+  */
 
-	static function fetch( $author ) {
+  static function fetch( $author ) {
 
-		$author_id = $author['author_id'];
-		$developer_key = $author['developer_key'];
-		$secret_key = $author['secret_key'];
-		$access_token = $author['auth_token'];
+    $author_id = $author['author_id'];
+    $developer_key = $author['developer_key'];
+    $secret_key = $author['secret_key'];
+    $access_token = $author['auth_token'];
 
     if( ! $access_token ) {
       // send request

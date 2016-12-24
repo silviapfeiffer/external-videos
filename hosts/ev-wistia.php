@@ -49,12 +49,12 @@ class SP_EV_Wistia {
   *  WISTIA DATA API v1
   *  check https://wistia.com/doc/data-api#making_requests
   *
-  *  @type	function
-  *  @date	31/10/16
-  *  @since	1.0
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
   *
-  *  @param	 $author
-  *  @return	$new_videos
+  *  @param   $author
+  *  @return  $new_videos
   */
 
   static function fetch( $author ) {
@@ -65,7 +65,7 @@ class SP_EV_Wistia {
     $baseurl = "https://api.wistia.com/v1/medias.json?sort_by=created&sort_direction=1";
     // set other options
     $page = 0;
-    $per_page = 1;	// One by one because we get no paging info from Wistia
+    $per_page = 1;  // One by one because we get no paging info from Wistia
     $thumb_w = get_option( "large_size_w" ); // Size could be set in options at some point
     $thumb_h = get_option( "large_size_h" );
 
@@ -113,7 +113,7 @@ class SP_EV_Wistia {
         // WISTIA DELIVERS HUGE THUMBNAILS AUTO CROPPED FROM THEIR API.
         // IF YOU WANT A SMALLER CROP OF THE THUMBNAIL,
         // RIGHT TRIM THE URL UNTIL THE EQUALS, THEN ADD WIDTH . X . HEIGHT
-        $thumbnail_url	= $vid->thumbnail->url;
+        $thumbnail_url  = $vid->thumbnail->url;
         $equipos = strripos( $thumbnail_url, "=" ) ? strripos( $thumbnail_url, "=" ) : 0;
         $thumbnail_url = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "X" . $thumb_h;
 

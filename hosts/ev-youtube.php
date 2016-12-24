@@ -54,30 +54,30 @@ class SP_EV_YouTube {
   *
   *  NEW YOUTUBE DATA API 3.0
   *
-  *  @type	function
-  *  @date	31/10/16
-  *  @since	1.0
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
   *
-  *  @param	 $author
-  *  @return	$new_videos
+  *  @param   $author
+  *  @return  $new_videos
   */
 
   static function fetch( $author ) {
 
-		$author_id = $author['author_id'];
-		$developer_key = $author['developer_key'];
-		$app_name = $author['secret_key'];
+    $author_id = $author['author_id'];
+    $developer_key = $author['developer_key'];
+    $app_name = $author['secret_key'];
 
-		// Setup YouTube API access. Ultimately we need a YouTube playlist_id,
+    // Setup YouTube API access. Ultimately we need a YouTube playlist_id,
     // which is hard for a user to find, and to get that we need the user's
     // channelId, which they're also unlikely to know. So we start by getting
-		// the channelId from the username, through a search query. Incredible!
-		// http://stackoverflow.com/questions/14925851/how-do-i-use-youtube-data-api-v3-to-fetch-channel-uploads-using-chanels-usernam?rq=1
-		// https://developers.google.com/youtube/v3/code_samples/php#search_by_keyword
+    // the channelId from the username, through a search query. Incredible!
+    // http://stackoverflow.com/questions/14925851/how-do-i-use-youtube-data-api-v3-to-fetch-channel-uploads-using-chanels-usernam?rq=1
+    // https://developers.google.com/youtube/v3/code_samples/php#search_by_keyword
     // Also! YouTube doesn't accept the way wp_remote_get forms args,
     // so we have to stringify the args ourselves.
 
-		$searchUrl = "https://www.googleapis.com/youtube/v3/search";
+    $searchUrl = "https://www.googleapis.com/youtube/v3/search";
     $searchUrl .= "?q=" . $author_id;
     $searchUrl .= "&key=" . $developer_key;
     $searchUrl .= "&type=channel&part=snippet&fields=items(id/channelId)&maxResults=1";
