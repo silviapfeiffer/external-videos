@@ -44,12 +44,12 @@ if( ! class_exists( 'SP_External_Videos' ) ) :
 class SP_External_Videos {
 
   // moving these to the options table for now. could also be a taxonomy!
-	public static $VIDEO_HOSTS = array(
-		'youtube' => 'YouTube',
-		'vimeo'   => 'Vimeo',
-		'dotsub'  => 'DotSub',
-		'wistia'  => 'Wistia'
-	);
+	// public static $VIDEO_HOSTS = array(
+	// 	'youtube' => 'YouTube',
+	// 	'vimeo'   => 'Vimeo',
+	// 	'dotsub'  => 'DotSub',
+	// 	'wistia'  => 'Wistia'
+	// );
 
 	public function __construct() {
 
@@ -132,7 +132,7 @@ class SP_External_Videos {
 
 		// create a "video" category to store posts against
 		wp_create_category(__( 'External Videos', 'external-videos' ) );
-    $this->admin_set_hosts();
+    // $this->admin_set_hosts();
 
 		// create "external videos" post type
 		register_post_type( 'external-videos', array(
@@ -238,7 +238,7 @@ class SP_External_Videos {
 		// Pass this array to the admin js
 		// For the nonce
 		$settings_nonce = wp_create_nonce( 'ev_settings' );
-		$VIDEO_HOSTS = self::$VIDEO_HOSTS;
+		$VIDEO_HOSTS = $this->admin_get_hosts();
 
 		// Make these variables an object array for the jquery later
 		wp_localize_script( 'ev-admin', 'evSettings', array(
@@ -310,7 +310,7 @@ class SP_External_Videos {
     $VIDEO_HOSTS = array();
 
     foreach( $options['hosts'] as $host ){
-      $id=$host['host_id'];
+      $id = $host['host_id'];
       $VIDEO_HOSTS[$id] = $host['host_name'];
     }
 
@@ -336,7 +336,8 @@ class SP_External_Videos {
     $options = $this->admin_get_options();
     // EXPERIMENTAL. THIS MUST BE IN DESIRED ORDER OF TABS
     // Set up some host options
-    $options['hosts'] = array(
+    // $options['hosts'] = array();
+    /* $options['hosts'] = array(
 
       // YOUTUBE
       array(
@@ -442,7 +443,7 @@ class SP_External_Videos {
         'link_title' => 'Wistia'
       )
     );
-
+    */
     update_option( 'sp_external_videos_options', $options );
 
   }
@@ -559,8 +560,9 @@ class SP_External_Videos {
 
 	function post_new_videos( $authors, $delete, $single ) {
 
-		$VIDEO_HOSTS = self::$VIDEO_HOSTS;
 		$options = $this->admin_get_options();
+    // $VIDEO_HOSTS = $this->admin_get_hosts();
+    $HOSTS = $options['hosts'];
 		$current_videos = $this->fetch_new_videos( $authors );
 
 		if ( !$current_videos ) return 0;
@@ -572,8 +574,9 @@ class SP_External_Videos {
     // $video_ids is an array of unique video ids
 		$added_videos = $deleted_videos = array();
     // we gotta fill out this array with zeros, or error
-    foreach( $VIDEO_HOSTS as $hostid=>$name ){
-      $added_videos[$hostid] = $deleted_videos[$hostid] = 0;
+    foreach( $hosts as $host ){
+      $id = $host['host_id'];
+      $added_videos[$id] = $deleted_videos[$id] = 0;
     }
 		$video_ids = array();
 
@@ -589,13 +592,13 @@ class SP_External_Videos {
 
     // build messages about added videos per host
     foreach ( $added_videos as $host=>$num ) {
+      $hostname = $HOSTS[$host]['host_name'];
       if ( $num > 0 ) {
-        $hostname = $VIDEO_HOSTS[$host];
         $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $hostname );
         $add_messages .= '<br />';
       }
       else {
-        $no_messages .= "No videos found on " . $host . '.<br />';
+        $no_messages .= "No videos found on " . $hostname . '.<br />';
       }
     }
 
@@ -934,7 +937,8 @@ class SP_External_Videos {
 
 		$options = $this->admin_get_options();
 		$AUTHORS = $options['authors'];
-		$VIDEO_HOSTS = self::$VIDEO_HOSTS;
+		// $VIDEO_HOSTS = self::$VIDEO_HOSTS;
+    $HOSTS = $options['hosts'];
 
 		$html = '<div class="limited-width"><span class="feedback"></span></div>';
     $html .= '<table class="wp-list-table ev-table widefat">';
@@ -947,16 +951,18 @@ class SP_External_Videos {
 
 		$html .= '<tbody>';
 		// Keeping the channels organized by host
-		foreach ( $VIDEO_HOSTS as $host => $hostname ) {
+		foreach ( $HOSTS as $host ) {
 
+      $id = $host['host_id'];
+      $hostname = $host['host_name'];
 			$host_authors = array();
 
 			// if we have a channel on this host, build a row
-			if( array_search( $host, array_column( $AUTHORS, 'host_id') ) !== false) {
+			if( array_search( $id, array_column( $AUTHORS, 'host_id') ) !== false) {
 
 				// channels we want are the ones with this $host in the 'host_id'
-				$host_authors = array_filter( $AUTHORS, function( $author ) use ( $host ) {
-					return $author['host_id'] == $host;
+				$host_authors = array_filter( $AUTHORS, function( $author ) use ( $id ) {
+					return $author['host_id'] == $id;
 				} );
 
 				$html .= '<tr>';
@@ -1089,8 +1095,8 @@ class SP_External_Videos {
 		// Handle the ajax request
 		check_ajax_referer( 'ev_settings' );
 
-		$VIDEO_HOSTS = self::$VIDEO_HOSTS;
 		$options = $this->admin_get_options();
+    $HOSTS = $options['hosts'];
 		$messages = '';
 
 		$author = array();
@@ -1103,7 +1109,7 @@ class SP_External_Videos {
 		$author['developer_key'] = isset( $author['developer_key'] ) ? trim( sanitize_text_field( $author['developer_key'] ) ) : '';
 		$author['auth_token'] = isset( $author['auth_token'] ) ? trim( sanitize_text_field( $author['auth_token'] ) ) : '';
 
-		if ( !array_key_exists( $author['host_id'], $VIDEO_HOSTS ) ) {
+		if ( !array_key_exists( $author['host_id'], $HOSTS ) ) {
 			$message = __( 'Invalid video host.', 'external-videos' );
       $message = sp_ev_wrap_admin_notice( $message, 'error' );
       $messages .= $message;
@@ -1147,7 +1153,7 @@ class SP_External_Videos {
 
 			if( update_option( 'sp_external_videos_options', $options ) ){
 				$host = $author['host_id'];
-				$hostname = $VIDEO_HOSTS[$host];
+				$hostname = $HOSTS[$host]['host_name'];
 				$message = sprintf( __( 'Added %s channel from %s', 'external-videos' ), $author['author_id'], $hostname );
 				// $message .=  __( 'Added channel from %s', 'external-videos' );
         $message = sp_ev_wrap_admin_notice( $message, 'warning' );

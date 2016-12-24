@@ -115,7 +115,7 @@ function sp_ev_author_settings(){ ?>
               </p>
               <p>
                 <?php esc_attr_e(
-									'To connect a video channel, click on one of the tabs at the top.".',
+									'To connect a video channel, click on one of the tabs at the top.',
                   'external-videos'
 								); ?>
               </p>
@@ -142,10 +142,7 @@ function sp_ev_author_settings(){ ?>
 
       		<h3><?php esc_attr_e( 'Update All Channels', 'external-videos' ); ?></h3>
           <p>
-            <?php esc_attr_e( 'Click the button below to immediately check all channels for newly added or deleted videos.' ); ?>
-          </p>
-          <p>
-            <?php esc_attr_e( 'The plugin normally updates videos every 24 hours. Next automatic update scheduled for:', 'external-videos' ); ?>
+            <?php esc_attr_e( 'Click the button below to immediately check all channels for newly added or deleted videos. The plugin normally updates videos every 24 hours. Next automatic update scheduled for:', 'external-videos' ); ?>
       			<i><?php echo date( 'Y-m-d H:i:s', wp_next_scheduled( 'ev_daily_event' ) ) ?></i>
       		</p>
 
@@ -223,22 +220,22 @@ function sp_ev_author_settings(){ ?>
         <!-- sidebar -->
         <div id="postbox-container-1" class="postbox-container">
 
-            <div class="postbox">
+          <div class="postbox">
 
-              <h2><span class=""><?php esc_attr_e( 'Authentication', 'wp_admin_style' ); ?></span></h2>
+            <h2><span class=""><?php esc_attr_e( 'Authentication', 'wp_admin_style' ); ?></span></h2>
 
-              <div class="inside">
-                <p>
-                  <?php esc_attr_e(
-                    'To allow WordPress to connect to your account on YouTube, Vimeo, and Wistia, you will have to login to those accounts and create authentication credentials ("API keys").',
-                    'external-videos'
-                  ); ?>
-                </p>
-              </div>
-              <!-- .inside -->
-
+            <div class="inside">
+              <p>
+                <?php esc_attr_e(
+                  'To allow WordPress to connect to your account on YouTube, Vimeo, and Wistia, you will have to login to those accounts and create authentication credentials ("API keys").',
+                  'external-videos'
+                ); ?>
+              </p>
             </div>
-            <!-- .postbox -->
+            <!-- .inside -->
+
+          </div>
+          <!-- .postbox -->
 
         </div>
         <!-- #postbox-container-1 .postbox-container -->
@@ -267,7 +264,7 @@ function sp_ev_author_settings(){ ?>
       <div id="poststuff">
         <div class="postbox">
           <div class="inside">
-            <p><?php echo esc_attr( $intro ); ?><a title="<?php echo esc_attr( $link ); ?>" href="<?php echo esc_url( $url ); ?>" target="_blank"><?php echo esc_attr( $link ); ?></a></p>
+            <p><?php echo esc_attr( $intro ); ?><span class="spacer"></span><a title="<?php echo esc_attr( $link ); ?>" href="<?php echo esc_url( $url ); ?>" target="_blank"><?php echo esc_attr( $link ); ?></a></p>
           </div><!-- .inside -->
         </div><!-- .postbox -->
       </div><!-- .poststuff -->
@@ -275,6 +272,7 @@ function sp_ev_author_settings(){ ?>
   	  <h3><?php echo sprintf( __( 'Add %s Channel', 'external-videos' ), esc_attr( $name ) ); ?></h3>
   	  <form id="ev_add_<?php echo esc_attr( $id )?>" class="ev_add_author" method="post" action="">
         <input type="hidden" name="host_id" value="<?php echo esc_attr( $id )?>" />
+        <div class="feedback"></div>
   	    <table class="form-table">
   	      <tbody>
             <?php foreach( $api_keys as $key ){ ?>
@@ -294,7 +292,6 @@ function sp_ev_author_settings(){ ?>
   	          </th>
   	          <td class="submit">
   	            <input type="submit" name="Submit" class="button" value="<?php echo sprintf( __( 'Add New %s Channel', 'external-videos' ), esc_attr( $name ) ); ?>" />
-  							<span class="feedback"></span>
               </td>
   	        </tr>
   	      </tbody>

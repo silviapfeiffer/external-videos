@@ -21,7 +21,7 @@ section:first-of-type {
   border-bottom: 1px solid #eee;
 }
 .ev-table td table td {
-  padding: 0 0 !important;
+  padding: 0.25em 0.5em 0.25em 0 !important;
   border-bottom: 0px solid #eee;
 }
 .ev-table-delete {
@@ -37,6 +37,10 @@ section:first-of-type {
   .w-25 {
     width: 25%;
   }
+}
+.spacer {
+  display: inline-block;
+  width: 1.5em;
 }
 .float-right {
   float: right;

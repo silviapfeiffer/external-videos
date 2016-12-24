@@ -6,6 +6,55 @@ if( ! class_exists( 'SP_EV_Vimeo' ) ) :
 
 class SP_EV_Vimeo {
 
+  public function __construct() {
+    add_action( 'init', array( $this, 'initialize' ) );
+  }
+
+  function initialize() {
+    $options = SP_External_Videos::admin_get_options();
+
+    if( !isset( $options['hosts']['vimeo'] ) ) :
+
+      $options['hosts']['vimeo'] = array(
+        'host_id' => 'vimeo',
+        'host_name' => 'Vimeo',
+        'api_keys' => array(
+          array(
+            'id' => 'author_id',
+            'label' => 'User ID',
+            'required' => true,
+            'explanation' => 'Required'
+          ),
+          array(
+            'id' => 'developer_key',
+            'label' => 'Client Identifier',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+          ),
+          array(
+            'id' => 'secret_key',
+            'label' => 'Client Secret',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+          ),
+          array(
+            'id' => 'auth_token',
+            'label' => 'Personal Access Token',
+            'required' => false,
+            'explanation' => 'Optional - this needs to be generated in your Vimeo API Apps. It gives you access to both your public and private videos.'
+          )
+        ),
+        'introduction' => "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier, Client Secret and Personal Access Token from your account, in order to access your videos from another site (like this one). ",
+        'url' => 'https://developer.vimeo.com/apps',
+        'link_title' => 'Vimeo API'
+      );
+
+      update_option( 'sp_external_videos_options', $options );
+
+    endif;
+
+  }
+
 	/*
 	*  fetch
 	*
@@ -144,7 +193,7 @@ class SP_EV_Vimeo {
 
       // update request url to next page
       $url = $baseurl . $next;
-      
+
     } while ( $next );
 
     // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($new_videos); echo '</pre>';

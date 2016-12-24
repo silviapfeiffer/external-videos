@@ -6,6 +6,37 @@ if( ! class_exists( 'SP_EV_Dotsub' ) ) :
 
 class SP_EV_Dotsub {
 
+  public function __construct() {
+    add_action( 'init', array( $this, 'initialize' ) );
+  }
+
+  function initialize() {
+    $options = SP_External_Videos::admin_get_options();
+
+    if( !isset( $options['hosts']['dotsub'] ) ):
+
+      $options['hosts']['dotsub'] = array(
+        'host_id' => 'dotsub',
+        'host_name' => 'DotSub',
+        'api_keys' => array(
+          array(
+            'id' => 'author_id',
+            'label' => 'User ID',
+            'required' => true,
+            'explanation' => ''
+          )
+        ),
+        'introduction' => "DotSub only requires a User ID in order to access your videos from another site.",
+        'url' => 'https://dotsub.com',
+        'link_title' => 'DotSub'
+      );
+
+      update_option( 'sp_external_videos_options', $options );
+
+    endif;
+
+  }
+
   /*
   *  fetch
   *

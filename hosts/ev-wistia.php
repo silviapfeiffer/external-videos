@@ -6,6 +6,43 @@ if( ! class_exists( 'SP_EV_Wistia' ) ) :
 
 class SP_EV_Wistia {
 
+  public function __construct() {
+    add_action( 'init', array( $this, 'initialize' ) );
+  }
+
+  function initialize() {
+    $options = SP_External_Videos::admin_get_options();
+
+    if( !isset( $options['hosts']['wistia'] ) ) :
+
+      $options['hosts']['wistia'] = array(
+        'host_id' => 'wistia',
+        'host_name' => 'Wistia',
+        'api_keys' => array(
+          array(
+            'id' => 'author_id',
+            'label' => 'Account Name',
+            'required' => true,
+            'explanation' => ''
+          ),
+          array(
+            'id' => 'developer_key',
+            'label' => 'API Token',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your Wistia account'
+          )
+        ),
+        'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
+        'url' => 'https://wistia.com',
+        'link_title' => 'Wistia'
+      );
+
+      update_option( 'sp_external_videos_options', $options );
+
+    endif;
+
+  }
+
   /*
   *  fetch
   *

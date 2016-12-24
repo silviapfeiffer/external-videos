@@ -6,6 +6,49 @@ if( ! class_exists( 'SP_EV_YouTube' ) ) :
 
 class SP_EV_YouTube {
 
+  public function __construct() {
+    add_action( 'init', array( $this, 'initialize' ) );
+  }
+
+  function initialize() {
+    $options = SP_External_Videos::admin_get_options();
+
+    if( !isset( $options['hosts']['youtube'] ) ) :
+
+      $options['hosts']['youtube'] = array(
+        'host_id' => 'youtube',
+        'host_name' => 'YouTube',
+        'api_keys' => array(
+          array(
+            'id' => 'author_id',
+            'label' => 'Channel Name',
+            'required' => true,
+            'explanation' => 'Required'
+          ),
+          array(
+            'id' => 'developer_key',
+            'label' => 'API Key',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your API console at YouTube'
+          ),
+          array(
+            'id' => 'secret_key',
+            'label' => 'Application Name',
+            'required' => true,
+            'explanation' => 'Required - this needs to be generated in your API console at YouTube'
+          )
+        ),
+        'introduction' => "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).",
+        'url' => 'https://console.developers.google.com/apis/credentials',
+        'link_title' => 'YouTube API'
+      );
+
+      update_option( 'sp_external_videos_options', $options );
+
+    endif;
+
+  }
+
   /*
   *  fetch
   *

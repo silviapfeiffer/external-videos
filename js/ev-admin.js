@@ -179,7 +179,11 @@
 			e.preventDefault();
 
 			var particular = $(this).attr("id"),
-			    author = $("#" + particular).serialize();
+          feedback = $("#" + particular + " .feedback")
+			    author = $("#" + particular).serialize(),
+          fadeNotice = function(){
+            $(feedback).children().fadeOut(1000);
+          };
 
 			$.post( evSettings.ajax_url, {
 				_ajax_nonce: evSettings.nonce,
@@ -190,6 +194,7 @@
 				$("#" + particular + " .feedback").html(data);
         var message = data;
 				authorList(message); //rebuild the author list from the database
+        window.setTimeout( fadeNotice, 5000 );
 			});
 		});
 	};
