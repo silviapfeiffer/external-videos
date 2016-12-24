@@ -1,0 +1,46 @@
+section {
+  display:none;
+}
+section:first-of-type {
+  display:block;
+}
+.no-js h2.nav-tab-wrapper {
+  display:none;
+}
+.no-js section {
+  border-top: 1px dashed #aaa;
+  margin-top:22px;
+  padding-top:22px;
+}
+.no-js section:first-child {
+  margin:0px;
+  padding:0px;
+  border:0px;
+}
+.ev-table td, .ev-table th {
+  border-bottom: 1px solid #eee;
+}
+.ev-table td table td {
+  padding: 0 0 !important;
+  border-bottom: 0px solid #eee;
+}
+.ev-table-delete {
+  text-align: right;
+}
+@media ( min-width: 45rem ){
+  .w-50 {
+    width: 50%;
+  }
+  .w-33 {
+    width: 33%;
+  }
+  .w-25 {
+    width: 25%;
+  }
+}
+.float-right {
+  float: right;
+}
+.v-top {
+  vertical-align: top;
+}

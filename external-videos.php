@@ -43,7 +43,8 @@ if( ! class_exists( 'SP_External_Videos' ) ) :
 
 class SP_External_Videos {
 
-	private static $VIDEO_HOSTS = array(
+  // moving these to the options table for now. could also be a taxonomy!
+	public static $VIDEO_HOSTS = array(
 		'youtube' => 'YouTube',
 		'vimeo'   => 'Vimeo',
 		'dotsub'  => 'DotSub',
@@ -90,7 +91,7 @@ class SP_External_Videos {
 
 		add_action( 'wp_ajax_plugin_settings_handler', array( $this, 'plugin_settings_handler' ) );
 		add_action( 'wp_ajax_update_videos_handler', array( $this, 'update_videos_handler' ) );
-		add_action( 'wp_ajax_delete_videos_handler', array( $this, 'delete_videos_handler' ) );
+		add_action( 'wp_ajax_delete_all_videos_handler', array( $this, 'delete_all_videos_handler' ) );
 		add_action( 'wp_ajax_author_list_handler', array( $this, 'author_list_handler' ) );
 		add_action( 'wp_ajax_delete_author_handler', array( $this, 'delete_author_handler' ) );
 		add_action( 'wp_ajax_add_author_handler', array( $this, 'add_author_handler' ) );
@@ -228,7 +229,10 @@ class SP_External_Videos {
 
 		if( "settings_page_external-videos/external-videos" != $hook ) return;
 
-		wp_enqueue_script( 'ev-admin', plugin_dir_url( __FILE__ ) . '/js/ev-admin.js', array('jquery'), false, true );
+    wp_register_style( 'ev-admin', plugin_dir_url( __FILE__ ) . '/css/ev-admin.css', array(), null, 'all' );
+  	wp_enqueue_style( 'ev-admin' );
+		wp_register_script( 'ev-admin', plugin_dir_url( __FILE__ ) . '/js/ev-admin.js', array('jquery'), false, true );
+    wp_enqueue_script( 'ev-admin' );
 
 		// Pass this array to the admin js
 		// For the nonce
@@ -267,7 +271,7 @@ class SP_External_Videos {
 
 		// Set defaults for the basic options
 		if( !$raw_options ) {
-			$options = array( 'version' => 1, 'authors' => array(), 'rss' => false, 'delete' => true, 'attrib' => false );
+			$options = array( 'version' => 1, 'authors' => array(), 'hosts' => array(), 'rss' => false, 'delete' => true, 'attrib' => false );
 		} else {
 			$options = $raw_options;
 			// below is needed, because if anything gets unset it throws an error
@@ -278,6 +282,45 @@ class SP_External_Videos {
 			if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
 		};
 		// echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
+
+    // Set up the host options
+    $options['hosts'] = array(
+      array(
+        'host_id' => 'youtube',
+        'host_name' => 'YouTube',
+        'api_keys' => array(
+          'author_id' => 'Channel Name',
+          'developer_key' => 'API Key',
+          'secret_key' => 'Application Name'
+        )
+      ),
+      array(
+        'host_id' => 'vimeo',
+        'host_name' => 'Vimeo',
+        'api_keys' => array(
+          'author_id' => 'User ID',
+          'developer_key' => 'Client Identifier',
+          'secret_key' => 'Client Secret',
+          'auth_token' => 'Personal Access Token'
+        )
+      ),
+      array(
+        'host_id' => 'dotsub',
+        'host_name' => 'DotSub',
+        'api_keys' => array(
+          'author_id' => 'User ID'
+        )
+      ),
+      array(
+        'host_id' => 'wistia',
+        'host_name' => 'Wistia',
+        'api_keys' => array(
+          'author_id' => 'Account Name',
+          'developer_key' => 'API Token'
+        )
+      )
+    );
+
 		return $options;
 
 	}
@@ -341,7 +384,7 @@ class SP_External_Videos {
 
 		$options = $this->admin_get_options();
     $AUTHORS = $options['authors'];
-		$message = '';
+		$messages = '';
 
     if( isset( $_POST['author_id'] ) && isset( $_POST['host_id'] ) ) {
       $eligibles = array();
@@ -354,6 +397,7 @@ class SP_External_Videos {
 
       if( $eligibles ) {
         $thisindex = array();
+
         foreach( $eligibles as $eligible => $originalkey ){
           if( in_array( $_POST['author_id'], $AUTHORS[$originalkey] ) ) {
             $thisindex[] = $originalkey;
@@ -361,21 +405,23 @@ class SP_External_Videos {
         }
         $thisindex = array_shift( $thisindex );
         $update_authors = array( $AUTHORS[$thisindex] );
+        $single = true;
       }
 
     } else {
       $update_authors = $AUTHORS;
+      $single = null;
     }
 
-		// post_videos() gets everything new and returns a message about it
-		$message = $this->post_videos( $update_authors, $options['delete'] );
+		// post_new_videos() gets everything new or deleted and returns messages about it
+		$messages = $this->post_new_videos( $update_authors, $options['delete'], $single );
 
-		wp_send_json( $message );
+		wp_send_json( $messages );
 
 	}
 
 	/*
-	*  post_videos
+	*  post_new_videos
 	*
 	*  Used by update_videos_handler() and daily_function()
 	*  Saves any new videos from host channels to the database.
@@ -389,7 +435,7 @@ class SP_External_Videos {
 	*  @return	$num_videos
 	*/
 
-	function post_videos( $authors, $delete ) {
+	function post_new_videos( $authors, $delete, $single ) {
 
 		$VIDEO_HOSTS = self::$VIDEO_HOSTS;
 		$options = $this->admin_get_options();
@@ -397,73 +443,109 @@ class SP_External_Videos {
 
 		if ( !$current_videos ) return 0;
 
-		$message = '';
+		$messages = $add_messages = $no_messages = $zero_message = '';
 
-		// save new videos & determine list of all current video_ids
-		// New: does it per host
-		$num_videos = array();
+		// save new videos & build list of all current video_ids
+		// $added_videos is an array of totals indexed by host
+    // $video_ids is an array of unique video ids
+		$added_videos = $deleted_videos = array();
+    // we gotta fill out this array with zeros, or error
+    foreach( $VIDEO_HOSTS as $hostid=>$name ){
+      $added_videos[$hostid] = $deleted_videos[$hostid] = 0;
+    }
 		$video_ids = array();
 
 		foreach ( $current_videos as $video ) {
-
 			array_push( $video_ids, $video['video_id'] );
 			$is_new = $this->save_video( $video );
 
 			if ( $is_new ) {
 				$host = $video['host_id'];
-				$num_videos[$host]++;
+				$added_videos[$host]++;
 			}
-
 		}
 
-		// want to delete externally deleted videos?
+    // build messages about added videos per host
+    foreach ( $added_videos as $host=>$num ) {
+      if ( $num > 0 ) {
+        $hostname = $VIDEO_HOSTS[$host];
+        $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $hostname );
+        $add_messages .= '<br />';
+      }
+      else {
+        $no_messages .= "No videos found on " . $host . '.<br />';
+      }
+    }
+
+    // reset the no message to single
+    if( $single && $no_messages ){
+      $no_messages = "No videos found on " . $authors[0]['host_id'] . '.<br />';
+    }
+    // could have both, or neither
+    if( !$add_messages && !$no_messages ) {
+      $zero_message = "No videos found.<br />";
+      $zero_message = sp_ev_wrap_admin_notice( $zero_message, 'info' );
+      $messages = $zero_message;
+    } else {
+      if( $add_messages ) {
+        $add_messages = sp_ev_wrap_admin_notice( $add_messages, 'success' );
+        $messages .= $add_messages;
+      }
+      if( $no_messages ) {
+        $no_messages = sp_ev_wrap_admin_notice( $no_messages, 'info' );
+        // only add $no_messages if we're doing multiple authors,
+        // or if we don't have any $add_messages for single author.
+        if( $single && !$add_messages ) $messages .= $no_messages;
+      }
+    }
+
+		// if we're not deleting anything
 		if ( !$delete ) {
-			// just return the message
-			foreach ( $num_videos as $host=>$num ) {
-				$hostname = $VIDEO_HOSTS[$host];
-				$message .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $hostname );
-				$message .= '<br />';
-			}
+			// just return the messages
+      return $messages;
 		}
 
-		// remove deleted videos
-		$deleted_videos = array();
+		// next up: deleted videos
 		$all_videos = new WP_Query( array(
 			'post_type'  => 'external-videos',
 			'nopaging' => 1
 		) );
 
 		while( $all_videos->have_posts() ) {
-
 			$old_video = $all_videos->next_post();
 			$video_id = get_post_meta( $old_video->ID, 'video_id', true );
 			$host = get_post_meta( $old_video->ID, 'host_id', true );
 
 			// Move external-video to trash if deleted on host channel
 			if ( $video_id != NULL && !in_array( $video_id, $video_ids ) ) {
-				$post = get_post( $query_video->ID );
+				$post = get_post( $old_video->ID );
 				$post->post_status = 'trash';
 				wp_update_post( $post );
 				$deleted_videos[$host]++;
 			}
-
 		}
 
+    // build message about deleted videos
 		foreach( $deleted_videos as $host=>$num ) {
 			if ( $num > 0 ) {
-				$message .= sprintf( _n( 'Note: %1$d video was deleted on %2$d and moved to trash in this collection.', 'Note: %1$d videos were deleted on %2$d and moved to trash in this collection.', $num, 'external-videos'), $num, $host );
-				$message .= '<br />';
+				$delete_messages = sprintf( _n( 'Note: %1$d video was deleted on %2$s and moved to trash on WordPress.', 'Note: %1$d videos were deleted on %2$s and moved to trash on WordPress.', $num, 'external-videos'), $num, $host );
+				$delete_messages .= '<br />';
 			}
 		}
 
-		return $message;
+    if( $delete_messages ) {
+      $delete_messages = sp_ev_wrap_admin_notice( $delete_messages, 'warning' );
+      $messages .= $delete_messages;
+    }
+
+		return $messages;
 
 	}
 
   /*
   *  fetch_new_videos
   *
-	*  Used by update_videos()
+	*  Used by post_new_videos()
   *  Fetch new videos from all registered, externally hosted channels.
   *  The various API functions are defined in separate classes for each host.
   *
@@ -647,7 +729,7 @@ class SP_External_Videos {
   }
 
 	/*
-	*  delete_videos_handler
+	*  delete_all_videos_handler
 	*
 	*  Used by settings page
 	*  AJAX handler for "Delete videos from all channels" form
@@ -660,19 +742,20 @@ class SP_External_Videos {
 	*  @return
 	*/
 
-	function delete_videos_handler() {
+	function delete_all_videos_handler() {
 
-		$num_videos = $this->delete_all_videos();
-		$message = sprintf( _n( 'Moved %d video into trash.', 'Moved %d videos into trash.', $num_videos, 'external-videos' ), $num_videos );
+		$deleted_videos = $this->delete_all_videos();
+		$messages = sprintf( _n( 'Moved %d video into trash.', 'Moved %d videos into trash.', $deleted_videos, 'external-videos' ), $deleted_videos );
+    $messages = sp_ev_wrap_admin_notice( $messages, 'info' );
 
-		wp_send_json( $message );
+		wp_send_json( $messages );
 
 	}
 
 	/*
   *  delete_all_videos
   *
-	*  Used by delete_videos_handler.php
+	*  Used by delete_all_videos_handler()
   *  Moves all external-videos posts to the trash
   *
   *  @type	function
@@ -692,14 +775,17 @@ class SP_External_Videos {
       'nopaging' => 1
     ) );
 
-    while ( $ev_posts->have_posts() ) : $ev_posts->the_post();
+    if( $ev_posts->have_posts() ) {
+      while ( $ev_posts->have_posts() ) : $ev_posts->the_post();
 
-      $post = get_post( get_the_ID() );
-      $post->post_status = 'trash';
-      wp_update_post( $post );
-      $deleted_videos += 1;
+        $post = get_post( get_the_ID() );
+        $post->post_status = 'trash';
+        wp_update_post( $post );
+        $deleted_videos += 1;
 
-    endwhile;
+      endwhile;
+      wp_reset_postdata();
+    }
 
     return $deleted_videos;
 
@@ -728,7 +814,8 @@ class SP_External_Videos {
 		$AUTHORS = $options['authors'];
 		$VIDEO_HOSTS = self::$VIDEO_HOSTS;
 
-		$html = '<table class="wp-list-table widefat limited-width">';
+		$html = '<div class="limited-width"><span class="feedback"></span></div>';
+    $html .= '<table class="wp-list-table ev-table widefat">';
 		$html .= '<thead>';
 		$html .= '<tr class="">';
 		$html .= '<th scope="col" class="column-title column-primary desc">' . __( 'Host', 'external-videos' ) . '</th>';
@@ -751,33 +838,31 @@ class SP_External_Videos {
 				} );
 
 				$html .= '<tr>';
-				$html .= '<th scope="row" class="v-top">';
-				$html .= $hostname;
+				$html .= '<th scope="row" class="w-33 row-title">';
+				$html .= '<strong>' . $hostname . '</strong>';
 				$html .= '</th>';
 				$html .= '<td>';
-				// $html .= '<table class="widefat">';
+				$html .= '<table class="form-table" style="margin-top:0;">';
 					foreach( $host_authors as $author ) {
-						// $html .= '<tr>';
-						$html .= '<p class="v-top" id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
+						$html .= '<tr>';
+						$html .= '<td class="w-33">';// id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
 						// $html .= '<p>';
-						$html .= '<span style="margin-right: 2em;">' . $author['author_id'] . '</span>';
-						$html .= '<input type="submit" class="button-delete button float-right ml-3" value="' . __( 'Delete' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
-            $html .= '<input type="submit" class="button-update button float-right ml-3" value="' . __( 'Update Videos' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
-						$html .= '</p>';
-						$html .= '<hr />';
-						// $html .= '</td>';
-						// $html .= '</tr>';
+						$html .= '<span>' . $author['author_id'] . '</span>';
+            $html .= '</td>';
+            $html .= '<td class="w-33 ev-table-check">';
+            $html .= '<input type="submit" class="button-update button" value="' . __( 'Update Videos' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" /><div class="spinner"></div>';
+						$html .= '</td>';
+            $html .= '<td class="w-25 ev-table-delete">';
+						$html .= '<input type="submit" class="button-delete button" value="' . __( 'Delete' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
+            $html .= '</td>';
+						$html .= '</tr>';
 					}
-				// $html .= '</table>';
+				$html .= '</table>';
 				$html .= '</td>';
 				$html .= '</tr>';
 
 			}
 		}
-
-		$html .= '<tr>';
-		$html .= '<th colspan=2 class="feedback"></td>';
-		$html .= '</tr>';
 		$html .= '</tbody>';
 		$html .= '</table>';
 
@@ -805,11 +890,13 @@ class SP_External_Videos {
 		check_ajax_referer( 'ev_settings' );
 
 		$options = $this->admin_get_options();
-		$message = '';
+		$messages = '';
 
 		// Does channel even exist?
 		if ( !$this->local_author_exists( $_POST['host_id'], $_POST['author_id'], $options['authors'] ) ) {
-			$message .= __( "Can't delete a channel that doesn't exist.", 'external-videos' );
+			$message = __( "Can't delete a channel that doesn't exist.", 'external-videos' );
+      $message = sp_ev_wrap_admin_notice( $message, 'warning' );
+      $messages .= $message;
 		}
 
 		else {
@@ -849,12 +936,14 @@ class SP_External_Videos {
 
 				// $message .= printf( __( 'Deleted channel and moved %d video to trash.', 'Deleted channel and moved %d videos to trash.', $del_videos, 'external-videos' ), $del_videos );
 
-				$message .= "Deleted channel " . $author['author_id'] . " from " . $author['host_id'] . " and moved " . $del_videos . " videos to trash";
+				$message = "Deleted channel " . $author['author_id'] . " from " . $author['host_id'] . " and moved " . $del_videos . " videos to trash";
+        $message = sp_ev_wrap_admin_notice( $message, 'warning' );
+        $messages .= $message;
 			}
 
 		}
 
-		wp_send_json( $message );
+		wp_send_json( $messages );
 
 	}
 
@@ -880,7 +969,7 @@ class SP_External_Videos {
 
 		$VIDEO_HOSTS = self::$VIDEO_HOSTS;
 		$options = $this->admin_get_options();
-		$message = '';
+		$messages = '';
 
 		$author = array();
     $author['post_category'] = ''; // this one doesn't necessarily set
@@ -893,22 +982,30 @@ class SP_External_Videos {
 		$author['auth_token'] = isset( $author['auth_token'] ) ? trim( sanitize_text_field( $author['auth_token'] ) ) : '';
 
 		if ( !array_key_exists( $author['host_id'], $VIDEO_HOSTS ) ) {
-			$message .= __( 'Invalid video host.', 'external-videos' );
+			$message = __( 'Invalid video host.', 'external-videos' );
+      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $messages .= $message;
 		}
 
 		// Check if local author already exists
 		elseif ( $this->local_author_exists( $author['host_id'], $author['author_id'], $options['authors'] ) ) {
-			$message .= __( 'Author already exists.', 'external-videos' );
+			$message = __( 'Author already exists.', 'external-videos' );
+      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $messages .= $message;
 		}
 
 		// Check if we don't have authentication with video service
 		elseif ( !$this->authorization_exists( $author['host_id'], $author['developer_key'], $author['secret_key'], $author['auth_token'] ) ) {
-			$message .=  __( 'Missing developer key.', 'external-videos' );
+			$message =  __( 'Missing developer key.', 'external-videos' );
+      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $messages .= $message;
 		}
 
 		// Check if author doesn't exist on video service
 		elseif ( !$this->remote_author_exists ($author['host_id'], $author['author_id'], $author['developer_key'] ) ) {
-			$message .= __( 'Invalid author - check spelling.', 'external-videos' );
+			$message = __( 'Invalid author - check spelling.', 'external-videos' );
+      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $messages .= $message;
 		}
 
 		// If we pass these tests, set up the author/channel
@@ -929,15 +1026,15 @@ class SP_External_Videos {
 			if( update_option( 'sp_external_videos_options', $options ) ){
 				$host = $author['host_id'];
 				$hostname = $VIDEO_HOSTS[$host];
-				$message .= sprintf( __( 'Added %s channel from %s', 'external-videos' ), $author['author_id'], $hostname );
+				$message = sprintf( __( 'Added %s channel from %s', 'external-videos' ), $author['author_id'], $hostname );
 				// $message .=  __( 'Added channel from %s', 'external-videos' );
+        $message = sp_ev_wrap_admin_notice( $message, 'warning' );
+        $messages .= $message;
 			}
-
-			else { 	$message .= 'Nothing added.'; }
 
 		}
 
-		wp_send_json( $message );
+		wp_send_json( $messages );
 
 	}
 

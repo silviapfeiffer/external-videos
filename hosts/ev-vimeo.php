@@ -97,19 +97,18 @@ class SP_EV_Vimeo {
       // Do an authenticated call
       try {
         $videoreq = wp_remote_get( $url, $args );
+        // Adjust array to get to the data
+        $videofeed = json_decode( wp_remote_retrieve_body( $videoreq ) );
+        $pagefeed = $videofeed->data; //$videofeed->paging->next
+        $feedarray = json_decode( json_encode( $pagefeed ), true );
+        $next = $videofeed->paging->next;
+        // $page = $videofeed->page;
+        // $per_page = $videofeed->per_page;
+        // $total = $videofeed->total;
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
-
-      // Adjust array to get to the data
-      $videofeed = json_decode( wp_remote_retrieve_body( $videoreq ) );
-      $pagefeed = $videofeed->data; //$videofeed->paging->next
-      $feedarray = json_decode( json_encode( $pagefeed ), true );
-      $next = $videofeed->paging->next;
-      $page = $videofeed->page - 1;
-      $per_page = $videofeed->per_page;
-      $total = $videofeed->total;
 
       foreach ( $feedarray as $vid )
       {
@@ -146,7 +145,7 @@ class SP_EV_Vimeo {
       // update request url to next page
       $url = $baseurl . $next;
       $page += 1;
-    } while ( ($page * $per_page) <= $total );
+    } while ( $next );
 
     // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($new_videos); echo '</pre>';
     return $new_videos;

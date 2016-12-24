@@ -68,17 +68,67 @@
 	var checkVideos = function(){
     $(document).on("click", "#ev_author_list .button-update", function(e){
 			e.preventDefault();
-      var hostId = $(this).attr("data-host");
-			var authorId = $(this).attr("data-author");
-			var particular = $(this).closest("td");
+      var hostId = $(this).attr("data-host"),
+			    authorId = $(this).attr("data-author"),
+			    // particular = $(this).closest("td"),
+          // buttonparent = $(this).parent(),
+          spinner = $(this).siblings(".spinner"),
+          feedback = $("#ev_author_list .feedback"),
+          fadeNotice = function(){
+            $(feedback).children().fadeOut(1000);
+          };
+      $(spinner).addClass("is-active");
+
 			$.post( evSettings.ajax_url, {
 				_ajax_nonce: evSettings.nonce,
 				action: "update_videos_handler",
         host_id: hostId,
 				author_id: authorId,
-				dataType:'json'
+				dataType:'html'
 			}, function(data){
-        $("#ev_author_list .feedback").html(data);
+        $(feedback).html(data);
+        $(spinner).removeClass("is-active");
+        window.setTimeout( fadeNotice, 5000 );
+        // set = JSON.stringify(data, null, 4);
+				// alert(set);
+			});
+		});
+	};
+
+  // Delete author handler
+  // AJAX loaded elements must click bind to document
+  // http://stackoverflow.com/questions/16598213/how-to-bind-events-on-ajax-loaded-content
+	var deleteAuthor = function(){
+		$(document).on("click", "#ev_author_list .button-delete", function(e){
+			e.preventDefault();
+			var hostId = $(this).attr("data-host"),
+  		    authorId = $(this).attr("data-author"),
+			    particular = $(this).closest("td"),
+          feedback = $("#ev_author_list .feedback"),
+          fadeNotice = function(){
+            $(feedback).children().fadeOut(1000);
+          };
+      // alert('hostId: ' + hostId);
+      // alert('authorId: ' + authorId);
+			// alert('particular: ' + particular);
+      if (!confirm('Are you sure you want to delete channel' + authorId + ' on ' + hostId + '?')){
+				return false;
+			}
+
+			$.post( evSettings.ajax_url, {
+				_ajax_nonce: evSettings.nonce,
+				host_id: hostId,
+				author_id: authorId,
+				dataType:'html',
+				action: "delete_author_handler"
+			}, function(data){
+        var message = data;
+				$(particular).fadeOut(); //first fade out this author
+				authorList(message); //rebuild the author list from the database
+        $(feedback).html(data);
+        window.setTimeout( fadeNotice, 5000 );
+				// set = JSON.stringify(data, null, 4);
+				// alert(set);
 			});
 		});
 	};
@@ -87,15 +137,23 @@
 	var deleteAll = function(){
 		$('#ev_delete_all').submit(function(e){
 			e.preventDefault();
+      var feedback = $("#ev_delete_all .feedback"),
+      fadeNotice = function(){
+        $(feedback).children().fadeOut(1000);
+      };
 			if (!confirm('Are you sure you want to delete all external video posts?')){
 				return false;
 			}
 			$.post( evSettings.ajax_url, {
 				_ajax_nonce: evSettings.nonce,
-				action: "delete_videos_handler"
-				// data: No data sent,
+        data: '',
+        dataType: 'html',
+				action: "delete_all_videos_handler"
 			}, function(data){
-				$("#ev_delete_all .feedback").html(data);
+        $(feedback).html(data);
+        window.setTimeout( fadeNotice, 5000 );
+        // set = JSON.stringify(data, null, 4);
+				// alert(set);
 			});
 		});
 	};
@@ -125,35 +183,6 @@
 		});
 	};
 
-	// Delete author handler
-  // AJAX loaded elements must click bind to document
-  // http://stackoverflow.com/questions/16598213/how-to-bind-events-on-ajax-loaded-content
-	var deleteAuthor = function(){
-		$(document).on("click", "#ev_author_list .button-delete", function(e){
-			e.preventDefault();
-			var hostId = $(this).attr("data-host");
-			var authorId = $(this).attr("data-author");
-			var particular = $(this).closest("td");
-      // alert('hostId: ' + hostId);
-      // alert('authorId: ' + authorId);
-			// alert('particular: ' + particular);
-
-			$.post( evSettings.ajax_url, {
-				_ajax_nonce: evSettings.nonce,
-				host_id: hostId,
-				author_id: authorId,
-				dataType:'json',
-				action: "delete_author_handler"
-			}, function(data){
-        var message = data;
-				$(particular).fadeOut(); //first fade out this author
-				authorList(message); //rebuild the author list from the database
-        $("#ev_author_list .feedback").html(data);
-				// set = JSON.stringify(data, null, 4);
-				// alert(set);
-			});
-		});
-	};
 
   // Author List refresher
   // Note that ajax loading of html f's up event binding on all loaded elements

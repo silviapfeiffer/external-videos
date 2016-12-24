@@ -36,7 +36,8 @@ class SP_EV_Dotsub {
       'Content-Type' => 'application/json'
     );
     $args = array(
-      'headers'     => $headers
+      'headers'     => $headers,
+      'timeout' => 25
     );
 
     $new_videos = array();
@@ -84,7 +85,7 @@ class SP_EV_Dotsub {
 
       // next page
       $currentPage++;
-      // update request url to next page
+      // update request url to next page - it's offset by #videos, not pages
       $offset = $offset + $pagesize;
       $url = $baseurl . '?pagesize=' . $pagesize .'&offset=' . $offset;
 

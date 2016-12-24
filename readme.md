@@ -16,7 +16,7 @@ A WordPress post types plugin for videos posted to external social networking si
 - Donate link: http://www.gingertech.net/
 - Tags: videos, YouTube, Vimeo, DotSub, Wistia
 - Requires at least: 2.9
-- Tested up to: 4.7.1
+- Tested up to: 4.7
 - Stable Tag: 1.0
 
 
