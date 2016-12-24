@@ -153,7 +153,7 @@ class SP_External_Videos {
 		));
 
 		// Oembed support for dotsub
-		wp_oembed_add_provider( '#http://(www\.)?dotsub\.com/view/.*#i', 'http://dotsub.com/services/oembed?width=720', true );
+		wp_oembed_add_provider( '#https://(www\.)?dotsub\.com/view/.*#i', 'https://dotsub.com/services/oembed?url=', true );
 		// Oembed support for wistia
 		wp_oembed_add_provider( '/https?:\/\/(.+)?(wistia\.(com|net)|wi\.st)\/.*/', 'http://fast.wistia.net/oembed', true );
 
