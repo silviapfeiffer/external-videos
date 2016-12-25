@@ -1126,7 +1126,7 @@ class SP_External_Videos {
   *  @return  boolean
   */
 
-  function authorization_exists( $host_id, $author_key, $developer_key, $secret_key, $auth_token ) {
+  function authorization_exists( $host_id, $author_id, $developer_key, $secret_key, $auth_token ) {
 
     $HOSTS = $this->admin_get_hosts();
 
