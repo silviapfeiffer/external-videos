@@ -103,6 +103,27 @@ class SP_EV_YouTube {
   }
 
   /*
+  *  embed_code
+  *
+  *  Used by save_video()
+  *  Embed code is stored as postmeta in external-video posts.
+  *  Code is specific to each host site's embed API.
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  0.23
+  *
+  *  @param   $video_id
+  *  @return  <iframe>
+  */
+
+  public static function embed_code( $video_id ) {
+
+    return "//www.youtube.com/embed/$video_id";
+
+  }
+
+  /*
   *  fetch
   *
   *  NEW YOUTUBE DATA API 3.0

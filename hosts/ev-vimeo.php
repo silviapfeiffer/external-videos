@@ -108,6 +108,27 @@ class SP_EV_Vimeo {
   }
 
   /*
+  *  embed_code
+  *
+  *  Used by save_video()
+  *  Embed code is stored as postmeta in external-video posts.
+  *  Code is specific to each host site's embed API.
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  0.23
+  *
+  *  @param   $video_id
+  *  @return  <iframe>
+  */
+
+  public static function embed_code( $video_id ) {
+
+    return "//player.vimeo.com/video/$video_id";
+
+  }
+
+  /*
   *  fetch
   *
   *  NEW VIMEO API 3.0 oAuth2

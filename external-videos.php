@@ -43,14 +43,6 @@ if( ! class_exists( 'SP_External_Videos' ) ) :
 
 class SP_External_Videos {
 
-  // moving these to the options table for now. could also be a taxonomy!
-  // public static $VIDEO_HOSTS = array(
-  //   'youtube' => 'YouTube',
-  //   'vimeo'   => 'Vimeo',
-  //   'dotsub'  => 'DotSub',
-  //   'wistia'  => 'Wistia'
-  // );
-
   public function __construct() {
 
     global $features_3_0;
@@ -237,7 +229,8 @@ class SP_External_Videos {
     // Pass this array to the admin js
     // For the nonce
     $settings_nonce = wp_create_nonce( 'ev_settings' );
-    $VIDEO_HOSTS = $this->admin_get_hosts();
+
+    $VIDEO_HOSTS = $this->admin_get_hosts_quick();
 
     // Make these variables an object array for the jquery later
     wp_localize_script( 'ev-admin', 'evSettings', array(
@@ -289,7 +282,53 @@ class SP_External_Videos {
   }
 
   /*
+  *  admin_get_authors
+  *
+  *  Settings page
+  *  Used by
+  *  Returns full array of authors from options['authors'];
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param
+  *  @returns $AUTHORS
+  */
+
+  static function admin_get_authors(){
+
+    $options = $this->admin_get_options();
+    $AUTHORS = $options['authors'];
+
+    return $AUTHORS;
+  }
+
+  /*
   *  admin_get_hosts
+  *
+  *  Settings page
+  *  Used by
+  *  Returns full array of hosts from options['hosts'];
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param
+  *  @returns $HOSTS
+  */
+
+  static function admin_get_hosts(){
+
+    $options = $this->admin_get_options();
+    $HOSTS = $options['hosts'];
+
+    return $HOSTS;
+  }
+
+  /*
+  *  admin_get_hosts_quick
   *
   *  Settings page
   *  Used by ev-settings-forms.php and AJAX handlers
@@ -300,15 +339,15 @@ class SP_External_Videos {
   *  @since  1.0
   *
   *  @param
-  *  @return
+  *  @returns $VIDEO_HOSTS
   */
 
-  static function admin_get_hosts(){
+  static function admin_get_hosts_quick(){
 
-    $options = SP_External_Videos::admin_get_options();
+    $HOSTS = $this->admin_get_hosts();
     $VIDEO_HOSTS = array();
 
-    foreach( $options['hosts'] as $host ){
+    foreach( $HOSTS as $host ){
       $id = $host['host_id'];
       $VIDEO_HOSTS[$id] = $host['host_name'];
     }
@@ -374,8 +413,7 @@ class SP_External_Videos {
     // Handle the ajax request
     check_ajax_referer( 'ev_settings' );
 
-    $options = $this->admin_get_options();
-    $AUTHORS = $options['authors'];
+    $AUTHORS = $this->admin_get_authors();
     $messages = '';
 
     if( isset( $_POST['author_id'] ) && isset( $_POST['host_id'] ) ) {
@@ -418,23 +456,23 @@ class SP_External_Videos {
   *  Used by update_videos_handler() and daily_function()
   *  Saves any new videos from host channels to the database.
   *  Returns number of video posts added.
+  *  Works for single-author and update-all via $single param
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $authors, $delete
-  *  @return  $num_videos
+  *  @param   $authors, $delete, $single
+  *  @return  html $messages
   */
 
   function post_new_videos( $authors, $delete, $single ) {
 
-    $options = $this->admin_get_options();
-    // $VIDEO_HOSTS = $this->admin_get_hosts();
-    $HOSTS = $options['hosts'];
-    $current_videos = $this->fetch_new_videos( $authors );
+    $HOSTS = $this->admin_get_hosts();
 
-    if ( !$current_videos ) return 0;
+    $new_videos = $this->fetch_new_videos( $authors, $HOSTS );
+
+    if ( !$new_videos ) return 0;
 
     $messages = $add_messages = $no_messages = $zero_message = '';
 
@@ -443,13 +481,13 @@ class SP_External_Videos {
     // $video_ids is an array of unique video ids
     $added_videos = $deleted_videos = array();
     // we gotta fill out this array with zeros, or error
-    foreach( $hosts as $host ){
+    foreach( $HOSTS as $host ){
       $id = $host['host_id'];
       $added_videos[$id] = $deleted_videos[$id] = 0;
     }
     $video_ids = array();
 
-    foreach ( $current_videos as $video ) {
+    foreach ( $new_videos as $video ) {
       array_push( $video_ids, $video['video_id'] );
       $is_new = $this->save_video( $video );
 
@@ -547,37 +585,28 @@ class SP_External_Videos {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $authors
-  *  @return  $all_videos
+  *  @param   $authors, $HOSTS (full hosts array)
+  *  @return  $new_videos
   */
 
-  function fetch_new_videos( $authors ) {
+  function fetch_new_videos( $authors, $HOSTS ) {
 
-    $current_videos = array();
+    $new_videos = array();
 
     foreach ( $authors as $author ) {
 
-      switch ( $author['host_id'] ) {
-        case 'youtube':
-          $videos = SP_EV_YouTube::fetch( $author );
-          break;
-        case 'vimeo':
-          $videos = SP_EV_Vimeo::fetch( $author );
-          break;
-        case 'dotsub':
-          $videos = SP_EV_Dotsub::fetch( $author );
-          break;
-        case 'wistia':
-          $videos = SP_EV_Wistia::fetch( $author );
-          break;
-      }
+      $host = $author['host_id'];
+      $hostname = $HOSTS[$host]['host_name'];
+      $ClassName = "SP_EV_".$hostname;
+
+      $videos = $ClassName::fetch( $author );
 
       if ( $videos ) {
-        $current_videos = array_merge( $current_videos, $videos );
+        $new_videos = array_merge( $new_videos, $videos );
       }
     }
 
-    return $current_videos;
+    return $new_videos;
 
   }
 
@@ -691,55 +720,46 @@ class SP_External_Videos {
   *  @date  31/10/16
   *  @since  0.23
   *
-  *  @param   $site, $video_id
+  *  @param   $host, $video_id
   *  @return  <iframe>
   */
 
-  function embed_code( $site, $video_id ) {
+  function embed_code( $host, $video_id ) {
 
+    $HOSTS = $this->admin_get_hosts();
+    $hostname = $HOSTS[$host]['host_name'];
+    $ClassName = "SP_EV_" . $hostname;
     $width = 560;
     $height = 315;
     $url = "";
 
-    switch ($site) {
-      case 'youtube':
-        $url = "//www.youtube.com/embed/$video_id";
-        break;
-      case 'vimeo':
-        $url = "//player.vimeo.com/video/$video_id";
-        break;
-      case 'dotsub':
-        $url = "//dotsub.com/media/$video_id/embed/";
-        break;
-      case 'wistia':
-        $url = "//fast.wistia.net/embed/iframe/$video_id";
-        break;
-      default:
-        return "";
-    }
+    $embed_code = $ClassName::embed_code( $video_id );
 
-    return "<iframe src='$url' frameborder='0' width='$width' height='$height' allowfullscreen></iframe>";
+    return $embed_code;
 
   }
 
   /*
   *  delete_all_videos_handler
   *
-  *  Used by settings page
   *  AJAX handler for "Delete videos from all channels" form
+  *  Used by settings page
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
   *  @param
-  *  @return
+  *  @return html $messages
   */
 
   function delete_all_videos_handler() {
 
+    check_ajax_referer( 'ev_settings' );
+
     $deleted_videos = $this->delete_all_videos();
     $messages = sprintf( _n( 'Moved %d video into trash.', 'Moved %d videos into trash.', $deleted_videos, 'external-videos' ), $deleted_videos );
+    $messages = esc_attr( $messages );
     $messages = sp_ev_wrap_admin_notice( $messages, 'info' );
 
     wp_send_json( $messages );
@@ -804,9 +824,9 @@ class SP_External_Videos {
 
     check_ajax_referer( 'ev_settings' );
 
+    // faster with one query: (not helper functions)
     $options = $this->admin_get_options();
     $AUTHORS = $options['authors'];
-    // $VIDEO_HOSTS = self::$VIDEO_HOSTS;
     $HOSTS = $options['hosts'];
 
     $html = '<div class="limited-width"><span class="feedback"></span></div>';
@@ -887,10 +907,11 @@ class SP_External_Videos {
     check_ajax_referer( 'ev_settings' );
 
     $options = $this->admin_get_options();
+    $AUTHORS = $options['authors'];
     $messages = '';
 
     // Does channel even exist?
-    if ( !$this->local_author_exists( $_POST['host_id'], $_POST['author_id'], $options['authors'] ) ) {
+    if ( !$this->local_author_exists( $_POST['host_id'], $_POST['author_id'], $AUTHORS ) ) {
       $message = __( "Can't delete a channel that doesn't exist.", 'external-videos' );
       $message = sp_ev_wrap_admin_notice( $message, 'warning' );
       $messages .= $message;
@@ -964,8 +985,10 @@ class SP_External_Videos {
     // Handle the ajax request
     check_ajax_referer( 'ev_settings' );
 
+    // faster with only one query
     $options = $this->admin_get_options();
     $HOSTS = $options['hosts'];
+    $AUTHORS = $options['authors'];
     $messages = '';
 
     $author = array();
@@ -985,15 +1008,15 @@ class SP_External_Videos {
     }
 
     // Check if local author already exists
-    elseif ( $this->local_author_exists( $author['host_id'], $author['author_id'], $options['authors'] ) ) {
+    elseif ( $this->local_author_exists( $author['host_id'], $author['author_id'], $AUTHORS ) ) {
       $message = __( 'Author already exists.', 'external-videos' );
       $message = sp_ev_wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
 
     // Check if we don't have authentication with video service
-    elseif ( !$this->authorization_exists( $author['host_id'], $author['developer_key'], $author['secret_key'], $author['auth_token'] ) ) {
-      $message =  __( 'Missing developer key.', 'external-videos' );
+    elseif ( !$this->authorization_exists( $author['host_id'], $author['author_id'], $author['developer_key'], $author['secret_key'], $author['auth_token'] ) ) {
+      $message =  __( 'Missing required API key.', 'external-videos' );
       $message = sp_ev_wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
@@ -1046,13 +1069,13 @@ class SP_External_Videos {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param    $host_id, $author_id, $authors
+  *  @param    $host_id, $author_id, $AUTHORS
   *  @return  boolean
   */
 
-  function local_author_exists( $host_id, $author_id, $authors ) {
+  function local_author_exists( $host_id, $author_id, $AUTHORS ) {
 
-    foreach ( $authors as $author ) {
+    foreach ( $AUTHORS as $author ) {
       if ( $author['author_id'] == $author_id && $author['host_id'] == $host_id ) {
         return true;
       }
@@ -1080,8 +1103,9 @@ class SP_External_Videos {
 
     $HOSTS = $this->admin_get_hosts();
     $hostname = $HOSTS[$host_id]['host_name'];
-    $CLASSNAME = "SP_EV_" . $hostname;
-    $response = $CLASSNAME::remote_author_exists();
+    $ClassName = "SP_EV_" . $hostname;
+
+    $response = $ClassName::remote_author_exists();
 
     return $response;
 
@@ -1102,15 +1126,17 @@ class SP_External_Videos {
   *  @return  boolean
   */
 
-  function authorization_exists( $host_id, $developer_key, $secret_key, $auth_token ) {
+  function authorization_exists( $host_id, $author_key, $developer_key, $secret_key, $auth_token ) {
 
     $HOSTS = $this->admin_get_hosts();
+    
     // get required keys for this host
     $api_keys = $HOSTS[$host_id]['api_keys'];
 
     foreach( $api_keys as $api_key ){
       $key = $api_key['id'];
       $required = $api_key['required'];
+
       if( !$$key && $required ) {
         return false;
       }
