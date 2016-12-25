@@ -10,14 +10,34 @@ class SP_EV_Vimeo {
     add_action( 'init', array( $this, 'initialize' ) );
   }
 
+  /*
+  *  initialize
+  *
+  *  Set up the sp_external_videos_options table for this host
+  *  so that host functions can be modularized and accessed from the db
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param
+  *  @return
+  */
+
   function initialize() {
+
+    // host_name must be the last part of the Class Name
+    $class = get_class();
+    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $hostname = $hostname[0];
+
     $options = SP_External_Videos::admin_get_options();
 
     if( !isset( $options['hosts']['vimeo'] ) ) :
 
       $options['hosts']['vimeo'] = array(
         'host_id' => 'vimeo',
-        'host_name' => 'Vimeo',
+        'host_name' => $hostname,
         'api_keys' => array(
           array(
             'id' => 'author_id',
@@ -52,6 +72,38 @@ class SP_EV_Vimeo {
       update_option( 'sp_external_videos_options', $options );
 
     endif;
+
+  }
+
+  /*
+  *  remote_author_exists
+  *
+  *  Requires appropriate method for THIS HOST
+  *  Used by SP_External_Videos::remote_author_exists()
+  *  Checks if remote author exists on this host
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param   $host_id, $author_id, $developer_key
+  *  @return  boolean
+  */
+
+  public static function remote_author_exists( $host_id, $author_id, $developer_key ){
+
+    $url = "https://vimeo.com/user" . $author_id;
+    $args = array();
+
+    $response = wp_remote_request( $url, $args );
+    $code = wp_remote_retrieve_response_code( $response );
+
+    // return false on error
+    if( !$response || is_wp_error( $response ) || preg_match('/^[45]/', $code ) ) {
+      return false;
+    }
+
+    return true;
 
   }
 
@@ -101,12 +153,12 @@ class SP_EV_Vimeo {
       $message = wp_remote_retrieve_response_message( $response );
       $body = json_decode( wp_remote_retrieve_body( $response ) );
 
-      echo '<pre>POST: '; print_r( $response ); echo '</pre>';
-      echo '<pre>CODE: '; print_r( $code ); echo '</pre>';
-      echo '<pre>MESSAGE: '; print_r( $message ); echo '</pre>';
+      // echo '<pre>POST: '; print_r( $response ); echo '</pre>';
+      // echo '<pre>CODE: '; print_r( $code ); echo '</pre>';
+      // echo '<pre>MESSAGE: '; print_r( $message ); echo '</pre>';
 
       $access_token = $body->access_token;
-      echo '<pre>TOKEN: '; print_r( $body->access_token ); echo '</pre>';
+      // echo '<pre>TOKEN: '; print_r( $body->access_token ); echo '</pre>';
     }
 
     // Now we're legit, supposedly.

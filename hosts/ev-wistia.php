@@ -10,14 +10,34 @@ class SP_EV_Wistia {
     add_action( 'init', array( $this, 'initialize' ) );
   }
 
+  /*
+  *  initialize
+  *
+  *  Set up the sp_external_videos_options table for this host
+  *  so that host functions can be modularized and accessed from the db
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param
+  *  @return
+  */
+
   function initialize() {
+
+    // host_name must be the last part of the Class Name
+    $class = get_class();
+    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $hostname = $hostname[0];
+
     $options = SP_External_Videos::admin_get_options();
 
     if( !isset( $options['hosts']['wistia'] ) ) :
 
       $options['hosts']['wistia'] = array(
         'host_id' => 'wistia',
-        'host_name' => 'Wistia',
+        'host_name' => $hostname,
         'api_keys' => array(
           array(
             'id' => 'author_id',
@@ -40,6 +60,56 @@ class SP_EV_Wistia {
       update_option( 'sp_external_videos_options', $options );
 
     endif;
+
+  }
+
+  public static function echo(){
+    $class = get_class();
+    echo 'Class is ' .  $class . '<br />';
+    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    print_r($hostname);
+    return;
+  }
+
+  /*
+  *  remote_author_exists
+  *
+  *  Requires appropriate method for THIS HOST
+  *  Used by SP_External_Videos::remote_author_exists()
+  *  Checks if remote author exists on this host
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param   $host_id, $author_id, $developer_key
+  *  @return  boolean
+  */
+
+  public static function remote_author_exists( $host_id, $author_id, $developer_key ){
+
+    $url = "https://api.wistia.com/v1/account.json";
+    $headers = array( 'Authorization' => 'Basic ' . base64_encode( "api:$developer_key" ) );
+    $args['headers'] = $headers;
+
+    $response = wp_remote_request( $url, $args );
+    $code = wp_remote_retrieve_response_code( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ) );
+
+    // return false on error
+    if( !$response || is_wp_error( $response ) || preg_match('/^[45]/', $code ) ) {
+      return false;
+    }
+
+    // for wistia: also check that this api key belongs to this user account
+    $userUrl = $body->url;
+    $expectUrl = "http://$author_id.wistia.com";
+
+    if ( $userUrl != $expectUrl ) {
+      return false;
+    }
+
+    return true;
 
   }
 

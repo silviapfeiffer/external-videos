@@ -1078,51 +1078,12 @@ class SP_External_Videos {
 
   function remote_author_exists( $host_id, $author_id, $developer_key ) {
 
-    $url = null;
-    $args = array();
+    $HOSTS = $this->admin_get_hosts();
+    $hostname = $HOSTS[$host_id]['host_name'];
+    $CLASSNAME = "SP_EV_" . $hostname;
+    $response = $CLASSNAME::remote_author_exists();
 
-    switch( $host_id ) {
-      case 'youtube':
-        $url = "http://www.youtube.com/$author_id";
-        break;
-      case 'vimeo':
-        $url = "http://www.vimeo.com/$author_id";
-        break;
-      case 'dotsub':
-        $url = "http://dotsub.com/view/user/$author_id";
-        break;
-      case 'wistia':
-        $url = "https://api.wistia.com/v1/account.json";
-        $headers = array( 'Authorization' => 'Basic ' . base64_encode( "api:$developer_key" ) );
-        $args['headers'] = $headers;
-        break;
-    }
-
-    $result = wp_remote_request( $url, $args );
-
-    // return false on error
-    if( is_wp_error( $result ) ) {
-      return false;
-    }
-
-    if ( !$result || preg_match('/^[45]/', $result['response']['code'] ) ) {
-      return false;
-    }
-
-    // for wistia: also check that this api key belongs to this user account
-    if ( $host_id == 'wistia' ) {
-
-      $userUrl = json_decode( $result['body'] )->url;
-      $expectUrl = "http://$author_id.wistia.com";
-
-      if ( $userUrl != $expectUrl ) {
-        return false;
-      }
-
-      echo "<div class='updated'><p><strong>Wistia account: make sure to <a href='http://wistia.com/doc/wordpress#using_the_oembed_embed_code'>activate oEmbed</a>.</strong></p></div>";
-    }
-
-    return true;
+    return $response;
 
   }
 
@@ -1143,21 +1104,16 @@ class SP_External_Videos {
 
   function authorization_exists( $host_id, $developer_key, $secret_key, $auth_token ) {
 
-    switch ( $host_id ) {
-      case 'youtube':
-        if ($developer_key == "" or $secret_key == "") {
-          return false;
-        }
-      case 'vimeo':
-        if ($developer_key == "" or $secret_key == "") {
-          return false;
-        }
-      case 'dotsub':
-        return true;
-      case 'wistia':
-        if ($developer_key == "") {
-          return false;
-        }
+    $HOSTS = $this->admin_get_hosts();
+    // get required keys for this host
+    $api_keys = $HOSTS[$host_id]['api_keys'];
+
+    foreach( $api_keys as $api_key ){
+      $key = $api_key['id'];
+      $required = $api_key['required'];
+      if( !$$key && $required ) {
+        return false;
+      }
     }
 
     return true;
