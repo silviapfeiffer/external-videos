@@ -227,7 +227,7 @@ function sp_ev_author_settings(){ ?>
             <div class="inside">
               <p>
                 <?php esc_attr_e(
-                  'To allow WordPress to connect to your account on YouTube, Vimeo, and Wistia, you will have to login to those accounts and create authentication credentials ("API keys").',
+                  'To allow WordPress to connect to your account on most hosts, you will have to login to those accounts and create authentication credentials ("API keys").',
                   'external-videos'
                 ); ?>
               </p>

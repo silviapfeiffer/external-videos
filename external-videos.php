@@ -298,7 +298,7 @@ class SP_External_Videos {
 
   static function admin_get_authors(){
 
-    $options = $this->admin_get_options();
+    $options = SP_External_Videos::admin_get_options();
     $AUTHORS = $options['authors'];
 
     return $AUTHORS;
@@ -321,7 +321,7 @@ class SP_External_Videos {
 
   static function admin_get_hosts(){
 
-    $options = $this->admin_get_options();
+    $options = SP_External_Videos::admin_get_options();
     $HOSTS = $options['hosts'];
 
     return $HOSTS;
@@ -344,7 +344,7 @@ class SP_External_Videos {
 
   static function admin_get_hosts_quick(){
 
-    $HOSTS = $this->admin_get_hosts();
+    $HOSTS = SP_External_Videos::admin_get_hosts();
     $VIDEO_HOSTS = array();
 
     foreach( $HOSTS as $host ){
@@ -855,21 +855,21 @@ class SP_External_Videos {
         } );
 
         $html .= '<tr>';
-        $html .= '<th scope="row" class="w-33 row-title">';
+        $html .= '<th scope="row" class="w-25 row-title">';
         $html .= '<strong>' . $hostname . '</strong>';
         $html .= '</th>';
         $html .= '<td>';
         $html .= '<table class="form-table" style="margin-top:0;">';
           foreach( $host_authors as $author ) {
             $html .= '<tr>';
-            $html .= '<td class="w-33">';// id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
+            $html .= '<td class="w-25">';// id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
             // $html .= '<p>';
             $html .= '<span>' . $author['author_id'] . '</span>';
             $html .= '</td>';
             $html .= '<td class="w-33 ev-table-check">';
             $html .= '<input type="submit" class="button-update button" value="' . __( 'Update Videos' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" /><div class="spinner"></div>';
             $html .= '</td>';
-            $html .= '<td class="w-25 ev-table-delete">';
+            $html .= '<td class="w-17 ev-table-delete">';
             $html .= '<input type="submit" class="button-delete button" value="' . __( 'Delete' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
             $html .= '</td>';
             $html .= '</tr>';
@@ -1129,7 +1129,7 @@ class SP_External_Videos {
   function authorization_exists( $host_id, $author_key, $developer_key, $secret_key, $auth_token ) {
 
     $HOSTS = $this->admin_get_hosts();
-    
+
     // get required keys for this host
     $api_keys = $HOSTS[$host_id]['api_keys'];
 

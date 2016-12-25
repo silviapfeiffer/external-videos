@@ -27,6 +27,19 @@ section:first-of-type {
 .ev-table-delete {
   text-align: right;
 }
+.w-50 {
+  width: 25%;
+}
+.w-33 {
+  width: 25%;
+}
+.w-25 {
+  width: 25%;
+}
+.w-17 {
+  width: 17%;
+}
+
 @media ( min-width: 45rem ){
   .w-50 {
     width: 50%;
@@ -36,6 +49,9 @@ section:first-of-type {
   }
   .w-25 {
     width: 25%;
+  }
+  .w-17 {
+    width: 17%;
   }
 }
 .spacer {
