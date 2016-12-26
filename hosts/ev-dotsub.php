@@ -26,34 +26,34 @@ class SP_EV_Dotsub {
 
   function initialize() {
 
+    // Do we need to add oEmbed support for this host?
+    // Oembed support for dotsub
+    wp_oembed_add_provider( '#https://(www\.)?dotsub\.com/view/.*#i', 'https://dotsub.com/services/oembed?url=', true );
+
     // host_name must be the last part of the Class Name
     $class = get_class();
     $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $hostname = $hostname[0];
 
-    $options = SP_External_Videos::admin_get_options();
+    $options = SP_External_Videos::get_options();
 
-    if( !isset( $options['hosts']['dotsub'] ) ):
+    $options['hosts']['dotsub'] = array(
+      'host_id' => 'dotsub',
+      'host_name' => $hostname,
+      'api_keys' => array(
+        array(
+          'id' => 'author_id',
+          'label' => 'User ID',
+          'required' => true,
+          'explanation' => ''
+        )
+      ),
+      'introduction' => "DotSub only requires a User ID in order to access your videos from another site.",
+      'api_url' => 'https://dotsub.com',
+      'api_link_title' => 'DotSub'
+    );
 
-      $options['hosts']['dotsub'] = array(
-        'host_id' => 'dotsub',
-        'host_name' => $hostname,
-        'api_keys' => array(
-          array(
-            'id' => 'author_id',
-            'label' => 'User ID',
-            'required' => true,
-            'explanation' => ''
-          )
-        ),
-        'introduction' => "DotSub only requires a User ID in order to access your videos from another site.",
-        'url' => 'https://dotsub.com',
-        'link_title' => 'DotSub'
-      );
-
-      update_option( 'sp_external_videos_options', $options );
-
-    endif;
+    update_option( 'sp_external_videos_options', $options );
 
   }
 

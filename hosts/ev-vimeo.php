@@ -26,52 +26,51 @@ class SP_EV_Vimeo {
 
   function initialize() {
 
+    // Do we need to add oEmbed support for this host?
+    // No, Vimeo oEmbed support is built in to WordPress
+
     // host_name must be the last part of the Class Name
     $class = get_class();
     $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $hostname = $hostname[0];
 
-    $options = SP_External_Videos::admin_get_options();
+    $options = SP_External_Videos::get_options();
 
-    if( !isset( $options['hosts']['vimeo'] ) ) :
-
-      $options['hosts']['vimeo'] = array(
-        'host_id' => 'vimeo',
-        'host_name' => $hostname,
-        'api_keys' => array(
-          array(
-            'id' => 'author_id',
-            'label' => 'User ID',
-            'required' => true,
-            'explanation' => 'Required'
-          ),
-          array(
-            'id' => 'developer_key',
-            'label' => 'Client Identifier',
-            'required' => true,
-            'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
-          ),
-          array(
-            'id' => 'secret_key',
-            'label' => 'Client Secret',
-            'required' => true,
-            'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
-          ),
-          array(
-            'id' => 'auth_token',
-            'label' => 'Personal Access Token',
-            'required' => false,
-            'explanation' => 'Optional - this needs to be generated in your Vimeo API Apps. It gives you access to both your public and private videos.'
-          )
+    $options['hosts']['vimeo'] = array(
+      'host_id' => 'vimeo',
+      'host_name' => $hostname,
+      'api_keys' => array(
+        array(
+          'id' => 'author_id',
+          'label' => 'User ID',
+          'required' => true,
+          'explanation' => 'Required'
         ),
-        'introduction' => "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier, Client Secret and Personal Access Token from your account, in order to access your videos from another site (like this one). ",
-        'url' => 'https://developer.vimeo.com/apps',
-        'link_title' => 'Vimeo API'
-      );
+        array(
+          'id' => 'developer_key',
+          'label' => 'Client Identifier',
+          'required' => true,
+          'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+        ),
+        array(
+          'id' => 'secret_key',
+          'label' => 'Client Secret',
+          'required' => true,
+          'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+        ),
+        array(
+          'id' => 'auth_token',
+          'label' => 'Personal Access Token',
+          'required' => false,
+          'explanation' => 'Optional - this needs to be generated in your Vimeo API Apps. It gives you access to both your public and private videos.'
+        )
+      ),
+      'introduction' => "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier, Client Secret and Personal Access Token from your account, in order to access your videos from another site (like this one). ",
+      'api_url' => 'https://developer.vimeo.com/apps',
+      'api_link_title' => 'Vimeo API'
+    );
 
-      update_option( 'sp_external_videos_options', $options );
-
-    endif;
+    update_option( 'sp_external_videos_options', $options );
 
   }
 

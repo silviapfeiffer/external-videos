@@ -26,46 +26,45 @@ class SP_EV_YouTube {
 
   function initialize() {
 
+    // Do we need to add oEmbed support for this host?
+    // No, YouTube oEmbed support is built in to WordPress
+
     // host_name must be the last part of the Class Name
     $class = get_class();
     $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $hostname = $hostname[0];
 
-    $options = SP_External_Videos::admin_get_options();
+    $options = SP_External_Videos::get_options();
 
-    if( !isset( $options['hosts']['youtube'] ) ) :
-
-      $options['hosts']['youtube'] = array(
-        'host_id' => 'youtube',
-        'host_name' => $hostname,
-        'api_keys' => array(
-          array(
-            'id' => 'author_id',
-            'label' => 'Channel Name',
-            'required' => true,
-            'explanation' => 'Required'
-          ),
-          array(
-            'id' => 'developer_key',
-            'label' => 'API Key',
-            'required' => true,
-            'explanation' => 'Required - this needs to be generated in your API console at YouTube'
-          ),
-          array(
-            'id' => 'secret_key',
-            'label' => 'Application Name',
-            'required' => true,
-            'explanation' => 'Required - this needs to be generated in your API console at YouTube'
-          )
+    $options['hosts']['youtube'] = array(
+      'host_id' => 'youtube',
+      'host_name' => $hostname,
+      'api_keys' => array(
+        array(
+          'id' => 'author_id',
+          'label' => 'Channel Name',
+          'required' => true,
+          'explanation' => 'Required'
         ),
-        'introduction' => "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).",
-        'url' => 'https://console.developers.google.com/apis/credentials',
-        'link_title' => 'YouTube API'
-      );
+        array(
+          'id' => 'developer_key',
+          'label' => 'API Key',
+          'required' => true,
+          'explanation' => 'Required - this needs to be generated in your API console at YouTube'
+        ),
+        array(
+          'id' => 'secret_key',
+          'label' => 'Application Name',
+          'required' => true,
+          'explanation' => 'Required - this needs to be generated in your API console at YouTube'
+        )
+      ),
+      'introduction' => "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).",
+      'api_url' => 'https://console.developers.google.com/apis/credentials',
+      'api_link_title' => 'YouTube API'
+    );
 
-      update_option( 'sp_external_videos_options', $options );
-
-    endif;
+    update_option( 'sp_external_videos_options', $options );
 
   }
 
@@ -145,29 +144,17 @@ class SP_EV_YouTube {
     // Setup YouTube API access. Ultimately we need a YouTube playlist_id,
     // which is hard for a user to find, and to get that we need the user's
     // channelId, which they're also unlikely to know. So we start by getting
-    // the channelId from the username, through a search query. Incredible!
+    // the channelId from the username, through a channels?forUsername query.
     // http://stackoverflow.com/questions/14925851/how-do-i-use-youtube-data-api-v3-to-fetch-channel-uploads-using-chanels-usernam?rq=1
     // https://developers.google.com/youtube/v3/code_samples/php#search_by_keyword
     // Also! YouTube doesn't accept the way wp_remote_get forms args,
     // so we have to stringify the args ourselves.
 
-    $searchUrl = "https://www.googleapis.com/youtube/v3/search";
-    $searchUrl .= "?q=" . $author_id;
-    $searchUrl .= "&key=" . $developer_key;
-    $searchUrl .= "&type=channel&part=snippet&fields=items(id/channelId)&maxResults=1";
-
-    // The first result has the channel.
-    $channelSearch = wp_remote_get( $searchUrl );
-    // $code = wp_remote_retrieve_response_code( $channelSearch );
-    // $message = wp_remote_retrieve_response_message( $channelSearch );
-    $body = json_decode( wp_remote_retrieve_body( $channelSearch ), true );
-    $channelId = $body["items"][0]["id"]["channelId"];
-
-    // Next we need the first playlistId
+    // NEW STYLE! WE ONLY NEED PLAYLIST ID
     $channelsUrl = "https://www.googleapis.com/youtube/v3/channels";
-    $channelsUrl .= "?id=" . $channelId;
+    $channelsUrl .= "?part=snippet,contentDetails";
+    $channelsUrl .= "&forUsername=" . $author_id;
     $channelsUrl .= "&key=" . $developer_key;
-    $channelsUrl .= "&part=contentDetails";
 
     $playlistSearch = wp_remote_get( $channelsUrl );
     // $code = wp_remote_retrieve_response_code( $playlistSearch );

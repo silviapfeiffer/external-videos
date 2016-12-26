@@ -14,7 +14,7 @@
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // make these variables available
-$options = SP_External_Videos::admin_get_options();
+$options = SP_External_Videos::get_options();
 $AUTHORS = $options['authors'];
 $HOSTS = $options['hosts'];
 
@@ -256,8 +256,8 @@ function sp_ev_author_settings(){ ?>
     $name = $host['host_name'];
     $api_keys = $host['api_keys'];
     $intro = $host['introduction'];
-    $url = $host['url'];
-    $link = $host['link_title'];
+    $url = $host['api_url'];
+    $link = $host['api_link_title'];
     ?>
     <section class="<?php echo esc_attr( $id )?>-tab content-tab">
 

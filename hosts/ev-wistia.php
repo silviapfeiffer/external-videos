@@ -26,40 +26,40 @@ class SP_EV_Wistia {
 
   function initialize() {
 
+    // Do we need to add oEmbed support for this host?
+    // Oembed support for wistia
+    wp_oembed_add_provider( '/https?:\/\/(.+)?(wistia\.(com|net)|wi\.st)\/.*/', 'http://fast.wistia.net/oembed', true );
+
     // host_name must be the last part of the Class Name
     $class = get_class();
     $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $hostname = $hostname[0];
 
-    $options = SP_External_Videos::admin_get_options();
+    $options = SP_External_Videos::get_options();
 
-    if( !isset( $options['hosts']['wistia'] ) ) :
-
-      $options['hosts']['wistia'] = array(
-        'host_id' => 'wistia',
-        'host_name' => $hostname,
-        'api_keys' => array(
-          array(
-            'id' => 'author_id',
-            'label' => 'Account Name',
-            'required' => true,
-            'explanation' => ''
-          ),
-          array(
-            'id' => 'developer_key',
-            'label' => 'API Token',
-            'required' => true,
-            'explanation' => 'Required - this needs to be generated in your Wistia account'
-          )
+    $options['hosts']['wistia'] = array(
+      'host_id' => 'wistia',
+      'host_name' => $hostname,
+      'api_keys' => array(
+        array(
+          'id' => 'author_id',
+          'label' => 'Account Name',
+          'required' => true,
+          'explanation' => ''
         ),
-        'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
-        'url' => 'https://wistia.com',
-        'link_title' => 'Wistia'
-      );
+        array(
+          'id' => 'developer_key',
+          'label' => 'API Token',
+          'required' => true,
+          'explanation' => 'Required - this needs to be generated in your Wistia account'
+        )
+      ),
+      'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
+      'api_url' => 'https://wistia.com',
+      'api_link_title' => 'Wistia'
+    );
 
-      update_option( 'sp_external_videos_options', $options );
-
-    endif;
+    update_option( 'sp_external_videos_options', $options );
 
   }
 
