@@ -623,14 +623,14 @@ class SP_EV_Admin {
         $html .= '<table class="form-table" style="margin-top:0;">';
           foreach( $host_authors as $author ) {
             $html .= '<tr>';
-            $html .= '<td class="w-25">';// id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
+            $html .= '<td class="w-33">';// id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
             // $html .= '<p>';
             $html .= '<span>' . $author['author_id'] . '</span>';
             $html .= '</td>';
-            $html .= '<td class="w-33 ev-table-check">';
+            $html .= '<td class="w-25 ev-table-check text-align-right">';
             $html .= '<input type="submit" class="button-update button" value="' . __( 'Update Videos' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" /><div class="spinner"></div>';
             $html .= '</td>';
-            $html .= '<td class="w-17 ev-table-delete">';
+            $html .= '<td class="w-17 ev-table-delete text-align-right">';
             $html .= '<input type="submit" class="button-delete button" value="' . __( 'Delete' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
             $html .= '</td>';
             $html .= '</tr>';
@@ -715,8 +715,8 @@ class SP_EV_Admin {
 
         // $message .= printf( __( 'Deleted channel and moved %d video to trash.', 'Deleted channel and moved %d videos to trash.', $del_videos, 'external-videos' ), $del_videos );
 
-        $message = "Deleted channel " . $author['author_id'] . " from " . $author['host_id'] . " and moved " . $del_videos . " videos to trash";
-        $message = sp_ev_wrap_admin_notice( $message, 'warning' );
+        $message = "Deleted channel " . $_POST['author_id'] . " from " . $_POST['host_id'] . " and moved " . $del_videos . " videos to trash. ";
+        $message = sp_ev_wrap_admin_notice( $message, 'info' );
         $messages .= $message;
       }
 
@@ -783,7 +783,7 @@ class SP_EV_Admin {
     }
 
     // Check if author doesn't exist on video service
-    elseif ( !$this->remote_author_exists ($author['host_id'], $author['author_id'], $author['developer_key'] ) ) {
+    elseif ( !$this->remote_author_exists ( $author['host_id'], $author['author_id'], $author['developer_key'] ) ) {
       $message = __( 'Invalid author - check spelling.', 'external-videos' );
       $message = sp_ev_wrap_admin_notice( $message, 'error' );
       $messages .= $message;
@@ -866,7 +866,7 @@ class SP_EV_Admin {
     $hostname = $HOSTS[$host_id]['host_name'];
     $ClassName = "SP_EV_" . $hostname;
 
-    $response = $ClassName::remote_author_exists();
+    $response = $ClassName::remote_author_exists( $host_id, $author_id, $developer_key );
 
     return $response;
 

@@ -1,3 +1,7 @@
+/*.ev-wrap .postbox .inside.big p {
+  font-size: 1rem;
+}*/
+
 section {
   display:none;
 }
@@ -24,7 +28,7 @@ section:first-of-type {
   padding: 0.25em 0.5em 0.25em 0 !important;
   border-bottom: 0px solid #eee;
 }
-.ev-table-delete {
+.text-align-right {
   text-align: right;
 }
 .w-50 {
@@ -38,6 +42,22 @@ section:first-of-type {
 }
 .w-17 {
   width: 17%;
+}
+.spacer {
+  display: inline-block;
+  width: 1.5em;
+}
+.float-right {
+  float: right;
+}
+.v-top {
+  vertical-align: top;
+}
+
+@media screen and ( max-width: 782px ) {
+  .ev-table .form-table td{
+    display: table-cell !important;
+  }
 }
 
 @media ( min-width: 45rem ){
@@ -53,14 +73,4 @@ section:first-of-type {
   .w-17 {
     width: 17%;
   }
-}
-.spacer {
-  display: inline-block;
-  width: 1.5em;
-}
-.float-right {
-  float: right;
-}
-.v-top {
-  vertical-align: top;
 }

@@ -44,19 +44,13 @@ class SP_EV_YouTube {
           'id' => 'author_id',
           'label' => 'Channel Name',
           'required' => true,
-          'explanation' => 'Required'
+          'explanation' => ''
         ),
         array(
           'id' => 'developer_key',
           'label' => 'API Key',
           'required' => true,
-          'explanation' => 'Required - this needs to be generated in your API console at YouTube'
-        ),
-        array(
-          'id' => 'secret_key',
-          'label' => 'Application Name',
-          'required' => true,
-          'explanation' => 'Required - this needs to be generated in your API console at YouTube'
+          'explanation' => 'This needs to be generated in your API console at YouTube'
         )
       ),
       'introduction' => "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).",
@@ -87,13 +81,14 @@ class SP_EV_YouTube {
     // $result is an uploads playlist_id for this username
     $url = "https://www.googleapis.com/youtube/v3/channels?key=$developer_key&part=snippet,contentDetails&forUsername=$author_id";
 
-    $response = wp_remote_get( $url );
-    $code = wp_remote_retrieve_response_code( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ) );
-    $result = $body['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+    $channelsSearch = wp_remote_get( $channelsUrl );
+    // $code = wp_remote_retrieve_response_code( $playlistSearch );
+    // $message = wp_remote_retrieve_response_message( $playlistSearch );
+    $channelsBody = json_decode( wp_remote_retrieve_body( $channelsSearch ), true );  // true to return array, not object
+    $playlistId = $channelsBody['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
 
     // return false on error
-    if( !$result || preg_match('/^[45]/', $code ) ) {
+    if( !$playlistId || preg_match('/^[45]/', $code ) ) {
       return false;
     }
 
@@ -139,7 +134,6 @@ class SP_EV_YouTube {
 
     $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
-    $app_name = $author['secret_key'];
 
     // Setup YouTube API access. Ultimately we need a YouTube playlist_id,
     // which is hard for a user to find, and to get that we need the user's
@@ -147,20 +141,18 @@ class SP_EV_YouTube {
     // the channelId from the username, through a channels?forUsername query.
     // http://stackoverflow.com/questions/14925851/how-do-i-use-youtube-data-api-v3-to-fetch-channel-uploads-using-chanels-usernam?rq=1
     // https://developers.google.com/youtube/v3/code_samples/php#search_by_keyword
-    // Also! YouTube doesn't accept the way wp_remote_get forms args,
+    // YouTube doesn't accept the way wp_remote_get forms args,
     // so we have to stringify the args ourselves.
 
-    // NEW STYLE! WE ONLY NEED PLAYLIST ID
+    // WE ONLY NEED PLAYLIST ID NOT CHANNEL ID
     $channelsUrl = "https://www.googleapis.com/youtube/v3/channels";
     $channelsUrl .= "?part=snippet,contentDetails";
     $channelsUrl .= "&forUsername=" . $author_id;
     $channelsUrl .= "&key=" . $developer_key;
 
-    $playlistSearch = wp_remote_get( $channelsUrl );
-    // $code = wp_remote_retrieve_response_code( $playlistSearch );
-    // $message = wp_remote_retrieve_response_message( $playlistSearch );
-    $playlistBody = json_decode( wp_remote_retrieve_body( $playlistSearch ), true );
-    $playlistId = $playlistBody['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+    $channelsSearch = wp_remote_get( $channelsUrl );
+    $channelsBody = json_decode( wp_remote_retrieve_body( $channelsSearch ), true );  // true to return array, not object
+    $playlistId = $channelsBody['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
 
     // And now we need those videos
     $per_page = 10;
@@ -169,7 +161,6 @@ class SP_EV_YouTube {
     $baseurl = "https://www.googleapis.com/youtube/v3/playlistItems";
     $baseurl .= "?part=contentDetails,snippet";
     $baseurl .= "&key=" . $developer_key;
-    $baseurl .= "&channelId=" . $channelId;
     $baseurl .= "&playlistId=" . $playlistId;
     $baseurl .= "&maxResults=" . $per_page;
 
@@ -184,30 +175,30 @@ class SP_EV_YouTube {
         $response = wp_remote_get( $url );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ) );
-        $videofeed = $body->items;
-        $pageToken = $body->nextPageToken;
+        $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+        $items = isset( $body['items'] ) ? $body['items'] : array();
+        $pageToken = isset( $body['nextPageToken'] ) ? true : null;
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $videofeed as $vid )
+      foreach ( $items as $vid )
       {
         // extract fields
         $video = array();
         $video['host_id']     = 'youtube';
         $video['author_id']   = strtolower( $author_id );
-        $video['video_id']    = $vid->id;
-        $video['title']       = $vid->snippet->title;
-        $video['description'] = $vid->snippet->description;
-        $video['authorname']  = $vid->snippet->channelTitle;
-        $video['videourl']    = 'https://www.youtube.com/watch?v=' . $vid->snippet->resourceId->videoId;
-        $video['published']   = date( "Y-m-d H:i:s", strtotime( $vid->snippet->publishedAt ) );
+        $video['video_id']    = $vid['id'];
+        $video['title']       = $vid['snippet']['title'];
+        $video['description'] = $vid['snippet']['description'];
+        $video['authorname']  = $vid['snippet']['channelTitle'];
+        $video['videourl']    = 'https://www.youtube.com/watch?v=' . $vid['snippet']['resourceId']['videoId'];
+        $video['published']   = date( "Y-m-d H:i:s", strtotime( $vid['snippet']['publishedAt'] ) );
         $video['author_url']  = "https://www.youtube.com/user/".$video['author_id'];
         $video['category']    = '';
         $video['keywords']    = array();
-        $video['thumbnail']   = $vid->snippet->thumbnails->default->url;
+        $video['thumbnail']   = $vid['snippet']['thumbnails']['default']['url'];
         $video['duration']    = '';
         $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
         $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';

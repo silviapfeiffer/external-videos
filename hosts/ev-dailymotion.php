@@ -44,7 +44,7 @@ class SP_EV_Dailymotion {
           'id' => 'author_id',
           'label' => 'User ID',
           'required' => true,
-          'explanation' => 'Required'
+          'explanation' => ''
         )
       ),
       'introduction' => "Dailymotion only requires a User ID in order to access your videos from another site.",
@@ -164,9 +164,9 @@ class SP_EV_Dailymotion {
         $response = wp_remote_request( $url, $args );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ) );
-        $list = $body->list;
-        $more = $body->has_more;
+        $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+        $list = $body['list'];
+        $has_more = $body['has_more'];
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
@@ -174,8 +174,6 @@ class SP_EV_Dailymotion {
 
       foreach ( $list as $vid )
       {
-        // we have to convert obj to array to access fields named with dots!
-        $vid = (array) $vid;
         // extract fields
         $video = array();
         $video['host_id']     = 'dailymotion';
@@ -206,7 +204,7 @@ class SP_EV_Dailymotion {
       // update request url to next page - it's offset by page on dailymotion
       $url = $baseurl . '&page=' . $page;
 
-    } while ( $more );
+    } while ( $has_more );
 
     // echo '<pre>'; print_r( $new_videos); echo '</pre>';
     return $new_videos;

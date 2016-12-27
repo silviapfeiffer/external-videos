@@ -76,9 +76,8 @@ function sp_ev_author_settings(){ ?>
 
 ?>
 
-<pre><?php // print_r( $VIDEO_HOSTS ); ?></pre>
 
-<div class="wrap">
+<div class="wrap ev-wrap">
 
   <h1><?php esc_attr_e( 'External Videos' ); ?></h1>
 
@@ -100,28 +99,22 @@ function sp_ev_author_settings(){ ?>
 
             <h2><span><?php esc_attr_e( 'About External Videos', 'external-videos' ); ?></span></h2>
 
-            <div class="inside">
+            <div class="inside big">
               <p>
                 <?php esc_attr_e(
-                  'External Videos allows your WordPress site to connect to your accounts at video hosting sites. For each video it finds on your channel, it creates a new post in WordPress of post_type "external-videos". ',
+                  'External Videos allows your WordPress site to connect to your accounts at video hosting sites. For each video it finds on a channel, it creates a new post in WordPress. For example, EV can find all the videos of the user "Fred" on YouTube, and add each of them as a new "external-videos" post.',
                   'external-videos'
                 ); ?>
               </p>
               <p>
                 <?php esc_attr_e(
-                  'For example, EV can find all the videos of the user "Fred" on YouTube, and add each of them as a new "external-videos" post. This is sometimes called "automatic cross-posting".',
+                  'To connect a video channel, click on one of the tabs at the top. Multiple video accounts are supported.',
                   'external-videos'
                 ); ?>
               </p>
               <p>
                 <?php esc_attr_e(
-                  'To connect a video channel, click on one of the tabs at the top.',
-                  'external-videos'
-                ); ?>
-              </p>
-              <p>
-                <?php esc_attr_e(
-                  'The plugin automatically checks once per day for new videos. Multiple video accounts are supported.',
+                  'The plugin automatically checks once per day for new videos.',
                   'external-videos'
                 ); ?>
               </p>
@@ -227,12 +220,28 @@ function sp_ev_author_settings(){ ?>
             <div class="inside">
               <p>
                 <?php esc_attr_e(
-                  'To allow WordPress to connect to your account on most hosts, you will have to login to those accounts and create authentication credentials ("API keys").',
+                  'For some hosts, you will have to login to your account and create API keys in order to access your videos.',
                   'external-videos'
                 ); ?>
               </p>
             </div>
             <!-- .inside -->
+
+            <h2><span class=""><?php esc_attr_e( 'Links', 'wp_admin_style' ); ?></span></h2>
+
+            <div class="inside">
+              <?php foreach( $HOSTS as $host ){
+                // print_r( $host['api_keys'][1] );
+                if( isset( $host['api_keys'][1] ) ){
+                  $url = $host['api_url'];
+                  $title = $host['api_link_title'];
+
+                  echo '<p><a target="_blank" href="' . esc_url( $url ) . '">' . $title . '</a></p>';
+                }
+              } ?>
+            </div>
+            <!-- .inside -->
+
 
           </div>
           <!-- .postbox -->
@@ -276,13 +285,16 @@ function sp_ev_author_settings(){ ?>
         <table class="form-table">
           <tbody>
             <?php foreach( $api_keys as $key ){ ?>
+              <?php $required = ( isset( $key['required'] ) && $key['required'] == true ) ? 'Required' : 'Optional'; ?>
+              <?php $explanation = $key['explanation']; ?>
+              <?php if( $required && $explanation ) $explanation = " - " . $explanation; ?>
               <tr>
                 <th scope="row">
                   <span><?php echo esc_attr( $key['label'] ); ?></span>
                 </th>
                 <td>
                   <input type="text" name="<?php echo esc_attr( $key['id'] ); ?>"/>
-                  <span class="description"><?php echo esc_attr( $key['explanation'] ); ?></span>
+                  <span class="description"><?php echo esc_attr( $required . $explanation ); ?></span>
                 </td>
               </tr>
             <?php } ?>

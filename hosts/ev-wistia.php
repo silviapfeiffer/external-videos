@@ -51,7 +51,7 @@ class SP_EV_Wistia {
           'id' => 'developer_key',
           'label' => 'API Token',
           'required' => true,
-          'explanation' => 'Required - this needs to be generated in your Wistia account'
+          'explanation' => 'This needs to be generated in your Wistia account'
         )
       ),
       'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
@@ -94,7 +94,7 @@ class SP_EV_Wistia {
 
     $response = wp_remote_request( $url, $args );
     $code = wp_remote_retrieve_response_code( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ) );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
 
     // return false on error
     if( !$response || is_wp_error( $response ) || preg_match('/^[45]/', $code ) ) {
@@ -102,7 +102,7 @@ class SP_EV_Wistia {
     }
 
     // for wistia: also check that this api key belongs to this user account
-    $userUrl = $body->url;
+    $userUrl = $body['url'];
     $expectUrl = "http://$author_id.wistia.com";
 
     if ( $userUrl != $expectUrl ) {
@@ -180,7 +180,7 @@ class SP_EV_Wistia {
         $response = wp_remote_get( $url, $args );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ) );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
@@ -191,26 +191,26 @@ class SP_EV_Wistia {
         $video = array();
         $video['host_id']     = 'wistia';
         $video['author_id']   = strtolower($author_id);
-        $video['video_id']    = $vid->hashed_id;
-        $video['title']       = $vid->name;
-        $video['description'] = $vid->description;
+        $video['video_id']    = $vid['hashed_id'];
+        $video['title']       = $vid['name'];
+        $video['description'] = $vid['description'];
         $video['authorname']  = $author_id;
-        $video['videourl']    = "https://$author_id.wistia.com/medias/" . $vid->hashed_id;
-        $video['published']   = date( "Y-m-d H:i:s", strtotime( $vid->created ));
+        $video['videourl']    = "https://$author_id.wistia.com/medias/" . $vid['hashed_id'];
+        $video['published']   = date( "Y-m-d H:i:s", strtotime( $vid['created'] ));
         $video['author_url']  = "https://$author_id.wistia.com/projects";
         $video['category']    = '';
         $video['keywords']    = array();
-        // $video['thumbnail']   = $vid->thumbnail->url;
+        // $video['thumbnail']   = $vid['thumbnail']['url'];
 
         // WISTIA DELIVERS HUGE THUMBNAILS AUTO CROPPED FROM THEIR API.
         // IF YOU WANT A SMALLER CROP OF THE THUMBNAIL,
         // RIGHT TRIM THE URL UNTIL THE EQUALS, THEN ADD WIDTH . X . HEIGHT
-        $thumbnail_url  = $vid->thumbnail->url;
+        $thumbnail_url  = $vid['thumbnail']['url'];
         $equipos = strripos( $thumbnail_url, "=" ) ? strripos( $thumbnail_url, "=" ) : 0;
         $thumbnail_url = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "X" . $thumb_h;
 
         $video['thumbnail']   = $thumbnail_url;
-        $video['duration']    = $vid->duration;
+        $video['duration']    = $vid['duration'];
         $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
         $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
         $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';

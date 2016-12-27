@@ -44,25 +44,25 @@ class SP_EV_Vimeo {
           'id' => 'author_id',
           'label' => 'User ID',
           'required' => true,
-          'explanation' => 'Required'
+          'explanation' => 'Note: this should be a number. Available at ...vimeo.com/settings/account/general'
         ),
         array(
           'id' => 'developer_key',
           'label' => 'Client Identifier',
           'required' => true,
-          'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+          'explanation' => 'This needs to be generated in your Vimeo API Apps'
         ),
         array(
           'id' => 'secret_key',
           'label' => 'Client Secret',
           'required' => true,
-          'explanation' => 'Required - this needs to be generated in your Vimeo API Apps'
+          'explanation' => 'This needs to be generated in your Vimeo API Apps'
         ),
         array(
           'id' => 'auth_token',
           'label' => 'Personal Access Token',
           'required' => false,
-          'explanation' => 'Optional - this needs to be generated in your Vimeo API Apps. It gives you access to both your public and private videos.'
+          'explanation' => 'This gives you access to both your public and private videos. It needs to be generated in your Vimeo API Apps.'
         )
       ),
       'introduction' => "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier, Client Secret and Personal Access Token from your account, in order to access your videos from another site (like this one). ",
@@ -152,36 +152,24 @@ class SP_EV_Vimeo {
     if( ! $access_token ) {
       // send request
       $url = 'https://api.vimeo.com/oauth/authorize/client?grant_type=client_credentials';
-      // $url = 'https://api.vimeo.com/oauth/authorize/client';
       $auth = base64_encode( $developer_key . ':' . $secret_key );
-      // $data = array(
-      //  'grant_type' => 'client_credentials',
-      //  'scope' => 'public private'
-      // );
-      // $data = json_encode( $data );
       $headers = array(
         'Authorization' => 'Basic ' . $auth,
         'Content-Type' => 'application/json'
       );
       $args = array(
-        'headers'     => $headers//,
-        // 'data'        => $data
+        'headers'     => $headers
       );
 
       $response = wp_remote_post( $url, $args );
       $code = wp_remote_retrieve_response_code( $response );
       $message = wp_remote_retrieve_response_message( $response );
-      $body = json_decode( wp_remote_retrieve_body( $response ) );
+      $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
 
-      // echo '<pre>POST: '; print_r( $response ); echo '</pre>';
-      // echo '<pre>CODE: '; print_r( $code ); echo '</pre>';
-      // echo '<pre>MESSAGE: '; print_r( $message ); echo '</pre>';
-
-      $access_token = $body->access_token;
-      // echo '<pre>TOKEN: '; print_r( $body->access_token ); echo '</pre>';
+      $access_token = $body['access_token'];
     }
 
-    // Now we're legit, supposedly.
+    // Now we should have an access token.
     // Limit field return.
     $fields_desired = array(
       'uri',
@@ -221,11 +209,10 @@ class SP_EV_Vimeo {
         $response = wp_remote_get( $url, $args );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ) );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
         // Adjust array to get to the data
-        $data = $body->data;
-        $videos = json_decode( json_encode( $data ), true );
-        $next = $body->paging->next;
+        $data = $body['data'];
+        $next = $body['paging']['next'];
         // $page = $body->page;
         // $per_page = $body->per_page;
         // $total = $body->total;
@@ -234,7 +221,7 @@ class SP_EV_Vimeo {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $videos as $vid )
+      foreach ( $data as $vid )
       {
         // extract fields
         $video = array();

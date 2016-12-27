@@ -84,8 +84,8 @@ class SP_EV_Dotsub {
 
     $response = wp_remote_request( $url, $args );
     $code = wp_remote_retrieve_response_code( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ) );
-    $result = $body->result;
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    $result = $body['result'];
 
     // return false on empty media result. This is a Dotsub quirk.
     if( !$result ) {
@@ -158,11 +158,11 @@ class SP_EV_Dotsub {
         $response = wp_remote_get( $url, $args );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ) );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
         // Adjust array to get to the "result"
-        $result = $body->result;
+        $result = $body['result'];
         $count = count( $result );
-        $totalPages = $body->totalPages;
+        $totalPages = $body['totalPages'];
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
@@ -173,18 +173,18 @@ class SP_EV_Dotsub {
         // extract fields
         $video = array();
         $video['host_id']     = 'dotsub';
-        $video['author_id']   = strtolower( $author_id );
-        $video['video_id']    = $vid->uuid;
-        $video['title']       = $vid->title;
-        $video['description'] = $vid->description;
-        $video['authorname']  = $vid->user;
-        $video['videourl']    = $vid->displayURI;
-        $video['published']   = date("Y-m-d H:i:s", strtotime( $vid->dateCreated ) );
-        $video['author_url']  = $vid->externalIdentifier;
+        $video['author_id']   = strtolower($author_id);
+        $video['video_id']    = $vid['uuid'];
+        $video['title']       = $vid['title'];
+        $video['description'] = $vid['description'];
+        $video['authorname']  = $vid['user'];
+        $video['videourl']    = $vid['displayURI'];
+        $video['published']   = date("Y-m-d H:i:s", strtotime($vid['dateCreated']));
+        $video['author_url']  = $vid['externalIdentifier'];
         $video['category']    = '';
         $video['keywords']    = array();
-        $video['thumbnail']   = $vid->screenshotURI;
-        $video['duration']    = $vid->duration;
+        $video['thumbnail']   = $vid['screenshotURI'];
+        $video['duration']    = $vid['duration'];
         $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
         $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
         $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
