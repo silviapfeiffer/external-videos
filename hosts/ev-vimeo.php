@@ -201,6 +201,7 @@ class SP_EV_Vimeo {
     // Put the parameters in the URL directly.
     // wp_remote_get doesn't stringify params in URL like Vimeo likes it
     $baseurl = 'https://api.vimeo.com';
+    // This whole end of the url is modified by the $next field at Vimeo. All parts needed
     $url = $baseurl . '/users/' . $author_id . '/videos?sort=date&page=1&per_page=50&fields=' . $fields_desired;
     $headers = array(
       'Authorization' => 'Bearer ' . $access_token, // was $token
@@ -217,21 +218,23 @@ class SP_EV_Vimeo {
     do {
       // Do an authenticated call
       try {
-        $videoreq = wp_remote_get( $url, $args );
+        $response = wp_remote_get( $url, $args );
+        $code = wp_remote_retrieve_response_code( $response );
+        $message = wp_remote_retrieve_response_message( $response );
+        $body = json_decode( wp_remote_retrieve_body( $response ) );
         // Adjust array to get to the data
-        $videofeed = json_decode( wp_remote_retrieve_body( $videoreq ) );
-        $pagefeed = $videofeed->data; //$videofeed->paging->next
-        $feedarray = json_decode( json_encode( $pagefeed ), true );
-        $next = $videofeed->paging->next;
-        // $page = $videofeed->page;
-        // $per_page = $videofeed->per_page;
-        // $total = $videofeed->total;
+        $data = $body->data;
+        $videos = json_decode( json_encode( $data ), true );
+        $next = $body->paging->next;
+        // $page = $body->page;
+        // $per_page = $body->per_page;
+        // $total = $body->total;
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $feedarray as $vid )
+      foreach ( $videos as $vid )
       {
         // extract fields
         $video = array();

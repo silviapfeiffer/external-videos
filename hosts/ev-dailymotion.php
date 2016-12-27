@@ -2,9 +2,9 @@
 
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
-if( ! class_exists( 'SP_EV_Dotsub' ) ) :
+if( ! class_exists( 'SP_EV_Dailymotion' ) ) :
 
-class SP_EV_Dotsub {
+class SP_EV_Dailymotion {
 
   public function __construct() {
     add_action( 'init', array( $this, 'initialize' ) );
@@ -27,8 +27,7 @@ class SP_EV_Dotsub {
   function initialize() {
 
     // Do we need to add oEmbed support for this host?
-    // Oembed support for dotsub
-    wp_oembed_add_provider( '#https://(www\.)?dotsub\.com/view/.*#i', 'https://dotsub.com/services/oembed?url=', true );
+    // No, Dailymotion oEmbed support is built in to WordPress
 
     // host_name must be the last part of the Class Name
     $class = get_class();
@@ -37,20 +36,20 @@ class SP_EV_Dotsub {
 
     $options = SP_External_Videos::get_options();
 
-    $options['hosts']['dotsub'] = array(
-      'host_id' => 'dotsub',
+    $options['hosts']['dailymotion'] = array(
+      'host_id' => 'dailymotion',
       'host_name' => $hostname,
       'api_keys' => array(
         array(
           'id' => 'author_id',
           'label' => 'User ID',
           'required' => true,
-          'explanation' => ''
+          'explanation' => 'Required'
         )
       ),
-      'introduction' => "DotSub only requires a User ID in order to access your videos from another site.",
-      'api_url' => 'https://dotsub.com',
-      'api_link_title' => 'DotSub'
+      'introduction' => "Dailymotion only requires a User ID in order to access your videos from another site.",
+      'api_url' => 'http://www.dailymotion.com/settings/developer',
+      'api_link_title' => 'Dailymotion API'
     );
 
     update_option( 'sp_external_videos_options', $options );
@@ -74,21 +73,14 @@ class SP_EV_Dotsub {
 
   public static function remote_author_exists( $host_id, $author_id, $developer_key ){
 
-    // Note: basic URL "https://dotsub.com/api/user/$author_id" always returns 200 OK.
-    // URL theoretically should work, but returns 200 OK even for non-users
-    // while the title gives "Internal Error | Dotsub" even for valid users!
-    // So we need to test media endpoint if there's media for the given user ID
-
-    $url = "https://dotsub.com/api/user/" . $author_id . "/media";
+    $url = "https://api.dailymotion.com/user/" . $author_id . "/videos/";
     $args = array();
 
     $response = wp_remote_request( $url, $args );
     $code = wp_remote_retrieve_response_code( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ) );
-    $result = $body->result;
 
-    // return false on empty media result. This is a Dotsub quirk.
-    if( !$result ) {
+    // return false on error
+    if( !$response || is_wp_error( $response ) || preg_match('/^[45]/', $code ) ) {
       return false;
     }
 
@@ -113,15 +105,16 @@ class SP_EV_Dotsub {
 
   public static function embed_code( $video_id ) {
 
-    return "//dotsub.com/media/$video_id/embed/";
+    return "//www.dailymotion.com/embed/video/$video_id";
 
   }
 
   /*
   *  fetch
   *
-  *  DOTSUB API v1
-  *  check https://github.com/dotsub/api-samples
+  *  NEW VIMEO API 3.0 oAuth2
+  *  Requires client identifier (developer_key) and client secret (secret_key)
+  *  Optional personal access token gives you access to private videos
   *
   *  @type  function
   *  @date  31/10/16
@@ -135,56 +128,69 @@ class SP_EV_Dotsub {
 
     $author_id = $author['author_id'];
 
-    $baseurl = "https://dotsub.com/api/user/" . $author_id . "/media";
-    $pagesize = 20;  // pagesize is automatically 20 at dotsub
-    $offset = 0; // which is fine, because the API is slow. Don't increase
-    $currentPage = 1;
-    $url = $baseurl . '?pagesize=' . $pagesize .'&offset=' . $offset; // At first. Then we start adding offsets
+    // Limit field return - these fields are specific to dailymotion
+    $fields_desired = array(
+      'id',
+      'url',
+      'title',
+      'description',
+      'duration',
+      'thumbnail_url',
+      'owner.screenname',
+      'owner.url',
+      'tags',
+      'created_time',
+    );
+    $fields_desired = implode( ',', $fields_desired );
+    $page = 1;
 
-    // for the request
+    $baseurl = 'https://api.dailymotion.com/user/' . $author_id. '/videos?sort=recent&fields=' . $fields_desired;
+    $url = $baseurl . '&page=' . $page;
+    // send request
     $headers = array(
-      'Authorization' => 'Basic',
-      'Content-Type' => 'application/json'
+      // 'Authorization' => 'Basic', // No authorization needed for video list by user at dailymotion
+      'Content-Type' => 'application/json',
     );
     $args = array(
-      'headers'     => $headers,
-      'timeout' => 25
+      'headers'     => $headers
     );
 
     $new_videos = array();
 
+    // /*
     do {
+      // fetch videos
       try {
-        $response = wp_remote_get( $url, $args );
+        $response = wp_remote_request( $url, $args );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
         $body = json_decode( wp_remote_retrieve_body( $response ) );
-        // Adjust array to get to the "result"
-        $result = $body->result;
-        $count = count( $result );
-        $totalPages = $body->totalPages;
+        $list = $body->list;
+        $more = $body->has_more;
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $result as $vid )
+      foreach ( $list as $vid )
       {
+        // we have to convert obj to array to access fields named with dots!
+        $vid = (array) $vid;
         // extract fields
         $video = array();
-        $video['host_id']     = 'dotsub';
-        $video['author_id']   = strtolower( $author_id );
-        $video['video_id']    = $vid->uuid;
-        $video['title']       = $vid->title;
-        $video['description'] = $vid->description;
-        $video['authorname']  = $vid->user;
-        $video['videourl']    = $vid->displayURI;
-        $video['published']   = date("Y-m-d H:i:s", strtotime( $vid->dateCreated ) );
-        $video['author_url']  = $vid->externalIdentifier;
+        $video['host_id']     = 'dailymotion';
+        $video['author_id']   = strtolower($author_id);
+        $video['video_id']    = $vid['id'];
+        $video['title']       = $vid['title'];
+        $video['description'] = $vid['description'];
+        $video['authorname']  = $vid['owner.screenname'];
+        $video['videourl']    = $vid['url'];
+        $video['published']   = date("Y-m-d H:i:s", strtotime($vid['created_time']));
+        $video['author_url']  = $vid['owner.url'];
         $video['category']    = '';
-        $video['keywords']    = array();
-        $video['thumbnail']   = $vid->screenshotURI;
-        $video['duration']    = $vid->duration;
+        $video['keywords']    = $vid['tags'];
+        $video['thumbnail']   = $vid['thumbnail_url'];
+        $video['duration']    = $vid['duration'];
         $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
         $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
         $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
@@ -196,13 +202,13 @@ class SP_EV_Dotsub {
       }
 
       // next page
-      $currentPage++;
-      // update request url to next page - it's offset by #videos, not pages
-      $offset = $offset + $pagesize;
-      $url = $baseurl . '?pagesize=' . $pagesize .'&offset=' . $offset;
+      $page++;
+      // update request url to next page - it's offset by page on dailymotion
+      $url = $baseurl . '&page=' . $page;
 
-    } while ( $totalPages > $currentPage );
+    } while ( $more );
 
+    // echo '<pre>'; print_r( $new_videos); echo '</pre>';
     return $new_videos;
 
   }
@@ -211,6 +217,6 @@ class SP_EV_Dotsub {
 
 endif;
 
-$SP_EV_Dotsub = new SP_EV_Dotsub;
+$SP_EV_Dailymotion = new SP_EV_Dailymotion;
 
 ?>

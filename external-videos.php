@@ -3,7 +3,7 @@
 * Plugin Name: External Videos
 * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
 * Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
-* Author: Silvia Pfeiffer
+* Author: Silvia Pfeiffer and Andrew Nimmo
 * Version: 1.0
 * Author URI: http://www.gingertech.net/
 * License: GPL2
@@ -29,7 +29,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
   @package    external-videos
-  @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
+  @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>, Andrew Nimmo <andrnimm@fastmail.fm>
   @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
   @version    1.0
@@ -65,6 +65,7 @@ class SP_External_Videos {
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-vimeo.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dotsub.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-wistia.php' );
+    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dailymotion.php' );
 
     /// *** vendor includes moved to files
 

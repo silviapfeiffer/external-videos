@@ -153,14 +153,15 @@ class SP_EV_Wistia {
     $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
 
-    $baseurl = "https://api.wistia.com/v1/medias.json?sort_by=created&sort_direction=1";
     // set other options
     $page = 0;
-    $per_page = 1;  // One by one because we get no paging info from Wistia
+    $per_page = 1;  // One by one because we get no next-page info from Wistia
     $thumb_w = get_option( "large_size_w" ); // Size could be set in options at some point
     $thumb_h = get_option( "large_size_h" );
 
-    $url = $baseurl . "&page=" . $page . "&per_page=" . $per_page;
+    $baseurl = "https://api.wistia.com/v1/medias.json?sort_by=created&sort_direction=1&per_page=" . $per_page;
+    // part of the url changes on subsequent page requests:
+    $url = $baseurl . "&page=" . $page;
 
     // send request; wistia is slow, so we're requesting one page at a time
     $headers = array(

@@ -809,7 +809,7 @@ class SP_EV_Admin {
         $hostname = $HOSTS[$host]['host_name'];
         $message = sprintf( __( 'Added %s channel from %s', 'external-videos' ), $author['author_id'], $hostname );
         // $message .=  __( 'Added channel from %s', 'external-videos' );
-        $message = sp_ev_wrap_admin_notice( $message, 'warning' );
+        $message = sp_ev_wrap_admin_notice( $message, 'success' );
         $messages .= $message;
       }
 
