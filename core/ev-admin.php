@@ -140,13 +140,14 @@ class SP_EV_Admin {
     $message = '';
 
     $fields = array();
-    parse_str($_POST['data'], $fields);
+    parse_str( $_POST['data'], $fields );
 
     // error_log( print_r( $fields, 1 ) );
 
     $options['rss'] = ( array_key_exists( 'ev-rss', $fields ) ? true : false );
     $options['delete'] = ( array_key_exists( 'ev-delete', $fields ) ? true : false );
     $options['attrib'] = ( array_key_exists( 'ev-attrib', $fields ) ? true : false );
+    $options['loop'] = ( array_key_exists( 'ev-loop', $fields ) ? true : false );
 
     if( update_option( 'sp_external_videos_options', $options ) ) $message = "Settings saved.";
     ob_clean();
@@ -770,7 +771,7 @@ class SP_EV_Admin {
 
     // Check if local author already exists
     elseif ( $this->local_author_exists( $author['host_id'], $author['author_id'], $AUTHORS ) ) {
-      $message = __( 'Author already exists.', 'external-videos' );
+      $message = __( 'Channel already exists.', 'external-videos' );
       $message = sp_ev_wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
@@ -783,8 +784,10 @@ class SP_EV_Admin {
     }
 
     // Check if author doesn't exist on video service
-    elseif ( !$this->remote_author_exists ( $author['host_id'], $author['author_id'], $author['developer_key'] ) ) {
-      $message = __( 'Invalid author - check spelling.', 'external-videos' );
+    elseif ( !$this->remote_author_exists( $author['host_id'], $author['author_id'], $author['developer_key'] ) ) {
+      $host = $author['host_id'];
+      $name = $HOSTS[$host]['api_keys'][0]['label'];
+      $message = sprintf( __( 'Invalid %s - check spelling.', 'external-videos' ), $name );
       $message = sp_ev_wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
@@ -799,7 +802,7 @@ class SP_EV_Admin {
         'secret_key' => $author['secret_key'],
         'auth_token' => $author['auth_token'],
         'ev_author' => $author['user'],
-        'ev_category' => isset($author['post_category']) ? $author['post_category'] : '',
+        'ev_category' => isset( $author['post_category'] ) ? $author['post_category'] : '',
         'ev_post_format' => $author['post_format'],
         'ev_post_status' => $author['post_status']
       );

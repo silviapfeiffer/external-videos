@@ -1,25 +1,16 @@
 === External Videos ===
 Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 Donate link: http://www.gingertech.net/
-Tags: videos, YouTube, Vimeo, DotSub
-Requires at least: 2.9
-Tested up to: 4.6
-Stable Tag: 0.28
+Tags: videos, YouTube, Vimeo, DotSub, Wistia, Dailymotion, crosspost
+Requires at least: 3.4
+Tested up to: 4.7
+Stable Tag: 1.0
 
-This is a WordPress post types plugin for videos posted to external social networking sites.
+A WordPress plugin to add videos posted to your accounts on external video hosting sites.
 
 == Description ==
 
-This plugin creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post type. The videos can be presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
-
-While some aspects of this plugin do work on wordpress 2.9.2 it is
-really designed for 3.0+. When using 2.9 you will miss the following
-features:
-
-* Admin Interface to list videos
-* Video page per video
-* Adding videos as attachments to posts
-
+This plugin creates a new WordPress post type called "External Videos" and aggregates videos from a video hosting site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post type. The videos can be presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
 
 == Installation ==
 
@@ -35,13 +26,13 @@ To install the External Videos plugin simply:
 
 = What sites are supported? =
 
-Currently supported sites are: YouTube, Vimeo
+Currently supported sites are: YouTube, Vimeo, Dotsub, Wistia, Dailymotion
 
 = How do I register another user account to draw videos from? =
 
 Go into the admin interface and add the site and user name.
 
-Note that Vimeo has changed their API - this means for Vimeo you will have to create an "app" including a client identifier, client secret *and an access token*, which you can do at https://developer.vimeo.com/apps.
+Note that for some hosts, you will have to login to your account and create API keys in order to access your videos. The plugin contains links to do this.
 
 = How often does the plugin pull videos from the registered publishers? =
 
@@ -51,7 +42,7 @@ If you have problems with "cron", consider installing the "Core Control" plugin,
 
 = How do you do the embedding? =
 
-We use OEmbed. For DotSub we use the service of embed.ly.
+We use OEmbed.
 
 = What short codes are available? =
 
@@ -73,18 +64,22 @@ You can add a link like this to your theme layout.
 
 1. screenshot-1.png : a list of the video posts in the admin interface
 2. screenshot-2.png : the setup page for the plugin
-3. screenshot-3.png : the setup page for the widget of recent videos
-4. screenshot-4.png : attaching a video from the external videos collection to a post or page
-5. screenshot-5.png : selecting a post or page to attach a video to
-6. screenshot-6.png : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
-7. screenshot-7.png : a video page as automatically created by the plugin
+3. screenshot-3.png : the setup page for a video host
+4. screenshot-4.png : the setup page for the widget of recent videos
+5. screenshot-5.png : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
+6. screenshot-6.png : a video page as automatically created by the plugin
 
 == Changelog ==
 
-= 0.28 =
-* updated to Vimeo API 3.0
-* automatically appending categories, author and hosting site to external-video post_content is now a settings option
-* fixed some php errors
+= 1.0 =
+* Major refactor - AJAX admin forms for live plugin settings and video updates
+* All video sites work again, using their current APIs
+* YouTube - Vimeo - Dotsub - Wistia
+* Dailymotion added
+* New settings option: Add external-videos to main Home page query (latest posts)
+* New settings option: Automatically append attribution (categories, author and hosting site) to external-video post content, or not
+* New admin column to sort external-videos by category
+* Note that some time since WP 3.5, you can no longer access connected external-videos from the Media Uploader, to add them to a post or page (other than the original external-videos post). This is because of hooks inaccessible since WP Media changed to backbone.js; this part of the plugin's functionality could be integrated with the Media Explorer plugin project.
 
 = 0.27 =
 * fixed use of set_include_path to be non-destructive

@@ -45,33 +45,19 @@ class SP_External_Videos {
 
   public function __construct() {
 
-    global $features_3_0;
-    global $wp_version;
-
-    $features_3_0 = false;
-
-    if ( version_compare( $wp_version, "3.0", ">=" ) ) {
-      $features_3_0 = true;
-    }
-
     require_once( ABSPATH . 'wp-admin/includes/taxonomy.php' );
 
     require_once( plugin_dir_path( __FILE__ ) . 'core/ev-admin.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'core/ev-helpers.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'core/ev-widget.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-shortcode.php' );
+    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'core/simple_html_dom.php' );
+
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-youtube.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-vimeo.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dotsub.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-wistia.php' );
     require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dailymotion.php' );
-
-    /// *** vendor includes moved to files
-
-    if ( $features_3_0 ) {
-      require_once( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
-    }
 
     // includes do not bring methods into the class! they're standalone functions
     register_activation_hook( __FILE__, array( $this, 'activation' ) );
@@ -80,6 +66,7 @@ class SP_External_Videos {
 
     add_action( 'init', array( $this, 'initialize' ) );
 
+    add_action( 'admin_head', array( $this, 'menu_icon' ) );
     add_action( 'admin_menu', array( $this, 'admin_settings' ) );
     add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 
@@ -90,6 +77,7 @@ class SP_External_Videos {
     add_action( 'widgets_init',  array( $this, 'load_widget' ) );
 
     add_filter( 'pre_get_posts', array( $this, 'filter_query_post_type' ) );
+    add_filter( 'pre_get_posts', array( $this, 'add_to_main_query' ) );
     add_filter( 'request', array( $this, 'feed_request' ) );
 
   }
@@ -136,6 +124,30 @@ class SP_External_Videos {
     // enable thickbox use for gallery
     wp_enqueue_style( 'thickbox' );
     wp_enqueue_script( 'thickbox' );
+
+  }
+
+  /*
+  *  menu_icon
+  *
+  *  Icon for External Videos post type in admin menu
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param
+  *  @return
+  */
+
+  function menu_icon(){  ?>
+
+    <style type="text/css" media="screen">
+      #menu-posts-external-videos .dashicons-admin-post:before {
+        content: "\f126";
+      }
+    </style>
+    <?php
 
   }
 
@@ -248,7 +260,7 @@ class SP_External_Videos {
 
     // Set defaults for the basic options
     if( !$raw_options ) {
-      $options = array( 'version' => 1, 'authors' => array(), 'hosts' => array(), 'rss' => false, 'delete' => true, 'attrib' => false );
+      $options = array( 'version' => 1, 'authors' => array(), 'hosts' => array(), 'rss' => false, 'delete' => true, 'attrib' => false, 'loop' => false );
     } else {
       $options = $raw_options;
       // below is needed, because if anything gets unset it throws an error
@@ -258,6 +270,7 @@ class SP_External_Videos {
       if( !array_key_exists( 'rss', $options ) ) $options['rss'] = false;
       if( !array_key_exists( 'delete', $options ) ) $options['delete'] = false;
       if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
+      if( !array_key_exists( 'loop', $options ) ) $options['loop'] = false;
     };
     // echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
 
@@ -304,6 +317,259 @@ class SP_External_Videos {
 
     return $query;
 
+  }
+
+  /*
+  *  add_to_main_query
+  *
+  *  add external-video posts to Home page (Latest posts) query
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  0.26
+  *
+  *  @param    $query
+  *  @return
+  */
+
+  function add_to_main_query( $query ) {
+
+    $options = $this->get_options();
+
+    if( !isset( $options['loop'] ) || $options['loop'] == false ) return $query;
+
+    if( is_home() ) {
+
+      $post_type = get_query_var( 'post_type' );
+
+      if( !is_array( $post_type ) ) $post_type = array( $post_type );
+      if( !in_array( 'external-videos', $post_type ) ) $post_type[] = 'external-videos';
+
+      $query->set( 'post_type', $post_type );
+
+    }
+
+    return $query;
+
+  }
+
+  /*
+  *  gallery
+  *
+  *  Sets up a shortcode for the videos.
+  *  [external-videos link="page/overlay"]
+  *      - provides a gallery with links to video pages or overlays
+  *  [external-videos feature="embed" width="600" height="360"]
+  *      - provides the embed code
+  *        for new newest video to feature as an embed  *
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  0.26
+  *
+  *  @param    $atts, $content
+  *  @return   shortcode HTML
+  */
+
+
+  function gallery( $atts, $content = null ) {
+
+    global $wp_query, $post;
+
+    // handles [external-videos ...] shortcode
+    // extract shortcode parameters
+    // the "feature" parameter should allow for {thumbnail, embed}
+    // as a choice between an embedded video and a thumbnail with overlay
+    // - does embed only right now
+
+    extract( shortcode_atts( array(
+      'link'    => 'overlay',
+      'feature' => '',
+      'width'   => '600',
+      'height'  => '360',
+      ), $atts));
+
+    // start output buffer collection
+    ob_start();
+
+    // depending on shortcode parameters, do different things
+    if ( $feature == 'embed' ) {
+      $params = array(
+        'posts_per_page' => 1,
+        'post_type'      => 'external-videos',
+        'post_status'    => 'publish',
+      );
+      query_posts( $params );
+      if ( have_posts() ) {
+        // extract the video for the feature
+        the_post();
+
+        $videourl  = get_post_meta( get_the_ID(), 'video_url' );
+        $video = trim( $videourl[0] );
+        // get oEmbed code
+        $oembed = new WP_Embed();
+        $html = $oembed->shortcode( null, $video );
+        // replace width with 600, height with 360
+        $html = preg_replace ( '/width="\d+"/', 'width="'.$width.'"', $html );
+        $html = preg_replace ( '/height="\d+"/', 'height="'.$height.'"', $html );
+
+        // just print the embed code for the newest video
+        echo $html;
+      }
+    } else {
+      // extract the videos for the gallery
+      $params = array(
+        'posts_per_page' => 20,
+        'post_type'      => 'external-videos',
+        'post_status'    => 'publish',
+      );
+      $params['paged'] = ( get_query_var( 'paged' ) ) ? get_query_var( 'paged' ) : 1;
+      query_posts( $params );
+
+      // display the gallery
+      $this->display_gallery( $width, $height, $link );
+    }
+
+    //Reset Query
+    wp_reset_query();
+    $result = ob_get_clean();
+    return $result;
+
+  }
+
+  /*
+  *  display_gallery
+  *
+  *  HTML for the shortcode.
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  0.26
+  *
+  *  @param    $width, $height, $link
+  *  @return   HTML
+  */
+
+  function display_gallery ( $width, $height, $link ) {
+
+    global $wp_query, $post, $features_3_0;
+
+    // if ( $wp_query->max_num_pages > 1 ) : ?>
+
+    <!-- see http://core.trac.wordpress.org/ticket/6453 -->
+    <script type="text/javascript">
+    //<![CDATA[
+    var tb_pathToImage = "wp-includes/js/thickbox/loadingAnimation.gif";
+    var tb_closeImage = "wp-includes/js/thickbox/tb-close.png";
+    //]]>
+    </script>
+    <div id="nav-above" class="navigation">
+      <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'external-videos' ) ); ?></div>
+      <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'external-videos' ) ); ?></div>
+    </div><!-- #nav-above -->
+    <?php // endif; ?>
+
+    <div class="gallerycontainer" style="clear:all;">
+      <?php
+      while ( have_posts() ) {
+        the_post();
+        $thumbnail = get_post_meta(get_the_ID(), 'thumbnail_url');
+        $thumb = $thumbnail[0];
+        $videourl  = get_post_meta(get_the_ID(), 'video_url');
+        $video = trim($videourl[0]);
+        $description = get_post_meta(get_the_ID(), 'description');
+        $desc = $description[0];
+        $short_title = sp_ev_shorten_text(get_the_title(), 33);
+        $thickbox_title = sp_ev_shorten_text(get_the_title(), 90);
+        // get oEmbed code
+        $oembed = new WP_Embed();
+        $html = $oembed->shortcode( null, $video );
+        // replace width with 600, height with 360
+        $html = preg_replace ( '/width="\d+"/', 'width="'.$width.'"', $html );
+        $html = preg_replace ( '/height="\d+"/', 'height="'.$height.'"', $html );
+      ?>
+      <div style="margin:2px; height:auto; width:auto; float:left;">
+        <?php
+        // display overlay if requested
+        if ($link == "page") {
+        ?>
+          <a href="<?php the_permalink() ?>"
+             title="<?php echo $thickbox_title ?>">
+            <div style="display:box; width:120px; height:90px;">
+              <img title="<?php the_title() ?>" src="<?php echo $thumb ?>"
+                style="display:inline; margin:0; border:1px solid black; width:120px; height:90px"/>
+            </div>
+          </a>
+          <div style="width:120px; height: 12px; margin-bottom:7px; line-height: 90%">
+            <small><i><?php echo get_the_time('F j, Y') ?></i></small>
+          </div>
+          <div style="width:120px; height: 30px; margin-bottom:20px; line-height: 80%">
+            <small><?php echo $short_title ?></small>
+          </div>
+        <?php
+        // display overlay if requested
+        } else {
+        ?>
+          <a href="#TB_inline?height=500&width=700&inlineId=hiddenModalContent_<?php the_ID() ?>"
+             title="<?php echo $thickbox_title ?>" class="thickbox">
+            <div style="display:box; width:120px; height:90px;">
+              <img title="<?php the_title() ?>" src="<?php echo $thumb ?>"
+                style="display:inline; margin:0; border:1px solid black; width:120px; height:90px"/>
+            </div>
+          </a>
+          <div style="width:120px; height: 12px; margin-bottom:7px; line-height: 90%">
+            <small><i><?php echo get_the_time('F j, Y') ?></i></small>
+          </div>
+          <div style="width:120px; height: 30px; margin-bottom:20px; line-height: 80%">
+            <small><?php echo $short_title ?></small>
+          </div>
+          <!-- Hidden content for the thickbox -->
+          <div id="hiddenModalContent_<?php echo $post->ID ?>" style="display:none;">
+            <p align="center"  style="margin-bottom:10px;">
+              <?php echo $html ?>
+            </p>
+            <div style="margin-bottom:10px;">
+              <?php
+              if ($post->post_parent > 0) {
+              ?>
+                <a href="<?php echo get_permalink( $post->post_parent ) ?>"><?php _e( 'Blog post related to this video', 'external-videos' ); ?></a>
+              <?php
+              }
+              ?>
+              <br/>
+              <?php
+              if ($features_3_0) {
+              ?>
+              <a href="<?php the_permalink(); ?>"><?php _e( 'Video page', 'external-videos' ); ?></a>
+              <?php
+              }
+              ?>
+            </div>
+            <div style="margin-bottom:10px;">
+              <?php echo $desc ?>
+            </div>
+            <div style="text-align: center;">
+              <input type="submit" id="Login" value="OK" onclick="tb_remove()"/>
+            </div>
+          </div>
+        <?php
+        }
+        ?>
+      </div>
+      <?php
+      }
+      ?>
+      <div style="clear: both;"></div>
+    </div>
+
+    <?php // if ( $wp_the_query->max_num_pages > 1 ) : ?>
+      <br/>
+      <div id="nav-below" class="navigation">
+        <div class="nav-previous"><?php next_posts_link( __( '<span class="meta-nav">&larr;</span> Older videos', 'external-videos' ) ); ?></div>
+        <div class="nav-next"><?php previous_posts_link( __( 'Newer videos <span class="meta-nav">&rarr;</span>', 'external-videos' ) ); ?></div>
+      </div><!-- #nav-below -->
+    <?php // endif; ?>
+    <?php
   }
 
   /*

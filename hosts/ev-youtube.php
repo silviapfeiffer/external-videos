@@ -44,7 +44,7 @@ class SP_EV_YouTube {
           'id' => 'author_id',
           'label' => 'Channel Name',
           'required' => true,
-          'explanation' => ''
+          'explanation' => 'This is the part after //www.youtube.com/user/ in your channel\'s full (not custom) URL'
         ),
         array(
           'id' => 'developer_key',

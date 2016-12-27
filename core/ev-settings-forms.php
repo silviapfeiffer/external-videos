@@ -200,8 +200,14 @@ function sp_ev_author_settings(){ ?>
                 <span><?php esc_attr_e('Add category, author and hosting site links to bottom of video post content', 'external-videos'); ?></span>
               </label>
             </fieldset>
+            <fieldset>
+              <label for="ev-loop">
+                <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ($ev_loop == true) echo "checked"; ?>/>
+                <span><?php esc_attr_e('Add external-video posts to the Home loop (latest Posts page)', 'external-videos'); ?></span>
+              </label>
+            </fieldset>
             <p class="submit">
-              <input type="submit" name="Submit" class="button button-primary" value="<?php esc_attr_e('Save Settings'); ?>" /><strong class="feedback ml-3"></strong>
+              <input type="submit" name="Submit" class="button button-primary" value="<?php esc_attr_e('Save Settings'); ?>" /><span class="spacer"></span><strong class="feedback ml-3"></strong>
             </p>
           </form>
 

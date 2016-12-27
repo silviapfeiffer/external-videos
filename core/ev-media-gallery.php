@@ -1,8 +1,17 @@
 <?php
 
 /*
-*  Class adds functions related to setting up a gallery with the videos.
+*  After WP 3.5, Media moved to backbone.js and these filters longer work.
+*  To do: make extension of Media Explorer plugin (MEXP) to enable these features
+*  https://github.com/Automattic/media-explorer
+*  https://vip.wordpress.com/documentation/extending-media-explorer/
+*  https://gist.github.com/paulgibbs/c4b50d07d04fd8da9410
+*  https://gist.github.com/Fab1en/4586865
+*
+*  Left here for upgrade reference.
+*  Class added functions related to setting up a gallery with the videos.
 *  All related to the Admin interface.
+*
 */
 
 if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
@@ -23,11 +32,11 @@ class SP_EV_Media_Gallery {
 
   }
 
-  function media_upload_tab( $tabs ) {
+  function media_upload_tab( $_default_tabs ) {
 
-    $tabs['external_videos'] = __('External Videos', 'external-videos');
+    $_default_tabs['external_videos'] = __('External Videos', 'external-videos');
 
-    return $tabs;
+    return $_default_tabs;
 
   }
 
@@ -46,7 +55,7 @@ class SP_EV_Media_Gallery {
           $errors = $return;
     }
 
-    return wp_iframe( 'media_upload_form', $errors );
+    return wp_iframe( array( $this, 'media_upload_form' ), $errors );
 
   }
 
