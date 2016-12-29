@@ -21,14 +21,24 @@
     $('.nav-tab-wrapper a').click( function() {
       $('.nav-tab').removeClass('nav-tab-active');
       $('section').fadeOut();
-      var chosen = $('section').eq($(this).index());
-      var choose = function(){
-        chosen.fadeIn();
-      };
+      var chosen = $('section').eq($(this).index()),
+          choose = function(){ chosen.fadeIn(); };
       window.setTimeout( choose, 300 );
       $(this).addClass('nav-tab-active');
       return false;
     });
+  };
+
+  // fadeOut
+  var fadeCallback = function(feedback){
+    $(feedback).children().fadeOut( 1000 );
+  };
+
+  // fadeOut
+  var fadeNotice = function(feedback){
+    window.setTimeout( function(){
+      fadeCallback(feedback);
+    }, 5000 );
   };
 
   // Plugin Settings handler
@@ -58,10 +68,7 @@
       var hostId = $(this).attr("data-host"),
           authorId = $(this).attr("data-author"),
           spinner = $(this).siblings(".spinner"),
-          feedback = $("#ev_author_list .feedback"),
-          fadeNotice = function(){
-            $(feedback).children().fadeOut(1000);
-          };
+          feedback = $("#ev_author_list .feedback");
 
       $(spinner).addClass("is-active");
 
@@ -74,7 +81,7 @@
       }, function(data){
         $(feedback).html(data);
         $(spinner).removeClass("is-active");
-        window.setTimeout( fadeNotice, 5000 );
+        fadeNotice(feedback);
       });
     });
   };
@@ -90,10 +97,7 @@
       var hostId = $(this).attr("data-host"),
           authorId = $(this).attr("data-author"),
           particular = $(this).closest("td"),
-          feedback = $("#ev_author_list .feedback"),
-          fadeNotice = function(){
-            $(feedback).children().fadeOut(1000);
-          };
+          feedback = $("#ev_author_list .feedback");
 
       if (!confirm('Are you sure you want to delete channel' + authorId + ' on ' + hostId + '?')){
         return false;
@@ -110,7 +114,7 @@
         $(particular).fadeOut(); //first fade out this author
         authorList(message); //rebuild the author list from the database
         $(feedback).html(data);
-        window.setTimeout( fadeNotice, 5000 );
+        fadeNotice(feedback);
       });
     });
   };
@@ -123,9 +127,6 @@
 
       var feedback = $("#ev_update_videos .feedback"),
           spinner = $("#ev_update_videos .spinner");
-          fadeNotice = function(){
-            $(feedback).children().fadeOut(1000);
-          };
 
       $(spinner).addClass("is-active");
 
@@ -137,7 +138,7 @@
         $(spinner).removeClass("is-active");
         $("#ev_update_videos .feedback").html(data);
         $(feedback).html(data);
-        window.setTimeout( fadeNotice, 5000 );
+        fadeNotice(feedback);
       });
     });
   };
@@ -149,15 +150,12 @@
       e.preventDefault();
 
       var feedback = $("#ev_delete_all .feedback"),
-          spinner = $("#ev_delete_all .spinner"),
-          fadeNotice = function(){
-            $(feedback).children().fadeOut(1000);
-          };
+          spinner = $("#ev_delete_all .spinner");
 
-      $(spinner).addClass("is-active");
       if (!confirm('Are you sure you want to delete all external video posts?')){
         return false;
       }
+      $(spinner).addClass("is-active");
 
       $.post( evSettings.ajax_url, {
         _ajax_nonce: evSettings.nonce,
@@ -167,7 +165,7 @@
       }, function(data){
         $(spinner).removeClass("is-active");
         $(feedback).html(data);
-        window.setTimeout( fadeNotice, 5000 );
+        fadeNotice(feedback);
       });
     });
   };
@@ -180,10 +178,7 @@
 
       var particular = $(this).attr("id"),
           feedback = $("#" + particular + " .feedback")
-          author = $("#" + particular).serialize(),
-          fadeNotice = function(){
-            $(feedback).children().fadeOut(1000);
-          };
+          author = $("#" + particular).serialize();
 
       $.post( evSettings.ajax_url, {
         _ajax_nonce: evSettings.nonce,
@@ -194,7 +189,7 @@
         $("#" + particular + " .feedback").html(data);
         var message = data;
         authorList(message); //rebuild the author list from the database
-        window.setTimeout( fadeNotice, 5000 );
+        fadeNotice(feedback);
       });
     });
   };
@@ -204,6 +199,9 @@
   // Note that ajax loading of html f's up event binding on all loaded elements
   // events herein must be bound to document henceforth
   var authorList = function(message){
+
+    var feedback = $("#ev_author_list .feedback");
+
     $.get( evSettings.ajax_url, {
       _ajax_nonce: evSettings.nonce,
       action: "author_list_handler",
@@ -211,6 +209,7 @@
     }, function(data){
       $("#ev_author_list").html(data);
       $("#ev_author_list .feedback").html(message);
+      fadeNotice(feedback);
     });
   };
 

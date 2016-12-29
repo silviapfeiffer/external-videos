@@ -43,6 +43,35 @@ class SP_EV_Admin {
   }
 
   /*
+  *  wrap_admin_notice
+  *
+  *  Settings page
+  *  Returns html WP-admin-notice-style message with appropriate notice class
+  *  Currently not dismissible because these are set to fadeOut via admin.js
+  *  types are info, success, warning, error
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param $message, $type
+  *  @returns $message html
+  */
+
+  function wrap_admin_notice( $message, $type ){
+
+    $new_message = '<div class="notice notice-' . esc_attr( $type ) . '">'; //  is-dismissible
+    $new_message .= '<p><strong>' . esc_attr( $message ) . '</strong></p>';
+    // $new_message .= '<button type="button" class="notice-dismiss">';
+    // $new_message .= '<span class="screen-reader-text">Dismiss this notice.</span>';
+    // $new_message .= '</button>';
+    $new_message .= '</div>';
+
+    return $new_message;
+
+  }
+
+  /*
   *  admin_get_authors
   *
   *  Settings page
@@ -175,13 +204,21 @@ class SP_EV_Admin {
     // Handle the ajax request
     check_ajax_referer( 'ev_settings' );
 
+    // Get options once now for the helper functions
     $options = SP_External_Videos::get_options();
-    $AUTHORS = SP_EV_Admin::admin_get_authors();
-    $messages = '';
+    $AUTHORS = $options['authors'];
+    $HOSTS = $options['hosts'];
+    $delete = isset( $options['delete'] ) ? $options['delete'] : null;
 
+    $new_messages = $trash_messages = '';
+
+    // figure out whether we're updating a single author, or all
+    // and populate the $update_authors array
     if( isset( $_POST['author_id'] ) && isset( $_POST['host_id'] ) ) {
+      // it's single
       $eligibles = array();
 
+      // get the relevant local author. not so simple in multidimensional!
       foreach( $AUTHORS as $authorkey => $authordata ){
         if( in_array( $_POST['host_id'], $authordata ) ) {
           $eligibles[] = $authorkey;
@@ -201,15 +238,18 @@ class SP_EV_Admin {
         $single = true;
       }
 
-    } else {
+    } else { // it's update all
       $update_authors = $AUTHORS;
       $single = null;
     }
 
-    $delete = isset( $options['delete'] ) ? $options['delete'] : null;
-    // post_new_videos() gets everything new or deleted and returns messages about it
-    $messages = $this->post_new_videos( $update_authors, $delete, $single );
+    // post_new_videos() gets everything new and returns messages about it
+    $new_messages = $this->post_new_videos( $update_authors, $HOSTS, $single );
 
+    // trash_deleted_videos() checks for videos deleted on host and returns messages about it
+    if( $delete && !$single ) $trash_messages = $this->trash_deleted_videos( $update_authors, $HOSTS );
+
+    $messages = $new_messages . $trash_messages;
     wp_send_json( $messages );
 
   }
@@ -219,50 +259,55 @@ class SP_EV_Admin {
   *
   *  Used by update_videos_handler() and daily_function()
   *  Saves any new videos from host channels to the database.
-  *  Returns number of video posts added.
+  *  Returns messages about number of video posts added.
   *  Works for single-author and update-all via $single param
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $authors, $delete, $single
+  *  @param   $authors, $HOSTS, $single
   *  @return  html $messages
   */
 
-  function post_new_videos( $authors, $delete, $single ) {
-
-    $HOSTS = SP_EV_Admin::admin_get_hosts();
+  function post_new_videos( $authors, $HOSTS, $single ) {
 
     $new_videos = $this->fetch_new_videos( $authors, $HOSTS );
 
-    if ( !$new_videos ) return 0;
-
     $messages = $add_messages = $no_messages = $zero_message = '';
 
-    // save new videos & build list of all current video_ids
-    // $added_videos is an array of totals indexed by host
-    // $video_ids is an array of unique video ids
-    $added_videos = $deleted_videos = array();
+    if ( !$new_videos ) {
+      $zero_message = "No videos found.";
+      $zero_message = $this->wrap_admin_notice( $zero_message, 'info' );
+
+      return $zero_message;
+    }
+
+    // we're going to count how many we add at each host
+    // $count_added is an array of totals indexed by host
+    $count_added = array();
     // we gotta fill out this array with zeros, or error
     foreach( $HOSTS as $host ){
       $id = $host['host_id'];
-      $added_videos[$id] = $deleted_videos[$id] = 0;
+      $count_added[$id] = 0;
     }
+    // save new videos & build list of all current video_ids
+    // $video_ids is an array of unique video ids
     $video_ids = array();
 
     foreach ( $new_videos as $video ) {
       array_push( $video_ids, $video['video_id'] );
+      // save_video() checks if is new, and saves video post
       $is_new = $this->save_video( $video );
 
       if ( $is_new ) {
         $host = $video['host_id'];
-        $added_videos[$host]++;
+        $count_added[$host]++;
       }
     }
 
     // build messages about added videos per host
-    foreach ( $added_videos as $host=>$num ) {
+    foreach ( $count_added as $host=>$num ) {
       $hostname = $HOSTS[$host]['host_name'];
       if ( $num > 0 ) {
         $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $hostname );
@@ -272,35 +317,61 @@ class SP_EV_Admin {
       }
     }
 
-    // reset the no message to single
+    // reset the no message for a single request
     if( $single && $no_messages ){
       $no_messages = "No videos found on " . $authors[0]['host_id'] . '.';
     }
     // could have both, or neither
     if( !$add_messages && !$no_messages ) {
       $zero_message = "No videos found.";
-      $zero_message = sp_ev_wrap_admin_notice( $zero_message, 'info' );
+      $zero_message = $this->wrap_admin_notice( $zero_message, 'info' );
       $messages = $zero_message;
     } else {
       if( $add_messages ) {
-        $add_messages = sp_ev_wrap_admin_notice( $add_messages, 'success' );
+        $add_messages = $this->wrap_admin_notice( $add_messages, 'success' );
         $messages .= $add_messages;
       }
       if( $no_messages ) {
-        $no_messages = sp_ev_wrap_admin_notice( $no_messages, 'info' );
+        $no_messages = $this->wrap_admin_notice( $no_messages, 'info' );
         // only add $no_messages if we're doing multiple authors,
         // or if we don't have any $add_messages for single author.
         if( $single && !$add_messages ) $messages .= $no_messages;
       }
     }
 
-    // if we're not deleting anything
-    if ( !$delete ) {
-      // just return the messages
-      return $messages;
-    }
+    // return the messages
+    return $messages;
+
+  }
+
+  /*
+  *  trash_deleted_videos()
+  *
+  *  Used by update_videos_handler() and daily_function()
+  *  Trashes any videos on WordPress that have been deleted from host channels.
+  *  Returns messages about number of video posts trashed.
+  *  Disabled for single-author update_videos
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param   $authors, $HOSTS, $single
+  *  @return  html $messages
+  */
+
+  function trash_deleted_videos( $authors, $HOSTS ) {
 
     // next up: deleted videos
+    // we're going to count how many were deleted at each host
+    // $count_deleted is an array of totals indexed by host
+    $count_deleted = array();
+    // gotta fill out this array with zeros, or error
+    foreach( $HOSTS as $host ){
+      $id = $host['host_id'];
+      $count_deleted[$id] = 0;
+    }
+
     $all_videos = new WP_Query( array(
       'post_type'  => 'external-videos',
       'nopaging' => 1
@@ -316,25 +387,28 @@ class SP_EV_Admin {
         $post = get_post( $old_video->ID );
         $post->post_status = 'trash';
         wp_update_post( $post );
-        $deleted_videos[$host]++;
+        //update count of deleted videos
+        $count_deleted[$host]++;
       }
     }
 
     // build message about deleted videos
-    foreach( $deleted_videos as $host=>$num ) {
+    foreach( $count_deleted as $host=>$num ) {
       if ( $num > 0 ) {
         $delete_messages = sprintf( _n( 'Note: %1$d video was deleted on %2$s and moved to trash on WordPress.', 'Note: %1$d videos were deleted on %2$s and moved to trash on WordPress.', $num, 'external-videos'), $num, $host );
       }
     }
 
-    if( $delete_messages ) {
-      $delete_messages = sp_ev_wrap_admin_notice( $delete_messages, 'warning' );
+    if( isset( $delete_messages ) ) {
+      $delete_messages = $this->wrap_admin_notice( $delete_messages, 'warning' );
       $messages .= $delete_messages;
     }
 
+    // return the messages
     return $messages;
 
   }
+
 
   /*
   *  fetch_new_videos
@@ -348,7 +422,7 @@ class SP_EV_Admin {
   *  @since  1.0
   *
   *  @param   $authors, $HOSTS (full hosts array)
-  *  @return  $new_videos
+  *  @return  $new_videos (array of videos)
   */
 
   function fetch_new_videos( $authors, $HOSTS ) {
@@ -522,7 +596,7 @@ class SP_EV_Admin {
     $deleted_videos = $this->delete_all_videos();
     $messages = sprintf( _n( 'Moved %d video into trash.', 'Moved %d videos into trash.', $deleted_videos, 'external-videos' ), $deleted_videos );
     $messages = esc_attr( $messages );
-    $messages = sp_ev_wrap_admin_notice( $messages, 'info' );
+    $messages = $this->wrap_admin_notice( $messages, 'info' );
 
     wp_send_json( $messages );
 
@@ -659,8 +733,8 @@ class SP_EV_Admin {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param
-  *  @return
+  *  @param $_POST['host_id'], $_POST['author_id']
+  *  @return $message about deleted author and videos, or error message
   */
 
   function delete_author_handler() {
@@ -670,13 +744,12 @@ class SP_EV_Admin {
 
     $options = SP_External_Videos::get_options();
     $AUTHORS = $options['authors'];
-    $messages = '';
+    $message = '';
 
     // Does channel even exist?
     if ( !$this->local_author_exists( $_POST['host_id'], $_POST['author_id'], $AUTHORS ) ) {
       $message = __( "Can't delete a channel that doesn't exist.", 'external-videos' );
-      $message = sp_ev_wrap_admin_notice( $message, 'warning' );
-      $messages .= $message;
+      $message = $this->wrap_admin_notice( $message, 'warning' );
     }
 
     else {
@@ -689,8 +762,8 @@ class SP_EV_Admin {
 
       $options['authors'] = array_values( $options['authors'] );
 
-      // also remove the channel's videos from the posts table. count how many we're deleting
-      $del_videos = 0;
+      // also move the channel's videos to the trash. count how many we're moving
+      $count_trash = 0;
 
       $author_posts = new WP_Query( array(
         'post_type'  => 'external-videos',
@@ -706,24 +779,21 @@ class SP_EV_Admin {
           $post = get_post( $query_video->ID );
           $post->post_status = 'trash';
           wp_update_post($post);
-          $del_videos += 1;
+          $count_trash += 1;
         }
       }
 
       // Save the options without this channel
       if( update_option( 'sp_external_videos_options', $options ) ) {
-        // unset( $_POST['host_id'], $_POST['author_id'] );
 
-        // $message .= printf( __( 'Deleted channel and moved %d video to trash.', 'Deleted channel and moved %d videos to trash.', $del_videos, 'external-videos' ), $del_videos );
+        $message = sprintf( _n( 'Deleted channel %s from %s and moved %d video to trash.', 'Deleted channel %s from %s and moved %d videos to trash.', $count_trash, 'external-videos' ), $_POST['author_id'], $_POST['host_id'], $count_trash );
 
-        $message = "Deleted channel " . $_POST['author_id'] . " from " . $_POST['host_id'] . " and moved " . $del_videos . " videos to trash. ";
-        $message = sp_ev_wrap_admin_notice( $message, 'info' );
-        $messages .= $message;
+        $message = $this->wrap_admin_notice( $message, 'info' );
       }
 
     }
 
-    wp_send_json( $messages );
+    wp_send_json( $message );
 
   }
 
@@ -765,21 +835,21 @@ class SP_EV_Admin {
 
     if ( !array_key_exists( $author['host_id'], $HOSTS ) ) {
       $message = __( 'Invalid video host.', 'external-videos' );
-      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
 
     // Check if local author already exists
     elseif ( $this->local_author_exists( $author['host_id'], $author['author_id'], $AUTHORS ) ) {
       $message = __( 'Channel already exists.', 'external-videos' );
-      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
 
     // Check if we don't have authentication with video service
     elseif ( !$this->authorization_exists( $author['host_id'], $author['author_id'], $author['developer_key'], $author['secret_key'], $author['auth_token'] ) ) {
       $message =  __( 'Missing required API key.', 'external-videos' );
-      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
 
@@ -788,7 +858,7 @@ class SP_EV_Admin {
       $host = $author['host_id'];
       $name = $HOSTS[$host]['api_keys'][0]['label'];
       $message = sprintf( __( 'Invalid %s - check spelling.', 'external-videos' ), $name );
-      $message = sp_ev_wrap_admin_notice( $message, 'error' );
+      $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
 
@@ -812,7 +882,7 @@ class SP_EV_Admin {
         $hostname = $HOSTS[$host]['host_name'];
         $message = sprintf( __( 'Added %s channel from %s', 'external-videos' ), $author['author_id'], $hostname );
         // $message .=  __( 'Added channel from %s', 'external-videos' );
-        $message = sp_ev_wrap_admin_notice( $message, 'success' );
+        $message = $this->wrap_admin_notice( $message, 'success' );
         $messages .= $message;
       }
 

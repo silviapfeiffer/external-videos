@@ -58,16 +58,4 @@ function sp_ev_shorten_text($input, $length = 36, $ellipses = true) {
   return $trimmed_text;
 }
 
-function sp_ev_wrap_admin_notice( $message, $type ){
-
-  $new_message = '<div class="notice notice-' . esc_attr( $type ) . '">'; //  is-dismissible
-  $new_message .= '<p><strong>' . esc_attr( $message ) . '</strong></p>';
-  // $new_message .= '<button type="button" class="notice-dismiss">';
-  // $new_message .= '<span class="screen-reader-text">Dismiss this notice.</span>';
-  // $new_message .= '</button>';
-  $new_message .= '</div>';
-
-  return $new_message;
-
-}
 ?>

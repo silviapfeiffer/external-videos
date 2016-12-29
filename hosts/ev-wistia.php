@@ -156,8 +156,11 @@ class SP_EV_Wistia {
     // set other options
     $page = 0;
     $per_page = 1;  // One by one because we get no next-page info from Wistia
-    $thumb_w = get_option( "large_size_w" ); // Size could be set in options at some point
-    $thumb_h = get_option( "large_size_h" );
+    // Size could alternatively be set in options at some point
+    // below is the WordPress Media "thumbnail" image setting, with defaults at 180x135
+    $thumb_w = ( null !== get_option( "thumbnail_size_w" ) ) ? get_option( "thumbnail_size_w" ) : 180;
+    $thumb_h = ( null !== get_option( "thumbnail_size_h" ) ) ? get_option( "thumbnail_size_h" ) : 135;
+
 
     $baseurl = "https://api.wistia.com/v1/medias.json?sort_by=created&sort_direction=1&per_page=" . $per_page;
     // part of the url changes on subsequent page requests:
@@ -204,10 +207,10 @@ class SP_EV_Wistia {
 
         // WISTIA DELIVERS HUGE THUMBNAILS AUTO CROPPED FROM THEIR API.
         // IF YOU WANT A SMALLER CROP OF THE THUMBNAIL,
-        // RIGHT TRIM THE URL UNTIL THE EQUALS, THEN ADD WIDTH . X . HEIGHT
+        // RIGHT TRIM THE URL UNTIL THE EQUALS, THEN ADD WIDTH . x . HEIGHT
         $thumbnail_url  = $vid['thumbnail']['url'];
         $equipos = strripos( $thumbnail_url, "=" ) ? strripos( $thumbnail_url, "=" ) : 0;
-        $thumbnail_url = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "X" . $thumb_h;
+        $thumbnail_url = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "x" . $thumb_h;
 
         $video['thumbnail']   = $thumbnail_url;
         $video['duration']    = $vid['duration'];

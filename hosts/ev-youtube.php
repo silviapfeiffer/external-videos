@@ -78,17 +78,21 @@ class SP_EV_YouTube {
 
   public static function remote_author_exists( $host_id, $author_id, $developer_key ){
 
-    // $result is an uploads playlist_id for this username
-    $url = "https://www.googleapis.com/youtube/v3/channels?key=$developer_key&part=snippet,contentDetails&forUsername=$author_id";
+    // SEARCH FOR CHANNEL_ID
+    $url = "https://www.googleapis.com/youtube/v3/search";
+    $url .= "?type=channel&part=snippet&fields=items(id/channelId)&maxResults=1";
+    $url .= "&key=" . $developer_key;
+    $url .= "&q=" . $author_id;
 
-    $channelsSearch = wp_remote_get( $channelsUrl );
-    // $code = wp_remote_retrieve_response_code( $playlistSearch );
-    // $message = wp_remote_retrieve_response_message( $playlistSearch );
-    $channelsBody = json_decode( wp_remote_retrieve_body( $channelsSearch ), true );  // true to return array, not object
-    $playlistId = $channelsBody['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+    $response = wp_remote_get( $url );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    // The first result has the channel.
+    $channelId = $body["items"][0]["id"]["channelId"];
 
     // return false on error
-    if( !$playlistId || preg_match('/^[45]/', $code ) ) {
+    if( !$channelId || preg_match('/^[45]/', $code ) ) {
       return false;
     }
 
@@ -144,15 +148,30 @@ class SP_EV_YouTube {
     // YouTube doesn't accept the way wp_remote_get forms args,
     // so we have to stringify the args ourselves.
 
-    // WE ONLY NEED PLAYLIST ID NOT CHANNEL ID
-    $channelsUrl = "https://www.googleapis.com/youtube/v3/channels";
-    $channelsUrl .= "?part=snippet,contentDetails";
-    $channelsUrl .= "&forUsername=" . $author_id;
-    $channelsUrl .= "&key=" . $developer_key;
+    // SEARCH FOR CHANNEL_ID
+    $url = "https://www.googleapis.com/youtube/v3/search";
+    $url .= "?type=channel&part=snippet&fields=items(id/channelId)&maxResults=1";
+    $url .= "&key=" . $developer_key;
+    $url .= "&q=" . $author_id;
 
-    $channelsSearch = wp_remote_get( $channelsUrl );
-    $channelsBody = json_decode( wp_remote_retrieve_body( $channelsSearch ), true );  // true to return array, not object
-    $playlistId = $channelsBody['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+    $response = wp_remote_get( $url );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    // The first result has the channel.
+    $channelId = $body["items"][0]["id"]["channelId"];
+
+    // SEARCH FOR PLAYLIST ID
+    $url = "https://www.googleapis.com/youtube/v3/channels";
+    $url .= "?part=snippet,contentDetails";
+    $url .= "&id=" . $channelId;
+    $url .= "&key=" . $developer_key;
+
+    $response = wp_remote_get( $url );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    $playlistId = $body['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
 
     // And now we need those videos
     $per_page = 10;
@@ -161,6 +180,7 @@ class SP_EV_YouTube {
     $baseurl = "https://www.googleapis.com/youtube/v3/playlistItems";
     $baseurl .= "?part=contentDetails,snippet";
     $baseurl .= "&key=" . $developer_key;
+    $baseurl .= "&channelId=" . $channelId;
     $baseurl .= "&playlistId=" . $playlistId;
     $baseurl .= "&maxResults=" . $per_page;
 

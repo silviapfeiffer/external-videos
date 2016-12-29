@@ -181,6 +181,7 @@ function sp_ev_author_settings(){ ?>
               $ev_rss = $options['rss'];
               $ev_del = $options['delete'];
               $ev_attrib = $options['attrib'];
+              $ev_loop = $options['loop'];
             ?>
             <fieldset>
               <label for="ev-rss">

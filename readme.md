@@ -77,12 +77,12 @@ You can add a link like this to your theme layout.
 
 # Screenshots
 
-1. screenshot-1.png : a list of the video posts in the admin interface
-2. screenshot-2.png : the setup page for the plugin
-3. screenshot-3.png : the setup page for a video host
-4. screenshot-4.png : the setup page for the widget of recent videos
-5. screenshot-5.png : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
-6. screenshot-6.png : a video page as automatically created by the plugin
+1. screenshot-1.jpg : a list of the video posts in the admin interface
+2. screenshot-2.jpg : the setup page for the plugin
+3. screenshot-3.jpg : the setup page for a video host
+4. screenshot-4.jpg : the setup page for the widget of recent videos
+5. screenshot-5.jpg : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
+6. screenshot-6.jpg : a video page as automatically created by the plugin
 
 
 # Changelog
