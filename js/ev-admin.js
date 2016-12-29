@@ -22,9 +22,11 @@
       $('.nav-tab').removeClass('nav-tab-active');
       $('section').fadeOut();
       var chosen = $('section').eq($(this).index()),
-          choose = function(){ chosen.fadeIn(); };
+          choose = function(){ chosen.fadeIn(); },
+          feedback = $("#ev_author_list .feedback");
       window.setTimeout( choose, 300 );
       $(this).addClass('nav-tab-active');
+      fadeNotice(feedback);
       return false;
     });
   };

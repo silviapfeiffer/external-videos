@@ -48,7 +48,7 @@ class SP_EV_Dotsub {
           'explanation' => ''
         )
       ),
-      'introduction' => "DotSub only requires a User ID in order to access your videos from another site.",
+      'introduction' => "DotSub only requires a User ID in order to access your videos from another site. Note: the DotSub server is quite slow - if you get an error adding an author, try again.",
       'api_url' => 'https://dotsub.com',
       'api_link_title' => 'DotSub'
     );
