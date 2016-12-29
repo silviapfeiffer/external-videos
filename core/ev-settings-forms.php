@@ -15,7 +15,6 @@ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 // make these variables available
 $options = SP_External_Videos::get_options();
-$AUTHORS = $options['authors'];
 $HOSTS = $options['hosts'];
 
 // some re-usable settings:

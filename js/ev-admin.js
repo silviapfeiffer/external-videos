@@ -40,7 +40,7 @@
   var fadeNotice = function(feedback){
     window.setTimeout( function(){
       fadeCallback(feedback);
-    }, 5000 );
+    }, 8000 );
   };
 
   // Plugin Settings handler
@@ -66,6 +66,7 @@
     $(document).on("click", "#ev_author_list .button-update", function(e){
 
       e.preventDefault();
+      // alert( evSettings.nonce );
 
       var hostId = $(this).attr("data-host"),
           authorId = $(this).attr("data-author"),

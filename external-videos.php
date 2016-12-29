@@ -227,13 +227,13 @@ class SP_External_Videos {
     // For the nonce
     $settings_nonce = wp_create_nonce( 'ev_settings' );
 
-    $VIDEO_HOSTS = SP_EV_Admin::admin_get_hosts_quick();
+    // $VIDEO_HOSTS = SP_EV_Admin::admin_get_hosts_quick();
 
     // Make these variables an object array for the jquery later
     wp_localize_script( 'ev-admin', 'evSettings', array(
-      'ajax_url'       => admin_url( 'admin-ajax.php' ),
-      'nonce'         => $settings_nonce,
-      'videohosts'    => $VIDEO_HOSTS,
+      'ajax_url'      => admin_url( 'admin-ajax.php' ),
+      'nonce'         => $settings_nonce
+      // 'videohosts'    => $VIDEO_HOSTS
     ) );
 
   }
