@@ -99,7 +99,7 @@
           particular = $(this).closest("td"),
           feedback = $("#ev_author_list .feedback");
 
-      if (!confirm('Are you sure you want to delete channel' + authorId + ' on ' + hostId + '?')){
+      if (!confirm('Are you sure you want to delete channel ' + authorId + ' on ' + hostId + '?')){
         return false;
       }
 
