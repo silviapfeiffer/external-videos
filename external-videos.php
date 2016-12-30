@@ -223,17 +223,13 @@ class SP_External_Videos {
     wp_register_script( 'ev-admin', plugin_dir_url( __FILE__ ) . '/js/ev-admin.js', array('jquery'), false, true );
     wp_enqueue_script( 'ev-admin' );
 
-    // Pass this array to the admin js
-    // For the nonce
+    // for the nonce
     $settings_nonce = wp_create_nonce( 'ev_settings' );
-
-    // $VIDEO_HOSTS = SP_EV_Admin::admin_get_hosts_quick();
 
     // Make these variables an object array for the jquery later
     wp_localize_script( 'ev-admin', 'evSettings', array(
       'ajax_url'      => admin_url( 'admin-ajax.php' ),
       'nonce'         => $settings_nonce
-      // 'videohosts'    => $VIDEO_HOSTS
     ) );
 
   }
