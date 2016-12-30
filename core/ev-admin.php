@@ -215,7 +215,6 @@ class SP_EV_Admin {
     // Handle the ajax request
     check_ajax_referer( 'ev_settings' );
 
-    // /*
     // Get EV options once now for the helper functions
     $options = SP_External_Videos::get_options();
     $AUTHORS = SP_EV_Admin::get_authors();
@@ -274,7 +273,7 @@ class SP_EV_Admin {
     }
 
     $messages = $new_messages . $trash_messages;
-    // */
+
     wp_send_json( $messages );
 
   }
@@ -343,15 +342,16 @@ class SP_EV_Admin {
       $hostname = $update_hosts[$host]['host_name'];
       if ( $num > 0 ) {
         $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $hostname );
-        $add_messages = $this->wrap_admin_notice( $add_messages, 'success' );
-        $messages .= $add_messages;
       }
       else {
         $no_messages .= "No videos found on " . $hostname . '.';
-        $no_messages = $this->wrap_admin_notice( $no_messages, 'info' );
-        $messages .= $no_messages;
       }
     }
+    // after looping to get all add/no messages, wrap them up for delivery
+    $add_messages = $this->wrap_admin_notice( $add_messages, 'success' );
+    $messages .= $add_messages;
+    $no_messages = $this->wrap_admin_notice( $no_messages, 'info' );
+    $messages .= $no_messages;
 
     // return the messages and the array of new video ids, needed by trash_deleted_videos()
     return array(
@@ -373,7 +373,7 @@ class SP_EV_Admin {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $update_hosts, $new_video_ids (from post_new_videos())
+  *  @param   $update_hosts, $new_video_ids passed from post_new_videos()
   *  @return  html $trash_messages
   */
 
@@ -609,8 +609,8 @@ class SP_EV_Admin {
 
     check_ajax_referer( 'ev_settings' );
 
-    $deleted_videos = $this->delete_all_videos();
-    $messages = sprintf( _n( 'Moved %d video into trash.', 'Moved %d videos into trash.', $deleted_videos, 'external-videos' ), $deleted_videos );
+    $count_deleted = $this->delete_all_videos();
+    $messages = sprintf( _n( 'Moved %d video into trash.', 'Moved %d videos into trash.', $count_deleted, 'external-videos' ), $count_deleted );
     $messages = esc_attr( $messages );
     $messages = $this->wrap_admin_notice( $messages, 'info' );
 
@@ -629,12 +629,12 @@ class SP_EV_Admin {
   *  @since  1.0
   *
   *  @param
-  *  @return
+  *  @return $count_deleted
   */
 
   function delete_all_videos() {
 
-    $deleted_videos = 0;
+    $count_deleted = 0;
     // query all of post_type: external-videos
     $ev_posts = new WP_Query( array(
       'post_type' => 'external-videos',
@@ -647,13 +647,13 @@ class SP_EV_Admin {
         $post = get_post( get_the_ID() );
         $post->post_status = 'trash';
         wp_update_post( $post );
-        $deleted_videos += 1;
+        $count_deleted += 1;
 
       endwhile;
       wp_reset_postdata();
     }
 
-    return $deleted_videos;
+    return $count_deleted;
 
   }
 
@@ -781,8 +781,11 @@ class SP_EV_Admin {
       // also move the channel's videos to the trash. count how many we're moving
       $count_trash = 0;
 
+      // we need both host and author in query, in case author name repeats across different hosts
       $author_posts = new WP_Query( array(
         'post_type'  => 'external-videos',
+        'meta_key'   => 'host_id',
+        'meta_value' => $_POST['host_id'],
         'meta_key'   => 'author_id',
         'meta_value' => $_POST['author_id'],
         'nopaging' => 1
@@ -833,7 +836,7 @@ class SP_EV_Admin {
     // Handle the ajax request
     check_ajax_referer( 'ev_settings' );
 
-    // faster with only one query
+    // get existing options
     $options = SP_External_Videos::get_options();
     $HOSTS = $options['hosts'];
     $AUTHORS = SP_EV_Admin::get_authors();
