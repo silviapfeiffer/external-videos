@@ -31,20 +31,25 @@ class SP_EV_Vimeo {
 
     // host_name must be the last part of the Class Name
     $class = get_class();
-    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
-    $hostname = $hostname[0];
+    $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $host_name = $host_name[0];
 
     $options = SP_External_Videos::get_options();
+    if( !isset( $options['hosts']['vimeo']['authors'] ) ) {
+      $authors = array();
+    } else {
+      $authors = $options['hosts']['vimeo']['authors'];
+    }
 
     $options['hosts']['vimeo'] = array(
       'host_id' => 'vimeo',
-      'host_name' => $hostname,
+      'host_name' => $host_name,
       'api_keys' => array(
         array(
           'id' => 'author_id',
           'label' => 'User ID Number',
           'required' => true,
-          'explanation' => 'Note: this is a NUMBER. Available at ...vimeo.com/settings/account/general'
+          'explanation' => 'Note this is a number. Available at ...vimeo.com/settings/account/general'
         ),
         array(
           'id' => 'developer_key',
@@ -62,12 +67,13 @@ class SP_EV_Vimeo {
           'id' => 'auth_token',
           'label' => 'Personal Access Token',
           'required' => false,
-          'explanation' => 'This gives you access to both your public and private videos. It needs to be generated in your Vimeo API Apps.'
+          'explanation' => 'This gives you access to both your public and private videos'
         )
       ),
       'introduction' => "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier and Client Secret from your account, in order to access your videos from another site (like this one). ",
       'api_url' => 'https://developer.vimeo.com/apps',
-      'api_link_title' => 'Vimeo API'
+      'api_link_title' => 'Vimeo API',
+      'authors' => $authors
     );
 
     update_option( 'sp_external_videos_options', $options );

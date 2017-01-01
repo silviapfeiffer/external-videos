@@ -31,20 +31,25 @@ class SP_EV_YouTube {
 
     // host_name must be the last part of the Class Name
     $class = get_class();
-    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
-    $hostname = $hostname[0];
+    $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $host_name = $host_name[0];
 
     $options = SP_External_Videos::get_options();
+    if( !isset( $options['hosts']['youtube']['authors'] ) ) {
+      $authors = array();
+    } else {
+      $authors = $options['hosts']['youtube']['authors'];
+    }
 
     $options['hosts']['youtube'] = array(
       'host_id' => 'youtube',
-      'host_name' => $hostname,
+      'host_name' => $host_name,
       'api_keys' => array(
         array(
           'id' => 'author_id',
           'label' => 'Channel Name',
           'required' => true,
-          'explanation' => 'This is the part after //www.youtube.com/user/ in your channel\'s full (not custom) URL'
+          'explanation' => ''
         ),
         array(
           'id' => 'developer_key',
@@ -55,7 +60,8 @@ class SP_EV_YouTube {
       ),
       'introduction' => "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).",
       'api_url' => 'https://console.developers.google.com/apis/credentials',
-      'api_link_title' => 'YouTube API'
+      'api_link_title' => 'YouTube API',
+      'authors' => $authors
     );
 
     update_option( 'sp_external_videos_options', $options );

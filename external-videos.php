@@ -125,6 +125,9 @@ class SP_External_Videos {
     wp_enqueue_style( 'thickbox' );
     wp_enqueue_script( 'thickbox' );
 
+    // move author options to hosts
+    $this->convert_author_options();
+
   }
 
   /*
@@ -218,9 +221,12 @@ class SP_External_Videos {
 
     if( "settings_page_external-videos/external-videos" != $hook ) return;
 
+    // wp_enqueue_script( 'jquery-ui-tabs' );
+    // wp_enqueue_script( 'jquery-ui-accordion' );
+
     wp_register_style( 'ev-admin', plugin_dir_url( __FILE__ ) . '/css/ev-admin.css', array(), null, 'all' );
     wp_enqueue_style( 'ev-admin' );
-    wp_register_script( 'ev-admin', plugin_dir_url( __FILE__ ) . '/js/ev-admin.js', array('jquery'), false, true );
+    wp_register_script( 'ev-admin', plugin_dir_url( __FILE__ ) . '/js/ev-admin.js', array( 'jquery'/*, 'jquery-ui-tabs', 'jquery-ui-accordion' */), false, true );
     wp_enqueue_script( 'ev-admin' );
 
     // for the nonce
@@ -256,7 +262,7 @@ class SP_External_Videos {
 
     // Set defaults for the basic options
     if( !$raw_options ) {
-      $options = array( 'version' => 1, 'authors' => array(), 'hosts' => array(), 'rss' => false, 'delete' => true, 'attrib' => false, 'loop' => false );
+      $options = array( 'version' => 1, 'hosts' => array(), 'rss' => false, 'delete' => true, 'attrib' => false, 'loop' => false );
     } else {
       $options = $raw_options;
       // below is needed, because if anything gets unset it throws an error
@@ -271,6 +277,42 @@ class SP_External_Videos {
     // echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
 
     return $options;
+
+  }
+
+  /*
+  *  convert_author_options
+  *
+  *  Move authors array under respective hosts for much easier indexing.
+  *  This is a database conversion function that is light and runs automatically
+  *  but is really needed once only. Could be moved to settings-page AJAX
+  *  to be explicitly run by user only if author options are detected.
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param
+  *  @return
+  */
+
+  function convert_author_options(){
+
+    $options = get_option( "sp_external_videos_options" );
+
+    if( !array_key_exists( 'hosts', $options ) ) return;
+    if( !array_key_exists( 'authors', $options ) ) return;
+
+    $AUTHORS = $options['authors'];
+
+    foreach( $AUTHORS as $author ){
+      $host_id = $author['host_id'];
+      $author_id = $author['author_id'];
+      $options['hosts'][$host_id]['authors'][$author_id] = $author;
+    }
+
+    unset( $options['authors'] );
+    update_option( 'sp_external_videos_options', $options );
 
   }
 

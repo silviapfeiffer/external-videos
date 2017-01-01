@@ -17,62 +17,6 @@ if( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 $options = SP_External_Videos::get_options();
 $HOSTS = $options['hosts'];
 
-// some re-usable settings:
-function sp_ev_author_settings(){ ?>
-  <tr>
-    <th scope="row">
-      <?php esc_attr_e('Set Post Status', 'external-videos'); ?>
-    </th>
-    <td>
-      <select name='post_status' id='ev_post_status'>
-        <option value='publish' selected><?php esc_attr_e('Published') ?></option>
-        <option value='pending'><?php esc_attr_e('Pending Review') ?></option>
-        <option value='draft'><?php esc_attr_e('Draft') ?></option>
-        <option value='private'><?php esc_attr_e('Privately Published') ?></option>
-        <option value='future'><?php esc_attr_e('Scheduled') ?></option>
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <th scope="row">
-      <?php esc_attr_e('Default WP Author', 'external-videos'); ?>
-    </th>
-    <td>
-      <?php wp_dropdown_users(); ?>
-    </td>
-  </tr>
-  <tr>
-    <th scope="row">
-      <?php esc_attr_e('Default Post Format'); ?>
-    </th>
-    <td>
-      <?php
-      $post_formats = get_post_format_strings();
-      unset( $post_formats['video'] );
-      ?>
-      <select name="post_format" id="ev_post_format">
-        <option value="video"><?php echo get_post_format_string( 'video' ); ?></option>
-        <?php foreach ( $post_formats as $format_slug => $format_name ): ?>
-          <option<?php selected( get_option( 'post_format' ), $format_slug ); ?> value="<?php echo esc_attr( $format_slug ); ?>"><?php echo esc_html( $format_name ); ?></option>
-        <?php endforeach; ?>
-      </select>
-    </td>
-  </tr>
-  <tr>
-    <th scope="row">
-      <?php esc_attr_e('Default Post Category'); ?>
-    </th>
-    <td>
-      <?php $selected_cats = array( get_cat_ID('External Videos', 'external-videos') ); ?>
-      <ul style="">
-        <?php wp_category_checklist(0, 0, $selected_cats, false, null, true); ?>
-      </ul>
-    </td>
-  </tr>
-
-  <?php
-}
-
 ?>
 
 
@@ -95,9 +39,7 @@ function sp_ev_author_settings(){ ?>
         <!-- main content -->
         <div id="post-body-content">
           <div class="postbox">
-
             <h2><span><?php esc_attr_e( 'About External Videos', 'external-videos' ); ?></span></h2>
-
             <div class="inside big">
               <p>
                 <?php esc_attr_e(
@@ -117,40 +59,78 @@ function sp_ev_author_settings(){ ?>
                   'external-videos'
                 ); ?>
               </p>
-
-            </div>
-            <!-- .inside -->
-          </div>
-          <!-- .postbox -->
-
-          <h3><?php esc_attr_e('Connected Accounts', 'external-videos'); ?></h3>
-
-          <form id="ev_author_list" method="post" action="">
-            <?php /* This is loaded by ajax now. */ ?>
-          </form>
+            </div><!-- .inside -->
+          </div><!-- .postbox -->
 
           <br class="clear" />
-          <!-- end of Connected Accounts -->
 
-          <h3><?php esc_attr_e( 'Update All Channels', 'external-videos' ); ?></h3>
+          <div class="postbox">
+            <h2><?php esc_attr_e('General Plugin Settings', 'external-videos'); ?></h2>
+            <form id="ev_plugin_settings" class="inside" method="post" action="">
+              <!-- <input type="hidden" name="external_videos" value="Y" /> -->
+              <input type="hidden" name="action" value="ev_plugin_settings" />
+
+              <?php // get saved options
+                $ev_rss = $options['rss'];
+                $ev_del = $options['delete'];
+                $ev_attrib = $options['attrib'];
+                $ev_loop = $options['loop'];
+              ?>
+              <fieldset>
+                <label for="ev-rss">
+                  <input type="checkbox" id="ev-rss" name="ev-rss" value="rss" <?php if ($ev_rss == true) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Add video posts to Website RSS feed', 'external-videos'); ?></span>
+                </label>
+              </fieldset>
+              <fieldset>
+                <label for="ev-delete">
+                  <input type="checkbox" id="ev-delete" name="ev-delete" value="delete" <?php if ($ev_del == true) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Move videos locally to trash when deleted on external site', 'external-videos'); ?></span>
+                </label>
+              </fieldset>
+              <fieldset>
+                <label for="ev-attrib">
+                  <input type="checkbox" id="ev-attrib" name="ev-attrib" value="attrib" <?php if ($ev_attrib == true) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Add category, author and hosting site links to bottom of video post content', 'external-videos'); ?></span>
+                </label>
+              </fieldset>
+              <fieldset>
+                <label for="ev-loop">
+                  <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ($ev_loop == true) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Add external-video posts to the Home loop (latest Posts page)', 'external-videos'); ?></span>
+                </label>
+              </fieldset>
+              <p class="">
+                <input type="submit" name="Submit" class="button button-primary" value="<?php esc_attr_e('Save Settings'); ?>" /><span class="spacer"></span><strong class="feedback ml-3"></strong>
+              </p>
+            </form>
+          </div><!-- .postbox -->
+          <!-- end of Plugin Settings -->
+          <br class="clear" />
+
+          <h3><?php esc_attr_e( 'Update videos from channels', 'external-videos' ); ?></h3>
           <p>
-            <?php esc_attr_e( 'Click the button below to immediately check all channels for newly added or deleted videos. The plugin normally updates videos every 24 hours. Next automatic update scheduled for:', 'external-videos' ); ?>
-            <i><?php echo date( 'Y-m-d H:i:s', wp_next_scheduled( 'ev_daily_event' ) ) ?></i>
+            <?php esc_attr_e( 'The plugin normally updates videos every 24 hours. Next automatic update scheduled for:', 'external-videos' ); ?>
+            <i><?php echo date( 'Y-m-d H:i:s. ', wp_next_scheduled( 'ev_daily_event' ) ) ?></i><br />
+            <?php esc_attr_e( 'Click the button below to immediately check all channels for newly added or deleted videos.' ); ?>
           </p>
 
           <form id="ev_update_videos" method="post" action="">
             <div class="feedback"></div>
             <!-- <input type="hidden" name="external_videos" value="Y" /> -->
             <input type="hidden" name="action" value="ev_update_videos" />
-            <div class="submit">
+            <p class="">
               <input type="submit" name="Submit" class="button" value="<?php esc_attr_e( 'Update videos from all channels', 'external-videos' ); ?>" />
               <div class="spinner inline"></div>
-            </div>
+            </p>
           </form>
 
+          <form id="ev_author_list" method="post" action="">
+            <?php /* This is loaded by ajax now. */ ?>
+          </form>
           <!-- end of Update Videos -->
 
-          <hr />
+          <br class="clear"/>
 
           <h3><?php esc_attr_e('Delete All Videos', 'external-videos'); ?></h3>
           <p>
@@ -161,66 +141,19 @@ function sp_ev_author_settings(){ ?>
             <div class="feedback"></div>
             <!-- <input type="hidden" name="external_videos" value="Y" /> -->
             <input type="hidden" name="action" value="ev_delete_videos" />
-            <div class="submit">
+            <p class="">
               <input type="submit" name="Submit" class="button" value="<?php esc_attr_e('Move all external videos to trash', 'external-videos'); ?>" />
               <div class="spinner inline"></div>
-            </div>
-          </form>
-
-          <!-- end of Delete All Videos -->
-
-          <hr />
-
-          <h3><?php esc_attr_e('General Plugin Settings', 'external-videos'); ?></h3>
-          <form id="ev_plugin_settings" method="post" action="">
-            <!-- <input type="hidden" name="external_videos" value="Y" /> -->
-            <input type="hidden" name="action" value="ev_plugin_settings" />
-
-            <?php // get saved options
-              $ev_rss = $options['rss'];
-              $ev_del = $options['delete'];
-              $ev_attrib = $options['attrib'];
-              $ev_loop = $options['loop'];
-            ?>
-            <fieldset>
-              <label for="ev-rss">
-                <input type="checkbox" id="ev-rss" name="ev-rss" value="rss" <?php if ($ev_rss == true) echo "checked"; ?>/>
-                <span><?php esc_attr_e('Add video posts to Website RSS feed', 'external-videos'); ?></span>
-              </label>
-            </fieldset>
-            <fieldset>
-              <label for="ev-delete">
-                <input type="checkbox" id="ev-delete" name="ev-delete" value="delete" <?php if ($ev_del == true) echo "checked"; ?>/>
-                <span><?php esc_attr_e('Move videos locally to trash when deleted on external site', 'external-videos'); ?></span>
-              </label>
-            </fieldset>
-            <fieldset>
-              <label for="ev-attrib">
-                <input type="checkbox" id="ev-attrib" name="ev-attrib" value="attrib" <?php if ($ev_attrib == true) echo "checked"; ?>/>
-                <span><?php esc_attr_e('Add category, author and hosting site links to bottom of video post content', 'external-videos'); ?></span>
-              </label>
-            </fieldset>
-            <fieldset>
-              <label for="ev-loop">
-                <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ($ev_loop == true) echo "checked"; ?>/>
-                <span><?php esc_attr_e('Add external-video posts to the Home loop (latest Posts page)', 'external-videos'); ?></span>
-              </label>
-            </fieldset>
-            <p class="submit">
-              <input type="submit" name="Submit" class="button button-primary" value="<?php esc_attr_e('Save Settings'); ?>" /><span class="spacer"></span><strong class="feedback ml-3"></strong>
             </p>
           </form>
+          <!-- end of Delete All Videos -->
 
-        <!-- end of Plugin Settings -->
-
-        </div>
-        <!-- post-body-content -->
+          <br class="clear"/>
+        </div><!-- post-body-content -->
 
         <!-- sidebar -->
         <div id="postbox-container-1" class="postbox-container">
-
           <div class="postbox">
-
             <h2><span class=""><?php esc_attr_e( 'Authentication', 'wp_admin_style' ); ?></span></h2>
 
             <div class="inside">
@@ -230,8 +163,7 @@ function sp_ev_author_settings(){ ?>
                   'external-videos'
                 ); ?>
               </p>
-            </div>
-            <!-- .inside -->
+            </div><!-- .inside -->
 
             <h2><span class=""><?php esc_attr_e( 'Links', 'wp_admin_style' ); ?></span></h2>
 
@@ -241,80 +173,55 @@ function sp_ev_author_settings(){ ?>
                 if( isset( $host['api_keys'][1] ) ){
                   $url = $host['api_url'];
                   $title = $host['api_link_title'];
-
                   echo '<p><a target="_blank" href="' . esc_url( $url ) . '">' . $title . '</a></p>';
                 }
               } ?>
-            </div>
-            <!-- .inside -->
-
-
-          </div>
-          <!-- .postbox -->
-
-        </div>
-        <!-- #postbox-container-1 .postbox-container -->
-
-      </div>
-      <!-- post-body -->
+            </div><!-- .inside -->
+          </div><!-- .postbox -->
+        </div><!-- #postbox-container-1 .postbox-container -->
+      </div><!-- post-body -->
       <br class="clear">
-
-    </div>
-    <!-- poststuff -->
-
+    </div><!-- poststuff -->
   </section>
 
-  <!-- BEGIN TABBED SECTIONS -->
+  <!-- BEGIN TABBED VIDEO HOST SECTIONS -->
 
   <?php foreach( $HOSTS as $host ){
-    $id = $host['host_id'];
-    $name = $host['host_name'];
-    $api_keys = $host['api_keys'];
-    $intro = $host['introduction'];
-    $url = $host['api_url'];
-    $link = $host['api_link_title'];
+    // Fill out if blanks
+    $host_id = $host['host_id'];
+    $host_name = isset( $host['host_name'] ) ? $host['host_name'] : '';
+    $api_keys = isset( $host['api_keys'] ) ? $host['api_keys'] : array();
+    $introduction = isset( $host['introduction'] ) ? $host['introduction'] : '';
+    $api_url = isset( $host['api_url'] ) ? $host['api_url'] : '';
+    $api_link_title = isset( $host['api_link_title'] ) ? $host['api_link_title'] : '';
+    $authors = isset( $host['authors'] ) ? $host['authors'] : array();
     ?>
-    <section class="<?php echo esc_attr( $id )?>-tab content-tab">
+    <section class="<?php echo esc_attr( $host_id )?>-tab content-tab">
 
       <div id="poststuff">
-        <div class="postbox">
-          <div class="inside">
-            <p><?php echo esc_attr( $intro ); ?><span class="spacer"></span><a title="<?php echo esc_attr( $link ); ?>" href="<?php echo esc_url( $url ); ?>" target="_blank"><?php echo esc_attr( $link ); ?></a></p>
-          </div><!-- .inside -->
-        </div><!-- .postbox -->
+        <div id="post-body" class="metabox-holder">
+          <div id="post-body-content">
+            <div class="postbox">
+              <h2><?php echo esc_attr_e( 'Connecting to ', 'external-videos' ); ?><?php echo esc_attr( $host_name ); ?></h2>
+              <div class="inside big">
+                <p><?php echo esc_attr( $introduction ); ?><span class="spacer"></span><a title="<?php echo esc_attr( $api_link_title ); ?>" href="<?php echo esc_url( $api_url ); ?>" target="_blank"><?php echo esc_attr( $api_link_title ); ?></a></p>
+              </div><!-- .inside -->
+            </div><!-- .postbox -->
+          </div><!-- post-body-content -->
+        </div><!-- post-body -->
+        <br class="clear">
       </div><!-- .poststuff -->
 
-      <h3><?php echo sprintf( __( 'Add %s Channel', 'external-videos' ), esc_attr( $name ) ); ?></h3>
-      <form id="ev_add_<?php echo esc_attr( $id )?>" class="ev_add_author" method="post" action="">
-        <input type="hidden" name="host_id" value="<?php echo esc_attr( $id )?>" />
+      <h2><?php echo sprintf( __( 'Your %s Channels', 'external-videos' ), esc_attr( $host_name ) ); ?></h3>
+
+      <div class="ev_edit_authors_host" data-host="<?php echo esc_attr( $host_id )?>" id="ev_edit_authors_<?php echo esc_attr( $host_id )?>">
         <div class="feedback"></div>
-        <table class="form-table">
-          <tbody>
-            <?php foreach( $api_keys as $key ){ ?>
-              <?php $required = ( isset( $key['required'] ) && $key['required'] == true ) ? 'Required' : 'Optional'; ?>
-              <?php $explanation = $key['explanation']; ?>
-              <?php if( $required && $explanation ) $explanation = " - " . $explanation; ?>
-              <tr>
-                <th scope="row">
-                  <span><?php echo esc_attr( $key['label'] ); ?></span>
-                </th>
-                <td>
-                  <input type="text" name="<?php echo esc_attr( $key['id'] ); ?>"/>
-                  <span class="description"><?php echo esc_attr( $required . $explanation ); ?></span>
-                </td>
-              </tr>
-            <?php } ?>
-            <?php if( function_exists( 'sp_ev_author_settings' ) ) sp_ev_author_settings(); ?>
-            <tr>
-              <th scope="row">
-              </th>
-              <td class="submit">
-                <input type="submit" name="Submit" class="button" value="<?php echo sprintf( __( 'Add New %s Channel', 'external-videos' ), esc_attr( $name ) ); ?>" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </form>
+        <div class="host-authors-list">
+          <?php // THIS IS WHERE THE HOST AUTHORS LIST GOES ?>
+          <?php // PUT THE ADD AUTHOR LIST AFTER EXISTING AUTHORS ?>
+        </div>
+      </div><!-- .ev_edit_host_authors -->
+
     </section>
 
   <?php } ?>

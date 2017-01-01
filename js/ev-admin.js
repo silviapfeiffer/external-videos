@@ -31,12 +31,30 @@
     });
   };
 
-  // fadeOut
+  // EDIT AUTHOR COLLAPSING FORMS
+  var formExpand = function(){
+    $(document).on("click", ".ev-host-table a.edit-author", function(e) {
+      e.preventDefault();
+      var table = $(this).parents("table"),
+          save = $(this).siblings("button"),
+          open = $(this).children(".open"),
+          closed = $(this).children(".closed"),
+          panel = $(table).children(".info-author");
+
+      $(closed).toggle();
+      $(open).toggle();
+      $(panel).fadeToggle();
+      $(save).fadeToggle();
+      return false;
+    });
+  };
+
+  // fadeCallback for fadeNotice
   var fadeCallback = function(feedback){
     $(feedback).children().fadeOut( 1000 );
   };
 
-  // fadeOut
+  // fadeNotice
   var fadeNotice = function(feedback){
     window.setTimeout( function(){
       fadeCallback(feedback);
@@ -57,67 +75,6 @@
         dataType:'json'
       }, function(data){
         $("#ev_plugin_settings .feedback").html(data);
-      });
-    });
-  };
-
-  // Check Videos handler
-  var checkVideos = function(){
-    $(document).on("click", "#ev_author_list .button-update", function(e){
-
-      e.preventDefault();
-      // alert( evSettings.nonce );
-
-      var hostId = $(this).attr("data-host"),
-          authorId = $(this).attr("data-author"),
-          spinner = $(this).siblings(".spinner"),
-          feedback = $("#ev_author_list .feedback");
-
-      $(spinner).addClass("is-active");
-
-      $.post( evSettings.ajax_url, {
-        _ajax_nonce: evSettings.nonce,
-        action: "update_videos_handler",
-        host_id: hostId,
-        author_id: authorId,
-        dataType:'html'
-      }, function(data){
-        $(feedback).html(data);
-        $(spinner).removeClass("is-active");
-        fadeNotice(feedback);
-      });
-    });
-  };
-
-  // Delete author handler
-  // AJAX loaded elements must click bind to document
-  // http://stackoverflow.com/questions/16598213/how-to-bind-events-on-ajax-loaded-content
-  var deleteAuthor = function(){
-    $(document).on("click", "#ev_author_list .button-delete", function(e){
-
-      e.preventDefault();
-
-      var hostId = $(this).attr("data-host"),
-          authorId = $(this).attr("data-author"),
-          particular = $(this).closest("td"),
-          feedback = $("#ev_author_list .feedback");
-
-      if (!confirm('Are you sure you want to delete channel ' + authorId + ' on ' + hostId + '?')){
-        return false;
-      }
-
-      $.post( evSettings.ajax_url, {
-        _ajax_nonce: evSettings.nonce,
-        host_id: hostId,
-        author_id: authorId,
-        dataType:'html',
-        action: "delete_author_handler"
-      }, function(data){
-        var message = data;
-        $(particular).fadeOut(); //first fade out this author
-        authorList(message); //rebuild the author list from the database
-        $(feedback).html(data);
-        fadeNotice(feedback);
       });
     });
   };
@@ -173,57 +130,177 @@
     });
   };
 
-  // Add author handler
-  var addAuthor = function(){
-    $('.ev_add_author').submit(function(e){
+  // Check Videos handler
+  var checkVideos = function(){
+    $(document).on("click", "#ev_author_list .button-update", function(e){
 
       e.preventDefault();
+      // alert( evSettings.nonce );
 
-      var particular = $(this).attr("id"),
-          feedback = $("#" + particular + " .feedback")
-          author = $("#" + particular).serialize();
+      var hostId = $(this).attr("data-host"),
+          authorId = $(this).attr("data-author"),
+          spinner = $(this).siblings(".spinner"),
+          feedback = $("#ev_author_list .feedback");
+
+      $(spinner).addClass("is-active");
 
       $.post( evSettings.ajax_url, {
         _ajax_nonce: evSettings.nonce,
-        data: author,
-        dataType:'json',
-        action: "add_author_handler"
+        action: "update_videos_handler",
+        host_id: hostId,
+        author_id: authorId,
+        dataType:'html'
       }, function(data){
-        $("#" + particular + " .feedback").html(data);
-        var message = data;
-        authorList(message); //rebuild the author list from the database
+        $(feedback).html(data);
+        $(spinner).removeClass("is-active");
         fadeNotice(feedback);
       });
     });
   };
 
+  // Delete author handler
+  // AJAX loaded elements must click bind to document
+  // http://stackoverflow.com/questions/16598213/how-to-bind-events-on-ajax-loaded-content
+  // needs to refresh ev_edit_author table for appropriate host, also
+  var deleteAuthor = function(){
+    $(document).on("click", ".host-authors-list .delete-author", function(e){
 
-  // Author List refresher
+      e.preventDefault();
+
+      var hostId = $(this).attr("data-host"),
+          authorId = $(this).attr("data-author"),
+          form = $(this).parents("form"),
+          list = $(form).parents(".host-authors-list"),
+          feedback = $(list).siblings(".feedback");
+          host = $(form).parents(".ev_edit_authors_host").data("host");
+
+      if (!confirm('Are you sure you want to delete channel ' + authorId + ' on ' + hostId + '?')){
+        return false;
+      }
+
+      $.post( evSettings.ajax_url, {
+        _ajax_nonce: evSettings.nonce,
+        host_id: hostId,
+        author_id: authorId,
+        dataType:'html',
+        action: "delete_author_handler"
+      }, function(data){
+        var message = data;
+        $(form).fadeOut(); //first fade out this author
+        refreshSettingsAuthorList(feedback,message); //rebuild the author list from the database
+        refreshHostAuthorList(feedback,list,host,message); //rebuild the host authors list from the database
+        $(feedback).html(message);
+        fadeNotice(feedback);
+      });
+    });
+  };
+
+  // addAuthor needs to refresh ev_edit_author table for appropriate host
+  // also needs a varation editAuthor to update db via add_author_handler cb
+  // that is bound on document click bc the form is AJAX printed
+  var addAuthor = function(){
+    $(document).on("submit", ".ev_add_author", function(e){
+      e.preventDefault();
+      var form = $(this);
+      authorAjax(form);
+    });
+  };
+
+  var editAuthor = function(){
+    $(document).on("submit", ".ev_edit_author", function(e){
+      e.preventDefault();
+      // $(this).css({backgroundColor: "blue"});
+      var form = $(this);
+      // set = JSON.stringify(form, null, 4);
+      // alert(set);
+      authorAjax(form);
+    });
+  };
+
+  var authorAjax = function(form){
+    var author = $(form).serialize(),
+        list = $(form).parents(".host-authors-list"),
+        feedback = $(list).siblings(".feedback");
+        host = $(form).parents(".ev_edit_authors_host").data("host");
+
+        // set = JSON.stringify(author, null, 4);
+        // alert(set);
+
+    $.post( evSettings.ajax_url, {
+      _ajax_nonce: evSettings.nonce,
+      data: author,
+      dataType:'json',
+      action: "add_author_handler"
+    }, function(data){
+      // set = JSON.stringify(data, null, 4);
+      // alert(set);
+      var message = data;
+      // $(feedback).html(message);
+      refreshSettingsAuthorList(feedback,message); //rebuild the author list from the database
+      refreshHostAuthorList(feedback,list,host,message); //rebuild the host authors list from the database
+      // fadeNotice(feedback);
+    });
+  }
+
+  // Settings Author List refresher
   // Note that ajax loading of html f's up event binding on all loaded elements
   // events herein must be bound to document henceforth
-  var authorList = function(message){
-
-    var feedback = $("#ev_author_list .feedback");
-
+  var refreshSettingsAuthorList = function(feedback,message){
     $.get( evSettings.ajax_url, {
       _ajax_nonce: evSettings.nonce,
       action: "author_list_handler",
       dataType:'html'
     }, function(data){
       $("#ev_author_list").html(data);
-      $("#ev_author_list .feedback").html(message);
+      $(feedback).html(message);
       fadeNotice(feedback);
+    });
+  };
+
+  // Host Author List refresher
+  // Note that ajax loading of html f's up event binding on all loaded elements
+  // events herein must be bound to document henceforth
+  var refreshHostAuthorList = function(feedback,list,host,message){
+    $.post( evSettings.ajax_url, {
+      _ajax_nonce: evSettings.nonce,
+      action: "author_host_list_handler",
+      dataType: 'html',
+      data: { host_id: host }
+    }, function(data){
+      // set = JSON.stringify(data, null, 4);
+      // alert(set);
+      $(list).html(data);
+      $(feedback).html(message);
+      fadeNotice(feedback);
+    });
+  };
+
+  var generateAllHostAuthorLists = function(){
+    var hostAuthorLists = $(".ev_edit_authors_host");
+    // listlist = JSON.stringify(hostAuthorLists, null, 4);
+    // alert(listlist);
+
+    $(hostAuthorLists).each(function(){
+      var feedback = $(this).children(".feedback"),
+          list = $(this).children(".host-authors-list"),
+          host = $(this).data("host"),
+          message = '';
+      // $(feedback).css({backgroundColor: "red"});
+      refreshHostAuthorList(feedback,list,host,message);
     });
   };
 
   $(document).ready( function() {
     tabChange();
+    formExpand();
     settingsUpdate();
     updateVideos();
     checkVideos();
     deleteAll();
-    authorList();
+    refreshSettingsAuthorList();
+    generateAllHostAuthorLists();
     addAuthor();
+    editAuthor();
     deleteAuthor();
   });
 

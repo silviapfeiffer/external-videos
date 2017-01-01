@@ -25,6 +25,7 @@ class SP_EV_Admin {
     add_action( 'wp_ajax_update_videos_handler', array( $this, 'update_videos_handler' ) );
     add_action( 'wp_ajax_delete_all_videos_handler', array( $this, 'delete_all_videos_handler' ) );
     add_action( 'wp_ajax_author_list_handler', array( $this, 'author_list_handler' ) );
+    add_action( 'wp_ajax_author_host_list_handler', array( $this, 'author_host_list_handler' ) );
     add_action( 'wp_ajax_delete_author_handler', array( $this, 'delete_author_handler' ) );
     add_action( 'wp_ajax_add_author_handler', array( $this, 'add_author_handler' ) );
 
@@ -100,7 +101,13 @@ class SP_EV_Admin {
   static function get_authors(){
 
     $options = SP_External_Videos::get_options();
-    $AUTHORS = $options['authors'];
+    $HOSTS = $options['hosts'];
+    $AUTHORS = array();
+
+    foreach( $HOSTS as $host ){
+      if( isset( $host['authors'] ) );
+      array_push( $AUTHORS, $host['authors'] );
+    }
 
     return $AUTHORS;
   }
@@ -126,35 +133,6 @@ class SP_EV_Admin {
     $HOSTS = $options['hosts'];
 
     return $HOSTS;
-  }
-
-  /*
-  *  get_hosts_quick
-  *
-  *  Settings page
-  *  Used by ev-settings-forms.php and AJAX handlers
-  *  Returns quick associative array of host_id => name from options['hosts'];
-  *
-  *  @type  function
-  *  @date  31/10/16
-  *  @since  1.0
-  *
-  *  @param
-  *  @returns $VIDEO_HOSTS
-  */
-
-  static function get_hosts_quick(){
-
-    $HOSTS = SP_EV_Admin::get_hosts();
-    $VIDEO_HOSTS = array();
-
-    foreach( $HOSTS as $host ){
-      $id = $host['host_id'];
-      $VIDEO_HOSTS[$id] = $host['host_name'];
-    }
-
-    return $VIDEO_HOSTS;
-
   }
 
   /*
@@ -226,35 +204,15 @@ class SP_EV_Admin {
     // figure out whether we're updating a single author, or all
     // if single limit the $update_authors and $update_hosts array accordingly
     if( isset( $_POST['author_id'] ) && isset( $_POST['host_id'] ) ) {
+
       // it's single
       $this_author = $_POST['author_id'];
       $this_host = $_POST['host_id'];
-      $eligibles = array();
 
-      // get the relevant local author. not so simple in multidimensional array
-      // problem is, authors are not indexed by host. look for host_id in values
-      // could be multiples
-      // *** TO DO MAYBE - break up $AUTHORS table to 'authors' under each $HOSTS ***
-      // Get all authors of a given host
-      foreach( $AUTHORS as $authorindex=>$authorarray ){
-        if( in_array( $this_host, $authorarray ) ) {
-          $eligibles[] = $authorindex;
-        }
-      }
-
-      if( $eligibles ) {
-        $thisindex = array();
-        // Check if $_POST['author_id'] matches author_id
-        foreach( $eligibles as $authorindex ){
-          if( in_array( $this_author, $AUTHORS[$authorindex] ) ) {
-            $thisindex[] = $authorindex;
-          }
-        }
-        $thisindex = array_shift( $thisindex ); // first one is the one
-        $update_authors = array( $AUTHORS[$thisindex] ); // has to stay loopable
-        $update_hosts = array( $this_host=>$HOSTS[$this_host] ); // has to stay indexed and loopable
-        $single = true;
-      }
+      // get the relevant local author. easier in hosts array. go direct to avoid possible $AUTHORS name duplicates
+      $update_authors = array( $this_author=>$HOSTS[$this_host]['authors'][$this_author] ); // has to stay indexed and loopable
+      $update_hosts = array( $this_host=>$HOSTS[$this_host] ); // has to stay indexed and loopable
+      $single = true;
 
     } else { // it's update all
       $update_authors = $AUTHORS;
@@ -321,8 +279,8 @@ class SP_EV_Admin {
     $count_added = array();
     // have to fill out this array with zeros, or error
     foreach( $update_hosts as $host ){
-      $id = $host['host_id'];
-      $count_added[$id] = 0;
+      $host_id = $host['host_id'];
+      $count_added[$host_id] = 0;
     }
 
     // save new videos & build list of all new video_ids
@@ -332,26 +290,30 @@ class SP_EV_Admin {
       // save_video() checks if is new, and saves video post
       $is_new = $this->save_video( $video );
       if ( $is_new ) {
-        $host = $video['host_id'];
-        $count_added[$host]++;
+        $host_id = $video['host_id'];
+        $count_added[$host_id]++;
       }
     }
 
     // build messages about added videos, or no videos, per host
-    foreach ( $count_added as $host=>$num ) {
-      $hostname = $update_hosts[$host]['host_name'];
+    foreach ( $count_added as $host_id=>$num ) {
+      $host_name = $update_hosts[$host_id]['host_name'];
       if ( $num > 0 ) {
-        $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $hostname );
+        $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $host_name );
       }
       else {
-        $no_messages .= "No videos found on " . $hostname . '.';
+        $no_messages .= "No videos found on " . $host_name . '.';
       }
     }
     // after looping to get all add/no messages, wrap them up for delivery
-    $add_messages = $this->wrap_admin_notice( $add_messages, 'success' );
-    $messages .= $add_messages;
-    $no_messages = $this->wrap_admin_notice( $no_messages, 'info' );
-    $messages .= $no_messages;
+    if( $add_messages ){
+      $add_messages = $this->wrap_admin_notice( $add_messages, 'success' );
+      $messages .= $add_messages;
+    }
+    if( $no_messages ){
+      $no_messages = $this->wrap_admin_notice( $no_messages, 'info' );
+      $messages .= $no_messages;
+    }
 
     // return the messages and the array of new video ids, needed by trash_deleted_videos()
     return array(
@@ -364,7 +326,7 @@ class SP_EV_Admin {
   /*
   *  trash_deleted_videos()
   *
-  *  Used by update_videos_handler() and daily_function()
+  *  Used by post_new_videos() and implicitly by update_videos_handler() and daily_function()
   *  Trashes any videos on WordPress that have been deleted from host channels.
   *  Returns messages about number of video posts trashed.
   *  We're only iterating by host, since we have a list of $new_video_ids to compare with existing posts.
@@ -373,7 +335,7 @@ class SP_EV_Admin {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $update_hosts, $new_video_ids passed from post_new_videos()
+  *  @param   $update_hosts, $new_video_ids - passed from post_new_videos()
   *  @return  html $trash_messages
   */
 
@@ -448,8 +410,8 @@ class SP_EV_Admin {
 
       // $output = ;
       $host = $author['host_id'];
-      $hostname = $update_hosts[$host]['host_name'];
-      $ClassName = "SP_EV_".$hostname;
+      $host_name = $update_hosts[$host]['host_name'];
+      $ClassName = "SP_EV_".$host_name;
 
       $videos = $ClassName::fetch( $author );
 
@@ -566,7 +528,7 @@ class SP_EV_Admin {
   *
   *  Used by save_video()
   *  Embed code is stored as postmeta in external-video posts.
-  *  Code is specific to each host site's embed API.
+  *  Format is specific to each host site's embed API.
   *
   *  @type  function
   *  @date  31/10/16
@@ -579,11 +541,8 @@ class SP_EV_Admin {
   function embed_code( $host, $video_id ) {
 
     $HOSTS = SP_EV_Admin::get_hosts();
-    $hostname = $HOSTS[$host]['host_name'];
-    $ClassName = "SP_EV_" . $hostname;
-    $width = 560;
-    $height = 315;
-    $url = "";
+    $host_name = $HOSTS[$host]['host_name'];
+    $ClassName = "SP_EV_" . $host_name;
 
     $embed_code = $ClassName::embed_code( $video_id );
 
@@ -668,17 +627,16 @@ class SP_EV_Admin {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param
-  *  @return
+  *  @param $_POST serialized form
+  *  @return html form
   */
 
   function author_list_handler() {
 
     check_ajax_referer( 'ev_settings' );
 
-    // faster with one query: (not helper functions)
+    // faster with one query
     $options = SP_External_Videos::get_options();
-    $AUTHORS = SP_EV_Admin::get_authors();
     $HOSTS = $options['hosts'];
 
     $html = '<div class="limited-width"><span class="feedback"></span></div>';
@@ -695,37 +653,34 @@ class SP_EV_Admin {
     foreach ( $HOSTS as $host ) {
 
       $id = $host['host_id'];
-      $hostname = $host['host_name'];
-      $host_authors = array();
+      $host_name = $host['host_name'];
+      $host_authors = isset( $host['authors'] ) ? $host['authors'] : array();
 
       // if we have a channel on this host, build a row
-      if( array_search( $id, array_column( $AUTHORS, 'host_id') ) !== false) {
-
-        // channels we want are the ones with this $host in the 'host_id'
-        $host_authors = array_filter( $AUTHORS, function( $author ) use ( $id ) {
-          return $author['host_id'] == $id;
-        } );
+      if( $host_authors ) {
 
         $html .= '<tr>';
         $html .= '<th scope="row" class="w-25 row-title">';
-        $html .= '<strong>' . $hostname . '</strong>';
+        $html .= '<strong>' . $host_name . '</strong>';
         $html .= '</th>';
         $html .= '<td>';
-        $html .= '<table class="form-table" style="margin-top:0;">';
-          foreach( $host_authors as $author ) {
-            $html .= '<tr>';
-            $html .= '<td class="w-33">';// id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
-            // $html .= '<p>';
-            $html .= '<span>' . $author['author_id'] . '</span>';
-            $html .= '</td>';
-            $html .= '<td class="w-25 ev-table-check text-align-right">';
-            $html .= '<input type="submit" class="button-update button" value="' . __( 'Update Videos' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" /><div class="spinner"></div>';
-            $html .= '</td>';
-            $html .= '<td class="w-17 ev-table-delete text-align-right">';
-            $html .= '<input type="submit" class="button-delete button" value="' . __( 'Delete' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
-            $html .= '</td>';
-            $html .= '</tr>';
-          }
+        $html .= '<table class="form-table ev-table" style="margin-top:0;">';
+
+        foreach( $host_authors as $author ) {
+          $html .= '<tr>';
+          $html .= '<td class="w-33">';// id="' . $author['host_id'] . '-' . $author['author_id'] . '">';
+          // $html .= '<p>';
+          $html .= '<span>' . $author['author_id'] . '</span>';
+          $html .= '</td>';
+          $html .= '<td class="w-25 ev-table-check text-align-right">';
+          $html .= '<input type="submit" class="button-update button" value="' . __( 'Update Videos' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" /><div class="spinner"></div>';
+          $html .= '</td>';
+          // $html .= '<td class="w-17 ev-table-delete text-align-right">';
+          // $html .= '<input type="submit" class="button-delete button" value="' . __( 'Delete' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
+          // $html .= '</td>';
+          $html .= '</tr>';
+        }
+
         $html .= '</table>';
         $html .= '</td>';
         $html .= '</tr>';
@@ -736,6 +691,207 @@ class SP_EV_Admin {
     $html .= '</table>';
 
     wp_send_json( $html );
+
+  }
+
+  /*
+  *  author_host_list_handler
+  *
+  *  Used by host tab on settings page
+  *  AJAX handler to reload the host's author list form with fresh db info
+  *  Should exactly mirror the html in ev-settings-forms.php
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param $_POST serialized form
+  *  @return html form
+  */
+
+  function author_host_list_handler() {
+
+    check_ajax_referer( 'ev_settings' );
+
+    $html = $edit_html = $add_html = '';
+    $options = SP_External_Videos::get_options();
+    $HOSTS = $options["hosts"];
+    $host_id = $_POST["data"]["host_id"];
+    $host = $HOSTS[$host_id];
+
+    if( isset( $host["authors"] ) ) :
+      foreach( $host["authors"] as $author ){
+        // $edit_html .= "<pre>AUTHOR: " . print_r( $author, true ) . "</pre>";
+        $edit_html .= $this->author_host_list_html( 'edit', $author, $host, $edit_html );
+      }
+    endif;
+
+    // Send this blank "author" to the html form callback for an add author form
+    $author = array(
+      'host_id' => $host_id,
+      'author_id' => '',
+      'developer_key' => '',
+      'secret_key' => '',
+      'auth_token' => '',
+      'ev_author' => '',
+      'ev_category' => '',
+      'ev_post_format' => '',
+      'ev_post_status' => ''
+    );
+    $add_html = $this->author_host_list_html( 'add', $author, $host, '' );
+
+    $html = $edit_html . $add_html;
+    wp_send_json( $html );
+
+  }
+
+  /*
+  *  author_host_list_html
+  *
+  *  Used by author_host_list_handler
+  *  Outputs either an ev_edit_author HTML form for a given $author,
+  *          or an ev_add_author form.
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param $type string ('edit', 'add'), $author array, $host array, $html (previous)
+  *  @return additional html
+  */
+
+  function author_host_list_html( $type, $author, $host, $html ) {
+
+    if( $type != 'edit' && $type != 'add' ) return;
+    // Fill out all $author keys even if not set, so no error
+    // eg, $author_id = isset( $author['author_id'] ) ? $author['author_id'] : '';
+    foreach( $author as $key=>$value ){
+      $$key = isset( $value ) ? $value : '';
+    }
+
+    if( $type == 'edit' ) {
+      $html = '<form id="ev_edit_' . esc_attr( $author_id ) . '" class="ev_edit_author ev-host-table" method="post" action="">';
+    } else {
+      $html = '<form id="ev_add_' . esc_attr( $host_id ) . '" class="ev_add_author ev-host-table" method="post" action="">';
+    }
+    $html .= '<input type="hidden" name="host_id" value="' . esc_attr( $host_id ) . '" />';
+    $html .= '<input type="hidden" name="edit_form" value="true" />';
+    $html .= '<table class="wp-list-table widefat">';
+
+    // AUTHOR TABLE HEAD
+    $html .= '<thead>';
+    if( $type == 'edit' ) {
+      $html .= '<tr>';
+      $html .= '<th scope="row">';
+      $html .= '<strong>' . esc_attr( $author_id ) . '</strong>';
+    } else {
+      $html .= '<tr class="alternate">';
+      $html .= '<th scope="row">';
+      $html .= '<strong>' . esc_attr__( "Add New Channel", "external-videos" ) . '</strong>';
+    }
+    $html .= '</th>';
+    $html .= '<td class="text-align-right">';
+    if( $type == 'edit' ) {
+      $html .= '<button class="button delete-author" data-host="' . $author['host_id'] . '" data-author="' . $author['author_id'] . '">';
+      $html .= esc_attr__( 'Delete', 'external-videos' ) . '</button>';
+      $html .= '<button type="submit" name="submit" class="button button-primary save-author">';
+      $html .= esc_attr__( 'Save', 'external-videos' ) . '</button>';
+      $html .= '<a href="#" class="edit-author button" data-toggle="collapse">';
+      $html .= '<span class="closed">' . esc_attr__( 'Edit', 'external-videos' ) . '</span>';
+      $html .= '<span class="open">' . esc_attr__( 'Cancel', 'external-videos' ) . '</span></a>';
+    } else {
+      $html .= '<button type="submit" name="submit" class="button button-primary save-author">';
+      $html .= esc_attr__( 'Add', 'external-videos' ) . '</button>';
+      $html .= '<a href="#" class="edit-author button" data-toggle="collapse">';
+      $html .= '<span class="closed">' . esc_attr__( '+', 'external-videos' ) . '</span>';
+      $html .= '<span class="open">' . esc_attr__( 'Cancel', 'external-videos' ) . '</span></a>';
+  }
+    $html .= '</td>';
+    $html .= '</tr>';
+    $html .= '</thead>';
+
+    if( $type == 'edit' ) {
+      $html .= '<tbody class="info-author collapse" aria-expanded="false">';
+    } else {
+      $html .= '<tbody class="info-author collapse" aria-expanded="false">';
+    }
+
+    // API KEYS ROWS
+    foreach( $host["api_keys"] as $key ){
+      $key_id = $key['id'];
+      $required = ( isset( $key['required'] ) && $key['required'] == true ) ? 'Required' : 'Optional';
+      $explanation = $key['explanation'];
+      if( $required && $explanation ) $explanation = " - " . $explanation;
+      $html .= '<tr>';
+      $html .= '<th scope="row">';
+      $html .= '<span>' . esc_attr( $key['label'] ) . '</span>';
+      $html .= '</th>';
+      $html .= '<td>';
+      $html .= '<input type="text large-text" name="' . esc_attr( $key_id ) . '" value="' . esc_attr( $$key_id ) . '" name="' . esc_attr( $key_id ) . '"/>';
+      $html .= '<span class="description">' . esc_attr( $required . $explanation ) . '</span>';
+      $html .= '</td>';
+      $html .= '</tr>';
+    }
+
+    // POST STATUS ROW
+    $html .= '<tr>';
+    $html .= '<th scope="row">';
+    $html .= esc_attr__('Set Post Status', 'external-videos');
+    $html .= '</th>';
+    $html .= '<td>';
+    $html .= '<select name="post_status" id="ev_post_status">';
+    $post_stati = get_post_stati( array( 'internal' => false, '_builtin' => true ), 'object' );
+    foreach ( $post_stati as $post_status ) {
+      $html .= '<option ' . selected( $ev_post_status, $post_status->name, false ) . ' value="' . esc_attr( $post_status->name ). '">' . esc_html( $post_status->label ) . '</option>';
+    }
+    $html .= '</select>';
+    $html .= '</td>';
+    $html .= '</tr>';
+
+    // DEFAULT USER ROW
+    $html .= '<tr>';
+    $html .= '<th scope="row">';
+    $html .= esc_attr__("Default WP Author", "external-videos");
+    $html .= '</th>';
+    $html .= '<td>';
+    $html .= wp_dropdown_users( array( 'echo' => false, 'selected' => $ev_author ) );
+    $html .= '</td>';
+    $html .= '</tr>';
+
+    // POST FORMAT ROW
+    $html .= '<tr>';
+    $html .= '<th scope="row">';
+    $html .= esc_attr__("Default Post Format");
+    $html .= '</th>';
+    $html .= '<td>';
+    $post_formats = get_post_format_strings();
+    unset( $post_formats["video"] );
+    $html .= '<select name="post_format" id="ev_post_format">';
+    $html .= '<option value="video">' . get_post_format_string( 'video' ) . '</option>';
+    foreach ( $post_formats as $format_slug => $format_name ) {
+      $html .= '<option ' . selected( $ev_post_format, $format_slug, false ) . ' value="' . esc_attr( $format_slug ). '">' . esc_html( $format_name ) . '</option>';
+    }
+    $html .= '</select>';
+    $html .= '</td>';
+    $html .= '</tr>';
+
+    // POST CATEGORY ROW
+    $html .= '<tr>';
+    $html .= '<th scope="row" class="v-top">';
+    $html .=  esc_attr__('Default Post Category');
+    $html .= '</th>';
+    $html .= '<td>';
+    $html .= '<ul class="category-box">';
+    $html .= wp_terms_checklist( 0, array( 'selected_cats' => $ev_category, 'echo' => false ) );
+    $html .= '</ul>';
+    $html .= '</td>';
+    $html .= '</tr>';
+
+    $html .= '</tbody>';
+    $html .= '</table>';
+    $html .= '</form>';
+
+    return $html;
 
   }
 
@@ -759,24 +915,20 @@ class SP_EV_Admin {
     check_ajax_referer( 'ev_settings' );
 
     $options = SP_External_Videos::get_options();
-    $AUTHORS = $options['authors'];
+    $HOSTS = $options['hosts'];
+    $this_host = $_POST['host_id'];
+    $this_author = $_POST['author_id'];
     $message = '';
 
-    // Does channel even exist?
-    if ( !$this->local_author_exists( $_POST['host_id'], $_POST['author_id'], $AUTHORS ) ) {
+    // Does author even exist?
+    if ( !$this->local_author_exists( $this_host, $this_author, $options ) ) {
       $message = __( "Can't delete a channel that doesn't exist.", 'external-videos' );
       $message = $this->wrap_admin_notice( $message, 'warning' );
     }
 
     else {
       // Start clearing channel options
-      foreach ( $options['authors'] as $key => $author ) {
-        if ( $author['host_id'] == $_POST['host_id'] && $author['author_id'] == $_POST['author_id'] ) {
-          unset( $options['authors'][$key] );
-        }
-      }
-
-      $options['authors'] = array_values( $options['authors'] );
+      unset( $options['hosts'][$this_host]['authors'][$this_author] );
 
       // also move the channel's videos to the trash. count how many we're moving
       $count_trash = 0;
@@ -805,7 +957,7 @@ class SP_EV_Admin {
       // Save the options without this channel
       if( update_option( 'sp_external_videos_options', $options ) ) {
 
-        $message = sprintf( _n( 'Deleted channel %s from %s and moved %d video to trash.', 'Deleted channel %s from %s and moved %d videos to trash.', $count_trash, 'external-videos' ), $_POST['author_id'], $_POST['host_id'], $count_trash );
+        $message = sprintf( _n( 'Deleted channel %s from %s and moved %d video to trash.', 'Deleted channel %s from %s and moved %d videos to trash.', $count_trash, 'external-videos' ), $this_author, $this_host, $count_trash );
 
         $message = $this->wrap_admin_notice( $message, 'info' );
       }
@@ -838,13 +990,14 @@ class SP_EV_Admin {
 
     // get existing options
     $options = SP_External_Videos::get_options();
-    $HOSTS = $options['hosts'];
-    $AUTHORS = SP_EV_Admin::get_authors();
+
     $messages = '';
 
     $author = array();
     $author['post_category'] = ''; // this one doesn't necessarily set
     parse_str($_POST['data'], $author);
+
+    // error_log( print_r( $author, true ) );
 
     // Clean up surplus white space from entered data
     $author['author_id'] = isset( $author['author_id'] ) ? trim( sanitize_text_field( $author['author_id'] ) ) : '';
@@ -852,14 +1005,14 @@ class SP_EV_Admin {
     $author['developer_key'] = isset( $author['developer_key'] ) ? trim( sanitize_text_field( $author['developer_key'] ) ) : '';
     $author['auth_token'] = isset( $author['auth_token'] ) ? trim( sanitize_text_field( $author['auth_token'] ) ) : '';
 
-    if ( !array_key_exists( $author['host_id'], $HOSTS ) ) {
+    if ( !array_key_exists( $author['host_id'], $options['hosts'] ) ) {
       $message = __( 'Invalid video host.', 'external-videos' );
       $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
     }
 
     // Check if local author already exists
-    elseif ( $this->local_author_exists( $author['host_id'], $author['author_id'], $AUTHORS ) ) {
+    elseif ( ( $author['edit_form'] != "true" ) && $this->local_author_exists( $author['host_id'], $author['author_id'], $options ) ) {
       $message = __( 'Channel already exists.', 'external-videos' );
       $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
@@ -874,8 +1027,8 @@ class SP_EV_Admin {
 
     // Check if author doesn't exist on video service
     elseif ( !$this->remote_author_exists( $author['host_id'], $author['author_id'], $author['developer_key'] ) ) {
-      $host = $author['host_id'];
-      $name = $HOSTS[$host]['api_keys'][0]['label'];
+      $host_id = $author['host_id'];
+      $name = $options['hosts'][$host_id]['api_keys'][0]['label'];
       $message = sprintf( __( 'Invalid %s - check spelling.', 'external-videos' ), $name );
       $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
@@ -883,10 +1036,12 @@ class SP_EV_Admin {
 
     // If we pass these tests, set up the author/channel
     else {
+      $author_id = $author['author_id'];
+      $host_id = $author['host_id'];
 
-      $options['authors'][] = array(
-        'host_id' => $author['host_id'],
-        'author_id' => $author['author_id'],
+      $options['hosts'][$host_id]['authors'][$author_id] = array(
+        'host_id' => $host_id,
+        'author_id' => $author_id,
         'developer_key' => $author['developer_key'],
         'secret_key' => $author['secret_key'],
         'auth_token' => $author['auth_token'],
@@ -896,15 +1051,18 @@ class SP_EV_Admin {
         'ev_post_status' => $author['post_status']
       );
 
+      // error_log( print_r( $options, true ) );
+
       if( update_option( 'sp_external_videos_options', $options ) ){
-        $host = $author['host_id'];
-        $hostname = $HOSTS[$host]['host_name'];
-        $message = sprintf( __( 'Added %s channel from %s', 'external-videos' ), $author['author_id'], $hostname );
-        // $message .=  __( 'Added channel from %s', 'external-videos' );
+        if( $author['edit_form'] == "true" ){
+          $message = sprintf( __( 'Edited %s channel settings', 'external-videos' ), $author['author_id'] );
+        } else {
+          $host_name = $options['hosts'][$host_id]['host_name'];
+          $message = sprintf( __( 'Added %s channel from %s', 'external-videos' ), $author['author_id'], $host_name );
+        }
         $message = $this->wrap_admin_notice( $message, 'success' );
         $messages .= $message;
       }
-
     }
 
     wp_send_json( $messages );
@@ -922,16 +1080,14 @@ class SP_EV_Admin {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param    $host_id, $author_id, $AUTHORS
+  *  @param    $host_id, $author_id, $options
   *  @return  boolean
   */
 
-  function local_author_exists( $host_id, $author_id, $AUTHORS ) {
+  function local_author_exists( $host_id, $author_id, $options ) {
 
-    foreach ( $AUTHORS as $author ) {
-      if ( $author['author_id'] == $author_id && $author['host_id'] == $host_id ) {
-        return true;
-      }
+    if ( isset( $options['hosts'][$host_id]['authors'][$author_id] ) ) {
+      return true;
     }
 
     return false;
@@ -955,8 +1111,8 @@ class SP_EV_Admin {
   function remote_author_exists( $host_id, $author_id, $developer_key ) {
 
     $HOSTS = SP_EV_Admin::get_hosts();
-    $hostname = $HOSTS[$host_id]['host_name'];
-    $ClassName = "SP_EV_" . $hostname;
+    $host_name = $HOSTS[$host_id]['host_name'];
+    $ClassName = "SP_EV_" . $host_name;
 
     $response = $ClassName::remote_author_exists( $host_id, $author_id, $developer_key );
 
@@ -967,7 +1123,7 @@ class SP_EV_Admin {
   /*
   *  authorization_exists
   *
-  *  Settings page
+  *  Settings page validation function
   *  Used by add_author_handler()
   *  Test if added author included enough credentials for a particular host
   *
@@ -981,9 +1137,8 @@ class SP_EV_Admin {
 
   function authorization_exists( $host_id, $author_id, $developer_key, $secret_key, $auth_token ) {
 
-    $HOSTS = SP_EV_Admin::get_hosts();
-
     // get required keys for this host
+    $HOSTS = SP_EV_Admin::get_hosts();
     $api_keys = $HOSTS[$host_id]['api_keys'];
 
     foreach( $api_keys as $api_key ){
@@ -1109,6 +1264,7 @@ class SP_EV_Admin {
   *  daily_function
   *
   *  cron job to check video channels and add them as posts to database if found
+  *  post_new_videos also runs trash_deleted_videos
   *
   *  @type  function
   *  @date  31/10/16
@@ -1121,8 +1277,10 @@ class SP_EV_Admin {
   function daily_function() {
 
     $options = SP_External_Videos::get_options();
-    $AUTHORS = SP_EV_Admin::get_authors();
-    $this->post_new_videos( $AUTHORS, $options['delete'] );
+    $update_hosts = $options['hosts']; // all
+    $update_authors = SP_EV_Admin::get_authors(); // all
+    $single = false;
+    $this->post_new_videos( $update_authors, $update_hosts, $single );
 
   }
 

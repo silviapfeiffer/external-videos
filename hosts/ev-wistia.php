@@ -32,14 +32,19 @@ class SP_EV_Wistia {
 
     // host_name must be the last part of the Class Name
     $class = get_class();
-    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
-    $hostname = $hostname[0];
+    $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $host_name = $host_name[0];
 
     $options = SP_External_Videos::get_options();
+    if( !isset( $options['hosts']['wistia']['authors'] ) ) {
+      $authors = array();
+    } else {
+      $authors = $options['hosts']['wistia']['authors'];
+    }
 
     $options['hosts']['wistia'] = array(
       'host_id' => 'wistia',
-      'host_name' => $hostname,
+      'host_name' => $host_name,
       'api_keys' => array(
         array(
           'id' => 'author_id',
@@ -56,7 +61,8 @@ class SP_EV_Wistia {
       ),
       'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
       'api_url' => 'https://wistia.com',
-      'api_link_title' => 'Wistia'
+      'api_link_title' => 'Wistia',
+      'authors' => $authors
     );
 
     update_option( 'sp_external_videos_options', $options );

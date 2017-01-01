@@ -32,14 +32,19 @@ class SP_EV_Dotsub {
 
     // host_name must be the last part of the Class Name
     $class = get_class();
-    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
-    $hostname = $hostname[0];
+    $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $host_name = $host_name[0];
 
     $options = SP_External_Videos::get_options();
+    if( !isset( $options['hosts']['dotsub']['authors'] ) ) {
+      $authors = array();
+    } else {
+      $authors = $options['hosts']['dotsub']['authors'];
+    }
 
     $options['hosts']['dotsub'] = array(
       'host_id' => 'dotsub',
-      'host_name' => $hostname,
+      'host_name' => $host_name,
       'api_keys' => array(
         array(
           'id' => 'author_id',
@@ -50,7 +55,8 @@ class SP_EV_Dotsub {
       ),
       'introduction' => "DotSub only requires a User ID in order to access your videos from another site. Note: the DotSub server is quite slow - if you get an error adding an author, try again.",
       'api_url' => 'https://dotsub.com',
-      'api_link_title' => 'DotSub'
+      'api_link_title' => 'DotSub',
+      'authors' => $authors
     );
 
     update_option( 'sp_external_videos_options', $options );

@@ -1,6 +1,6 @@
-/*.ev-wrap .postbox .inside.big p {
+.ev-wrap .postbox .inside p {
   font-size: 1rem;
-}*/
+}
 
 section {
   display:none;
@@ -21,16 +21,6 @@ section:first-of-type {
   padding:0px;
   border:0px;
 }
-.ev-table td, .ev-table th {
-  border-bottom: 1px solid #eee;
-}
-.ev-table td table td {
-  padding: 0.25em 0.5em 0.25em 0 !important;
-  border-bottom: 0px solid #eee;
-}
-.text-align-right {
-  text-align: right;
-}
 .w-50 {
   width: 25%;
 }
@@ -50,8 +40,51 @@ section:first-of-type {
 .float-right {
   float: right;
 }
-.v-top {
+.collapse {
+  display: none;
+}
+.collapse.in {
+  display: block;
+}
+
+/* all this specificity is necessary to override default WP admin styles */
+.ev-table td, .ev-table th {
+  border-bottom: 1px solid #eee;
+}
+.ev-table td table td {
+  padding: 0.25em 0.5em 0.25em 0 !important;
+  border-bottom: 0px solid #eee;
+}
+.ev-host-table .text-align-right,
+.ev-table .text-align-right {
+  text-align: right;
+}
+.ev-host-table .v-top {
   vertical-align: top;
+  padding-top: 2em;
+}
+.ev-host-table .save-author,
+.ev_edit_author .delete-author {
+  display: none;
+}
+.edit-author .open {
+  display: none;
+}
+.wp-core-ui .ev-host-table button,
+.wp-core-ui .ev-host-table a {
+  margin-left: 0.75em;
+}
+
+.ev-host-table ul.category-box {
+  background-color: white;
+  padding: 0.5em 1em 0;
+  max-height: 10em;
+  max-width: 20em;
+  overflow-y: scroll;
+  border: 1px solid #e5e5e5;
+  -webkit-box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+  background: #fff;
 }
 
 @media screen and ( max-width: 782px ) {
@@ -72,5 +105,9 @@ section:first-of-type {
   }
   .w-17 {
     width: 17%;
+  }
+  .description {
+    display: inline-block;
+    margin-left: 1em;
   }
 }

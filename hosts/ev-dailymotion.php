@@ -31,14 +31,19 @@ class SP_EV_Dailymotion {
 
     // host_name must be the last part of the Class Name
     $class = get_class();
-    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
-    $hostname = $hostname[0];
+    $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $host_name = $host_name[0];
 
     $options = SP_External_Videos::get_options();
+    if( !isset( $options['hosts']['dailymotion']['authors'] ) ) {
+      $authors = array();
+    } else {
+      $authors = $options['hosts']['dailymotion']['authors'];
+    }
 
     $options['hosts']['dailymotion'] = array(
       'host_id' => 'dailymotion',
-      'host_name' => $hostname,
+      'host_name' => $host_name,
       'api_keys' => array(
         array(
           'id' => 'author_id',
@@ -49,7 +54,8 @@ class SP_EV_Dailymotion {
       ),
       'introduction' => "Dailymotion only requires a User ID in order to access your videos from another site.",
       'api_url' => 'http://www.dailymotion.com/settings/developer',
-      'api_link_title' => 'Dailymotion API'
+      'api_link_title' => 'Dailymotion API',
+      'authors' => $authors
     );
 
     update_option( 'sp_external_videos_options', $options );
