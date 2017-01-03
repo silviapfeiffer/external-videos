@@ -74,6 +74,7 @@ class SP_EV_Admin {
 
     $new_message = '<div class="notice notice-' . esc_attr( $type ) . '">'; //  is-dismissible
     $new_message .= '<p><strong>' . esc_attr( $message ) . '</strong></p>';
+    // Keep this in case we want to make notices dismissible and use the admin notice hook
     // $new_message .= '<button type="button" class="notice-dismiss">';
     // $new_message .= '<span class="screen-reader-text">Dismiss this notice.</span>';
     // $new_message .= '</button>';
@@ -675,9 +676,6 @@ class SP_EV_Admin {
           $html .= '<td class="w-25 ev-table-check text-align-right">';
           $html .= '<input type="submit" class="button-update button" value="' . __( 'Update Videos' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" /><div class="spinner"></div>';
           $html .= '</td>';
-          // $html .= '<td class="w-17 ev-table-delete text-align-right">';
-          // $html .= '<input type="submit" class="button-delete button" value="' . __( 'Delete' ) . '" data-host="' .  $author['host_id'] . '" data-author="' . $author['author_id'] . '" />';
-          // $html .= '</td>';
           $html .= '</tr>';
         }
 
@@ -1131,7 +1129,7 @@ class SP_EV_Admin {
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param    $host_id, $developer_key, $secret_key, $auth_token
+  *  @param    $host_id, $author_id, $developer_key, $secret_key, $auth_token
   *  @return  boolean
   */
 
@@ -1277,10 +1275,14 @@ class SP_EV_Admin {
   function daily_function() {
 
     $options = SP_External_Videos::get_options();
-    $update_hosts = $options['hosts']; // all
-    $update_authors = SP_EV_Admin::get_authors(); // all
-    $single = false;
-    $this->post_new_videos( $update_authors, $update_hosts, $single );
+    if( !isset( $options['hosts'] ) ) return;
+    $update_hosts = $options['hosts']; // get all hosts
+    foreach( $update_hosts as $host ) {
+      if( isset( $host['authors'] ) ) { // if we have authors
+        $update_authors = $host['authors'];
+        $this->post_new_videos( $update_authors, $update_hosts ); // one host at a time
+      }
+    }
 
   }
 
