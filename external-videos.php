@@ -372,23 +372,19 @@ class SP_External_Videos {
 
   function add_to_main_query( $query ) {
 
-    $options = $this->get_options();
+    $options = SP_External_Videos::get_options();
 
-    if( !isset( $options['loop'] ) || $options['loop'] == false ) return $query;
+    if( !isset( $options['loop'] ) || $options['loop'] == false ) return;
 
     if( is_home() ) {
-
       $post_type = get_query_var( 'post_type' );
-
-      if( !is_array( $post_type ) ) $post_type = array( $post_type );
+      // Default index page has no post_type set
+      if( !isset( $post_type ) || !is_array( $post_type ) ) {
+        $post_type = array( 'post' );
+      }
       if( !in_array( 'external-videos', $post_type ) ) $post_type[] = 'external-videos';
-
-      $query->set( 'post_type', $post_type );
-
+      set_query_var ( 'post_type', $post_type );
     }
-
-    return $query;
-
   }
 
   /*

@@ -77,15 +77,9 @@ $HOSTS = $options['hosts'];
                 $ev_loop = $options['loop'];
               ?>
               <fieldset>
-                <label for="ev-rss">
-                  <input type="checkbox" id="ev-rss" name="ev-rss" value="rss" <?php if ($ev_rss == true) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Add video posts to Website RSS feed', 'external-videos'); ?></span>
-                </label>
-              </fieldset>
-              <fieldset>
-                <label for="ev-delete">
-                  <input type="checkbox" id="ev-delete" name="ev-delete" value="delete" <?php if ($ev_del == true) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Move videos locally to trash when deleted on external site', 'external-videos'); ?></span>
+                <label for="ev-loop">
+                  <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ($ev_loop == true) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Add external-video posts to the Home loop (latest Posts page)', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
@@ -95,9 +89,15 @@ $HOSTS = $options['hosts'];
                 </label>
               </fieldset>
               <fieldset>
-                <label for="ev-loop">
-                  <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ($ev_loop == true) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Add external-video posts to the Home loop (latest Posts page)', 'external-videos'); ?></span>
+                <label for="ev-rss">
+                  <input type="checkbox" id="ev-rss" name="ev-rss" value="rss" <?php if ($ev_rss == true) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Add video posts to Website RSS feed', 'external-videos'); ?></span>
+                </label>
+              </fieldset>
+              <fieldset>
+                <label for="ev-delete">
+                  <input type="checkbox" id="ev-delete" name="ev-delete" value="delete" <?php if ($ev_del == true) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Move videos locally to trash when deleted on external site', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <p class="">
