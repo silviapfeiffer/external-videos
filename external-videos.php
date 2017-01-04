@@ -103,6 +103,13 @@ class SP_External_Videos {
     // create a "video" category to store posts against
     wp_create_category(__( 'External Videos', 'external-videos' ) );
 
+    $options = get_option( 'sp_external_videos_options' );
+    if( $options && isset( $options['slug'] ) ){
+      $rewrite = $options['slug'];
+    } else {
+      $rewrite = 'external-videos';
+    }
+
     // create "external videos" post type
     register_post_type( 'external-videos', array(
       'label'           => __( 'External Videos', 'external-videos' ),
@@ -117,7 +124,7 @@ class SP_External_Videos {
       'supports'        => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'post-formats' ),
       'taxonomies'      => array( 'post_tag', 'category' ),
       'has_archive'     => true,
-      'rewrite'         => array( 'slug' => 'external-videos' ),
+      'rewrite'         => array( 'slug' => $rewrite ),
       'yarpp_support'   => true
     ));
 

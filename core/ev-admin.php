@@ -156,6 +156,7 @@ class SP_EV_Admin {
     check_ajax_referer( 'ev_settings' );
 
     $options = SP_External_Videos::get_options();
+    $old_slug = isset( $options['slug'] ) ? $options['slug'] : '';
     $message = '';
 
     $fields = array();
@@ -167,11 +168,18 @@ class SP_EV_Admin {
     $options['delete'] = ( array_key_exists( 'ev-delete', $fields ) ? true : false );
     $options['attrib'] = ( array_key_exists( 'ev-attrib', $fields ) ? true : false );
     $options['loop'] = ( array_key_exists( 'ev-loop', $fields ) ? true : false );
+    $options['slug'] = ( array_key_exists( 'ev-slug', $fields ) ? sanitize_title_with_dashes( $fields['ev-slug'] ) : '' );
 
-    if( update_option( 'sp_external_videos_options', $options ) ) $message = "Settings saved.";
+    if( update_option( 'sp_external_videos_options', $options ) ) $message = __( "Settings saved. ", "external-videos" );
+    if( ( '' != $options['slug'] ) && ( $old_slug != $options['slug'] ) ) {
+      $message .= __( "Please go to Permalink Settings page and re-save for changes to take effect.", "external-videos" );
+    }
+
     ob_clean();
 
-    wp_send_json( $message );
+    $data = array( 'message' => $message, 'slug' => $options['slug'] );
+
+    wp_send_json( $data );
 
   }
 

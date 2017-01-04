@@ -72,9 +72,12 @@
         _ajax_nonce: evSettings.nonce,
         action: "plugin_settings_handler",
         data: pluginSettings,
-        dataType:'json'
+        dataType: 'json'
       }, function(data){
-        $("#ev_plugin_settings .feedback").html(data);
+        var message = $(data).prop("message"),
+            slug = $(data).prop("slug");
+        $("#ev_plugin_settings .feedback").html(message);
+        $("#ev_plugin_settings input#ev-slug").val(slug);
       });
     });
   };

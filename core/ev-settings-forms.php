@@ -75,29 +75,38 @@ $HOSTS = $options['hosts'];
                 $ev_del = $options['delete'];
                 $ev_attrib = $options['attrib'];
                 $ev_loop = $options['loop'];
+                $ev_slug = $options['slug'];
               ?>
               <fieldset>
                 <label for="ev-loop">
-                  <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ($ev_loop == true) echo "checked"; ?>/>
+                  <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ( $ev_loop == true ) echo "checked"; ?>/>
                   <span><?php esc_attr_e('Add external-video posts to the Home loop (latest Posts page)', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
                 <label for="ev-attrib">
-                  <input type="checkbox" id="ev-attrib" name="ev-attrib" value="attrib" <?php if ($ev_attrib == true) echo "checked"; ?>/>
+                  <input type="checkbox" id="ev-attrib" name="ev-attrib" value="attrib" <?php if ( $ev_attrib == true ) echo "checked"; ?>/>
                   <span><?php esc_attr_e('Add category, author and hosting site links to bottom of video post content', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
                 <label for="ev-rss">
-                  <input type="checkbox" id="ev-rss" name="ev-rss" value="rss" <?php if ($ev_rss == true) echo "checked"; ?>/>
+                  <input type="checkbox" id="ev-rss" name="ev-rss" value="rss" <?php if ( $ev_rss == true ) echo "checked"; ?>/>
                   <span><?php esc_attr_e('Add video posts to Website RSS feed', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
                 <label for="ev-delete">
-                  <input type="checkbox" id="ev-delete" name="ev-delete" value="delete" <?php if ($ev_del == true) echo "checked"; ?>/>
+                  <input type="checkbox" id="ev-delete" name="ev-delete" value="delete" <?php if ( $ev_del == true ) echo "checked"; ?>/>
                   <span><?php esc_attr_e('Move videos locally to trash when deleted on external site', 'external-videos'); ?></span>
+                </label>
+              </fieldset>
+              <fieldset>
+                <p><?php esc_attr_e( 'If you want a custom URL slug for External Videos permalinks and archive, enter it here:', 'external-videos'); ?></p>
+                <label for="ev-cpt-slug">
+                  <span><?php echo home_url( '/' ); ?></span><input type="text" id="ev-slug" name="ev-slug" placeholder="<?php esc_attr_e( 'external-videos', 'external-videos' ); ?>" value="<?php esc_attr_e( $ev_slug ); ?>"/>
+                  <span class="spacer"></span><span><?php esc_attr_e('Default is "external-videos". ', 'external-videos'); ?></span>
+                  <strong><?php esc_attr_e( 'Be careful: this should not conflict with any other rewrite slug.', 'external-videos'); ?></strong>
                 </label>
               </fieldset>
               <p class="">
