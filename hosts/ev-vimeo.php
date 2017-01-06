@@ -123,12 +123,15 @@ class SP_EV_Vimeo {
   *  @date  31/10/16
   *  @since  0.23
   *
-  *  @param   $video_id
+  *  @param   $video_id is in format "/videos/123255" - this is useless because
+  *           /videos/ is not any part of the embedabble uri of the video!
   *  @return  <iframe>
   */
 
   public static function embed_code( $video_id ) {
 
+    $parts = explode( "/", $video_id );
+    $actual_id = $parts[2];
     return "//player.vimeo.com/video/$video_id";
 
   }

@@ -248,6 +248,7 @@ class SP_EV_Admin {
   /*
   *  post_new_videos
   *
+  *  Uses save_video()
   *  Used by update_videos_handler() and daily_function()
   *  Saves any new videos from host channels to the database.
   *  Returns messages about number of video posts added.
@@ -1288,7 +1289,7 @@ class SP_EV_Admin {
     foreach( $update_hosts as $host ) {
       if( isset( $host['authors'] ) ) { // if we have authors
         $update_authors = $host['authors'];
-        $this->post_new_videos( $update_authors, $update_hosts ); // one host at a time
+        $this->post_new_videos( $update_authors, $update_hosts, false ); // one host at a time
       }
     }
 

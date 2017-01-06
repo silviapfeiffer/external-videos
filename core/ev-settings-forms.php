@@ -105,7 +105,7 @@ $HOSTS = $options['hosts'];
                 <p><?php esc_attr_e( 'If you want a custom URL slug for External Videos permalinks and archive, enter it here:', 'external-videos'); ?></p>
                 <label for="ev-cpt-slug">
                   <span><?php echo home_url( '/' ); ?></span><input type="text" id="ev-slug" name="ev-slug" placeholder="<?php esc_attr_e( 'external-videos', 'external-videos' ); ?>" value="<?php esc_attr_e( $ev_slug ); ?>"/>
-                  <span class="spacer"></span><span><?php esc_attr_e('Default is "external-videos". ', 'external-videos'); ?></span>
+                  <span class="spacer"></span><span><?php esc_attr_e('Default is "external-videos"', 'external-videos'); ?></span><br />
                   <strong><?php esc_attr_e( 'Be careful: this should not conflict with any other rewrite slug.', 'external-videos'); ?></strong>
                 </label>
               </fieldset>
