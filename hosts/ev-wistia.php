@@ -69,14 +69,6 @@ class SP_EV_Wistia {
 
   }
 
-  public static function echo(){
-    $class = get_class();
-    echo 'Class is ' .  $class . '<br />';
-    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
-    print_r($hostname);
-    return;
-  }
-
   /*
   *  remote_author_exists
   *
