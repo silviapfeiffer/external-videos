@@ -199,4 +199,4 @@ You can add a link like this to your theme layout.
 == Upgrade Notice ==
 
 = 1.0 =
-Major refactor, now supports YouTube - Vimeo - Dotsub - Wistia - Dailymotion, much better settings page
+Major refactor, now supports YouTube - Vimeo - Dotsub - Wistia - Dailymotion, much better settings page. You may need to re-add your sites after updating.
