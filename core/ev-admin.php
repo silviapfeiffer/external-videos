@@ -371,6 +371,9 @@ class SP_EV_Admin {
       $video_id = get_post_meta( $old_video->ID, 'video_id', true );
       $host = get_post_meta( $old_video->ID, 'host_id', true );
 
+      // next video if we're looking at a video not on a updated site
+      if ( !in_array( $host, $update_hosts ) ) continue;
+
       // Move external-video to trash if not in array of $new_video_ids passed from the post_new_videos() function
       if ( $video_id != NULL && !in_array( $video_id, $new_video_ids ) ) {
         $post = get_post( $old_video->ID );
