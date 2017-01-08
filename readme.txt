@@ -72,12 +72,13 @@ You can add a link like this to your theme layout.
 == Changelog ==
 
 = 1.0 =
-* Major refactor - AJAX admin forms for live plugin settings and video updates
-* All video sites work again, using their current APIs
-* YouTube - Vimeo - Dotsub - Wistia
+* Major refactor - thanks to Andrew Nimmo
+* All video sites updated to their current APIs
+* YouTube - Vimeo - Dotsub - Wistia updated
 * Dailymotion added
+* Settings: Added AJAX admin forms for live plugin settings and video updates
 * New settings option: Add external-videos to main Home page query (latest posts)
-* New settings option: Automatically append attribution (categories, author and hosting site) to external-video post content, or not
+* New settings option: Automatically append attribution (categories, author and hosting site) to external-video post content
 * New admin column to sort external-videos by category
 * Note that some time since WP 3.5, you can no longer access connected external-videos from the Media Uploader, to add them to a post or page (other than the original external-videos post). This is because of hooks inaccessible since WP Media changed to backbone.js; this part of the plugin's functionality could be integrated with the Media Explorer plugin project.
 
@@ -193,3 +194,9 @@ You can add a link like this to your theme layout.
 
 = 0.1 =
 * Initial version
+
+
+== Upgrade Notice ==
+
+= 1.0 =
+Major refactor, now supports YouTube - Vimeo - Dotsub - Wistia - Dailymotion, much better settings page

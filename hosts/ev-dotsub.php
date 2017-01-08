@@ -185,7 +185,7 @@ class SP_EV_Dotsub {
         $video['description'] = $vid['description'];
         $video['authorname']  = $vid['user'];
         $video['videourl']    = $vid['displayURI'];
-        $video['published']   = date("Y-m-d H:i:s", strtotime($vid['dateCreated']));
+        $video['published']   = gmdate("Y-m-d\TH:i:s\Z", $vid['dateCreated']/1000);
         $video['author_url']  = $vid['externalIdentifier'];
         $video['category']    = '';
         $video['keywords']    = array();

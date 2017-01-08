@@ -219,6 +219,13 @@ class SP_EV_Vimeo {
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
         $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+
+        // Interpret errors from the API - should really raise this as an exception
+        if ( isset($body['error']) ) {
+//          print_r( $body['error'] );
+          return [];
+        }
+
         // Adjust array to get to the data
         $data = $body['data'];
         $next = $body['paging']['next'];

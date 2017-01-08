@@ -89,27 +89,30 @@ class SP_EV_Admin {
   *
   *  Settings page
   *  Used by
-  *  Returns full array of authors from options['authors'];
+  *  Returns full array of authors from options['hosts'];
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param
+  *  @param   $options
   *  @returns $AUTHORS
   */
 
-  static function get_authors(){
+  static function get_authors( $options ){
 
-    $options = SP_External_Videos::get_options();
     $HOSTS = $options['hosts'];
     $AUTHORS = array();
 
     foreach( $HOSTS as $host ){
-      if( isset( $host['authors'] ) );
-      array_push( $AUTHORS, $host['authors'] );
+      if( isset( $host['authors'] ) ) { // add all authors
+        foreach( $host['authors'] as $author ) {
+          array_push( $AUTHORS, $author );
+        }
+      }
     }
 
+    //error_log(print_r($AUTHORS,true));
     return $AUTHORS;
   }
 
@@ -156,7 +159,7 @@ class SP_EV_Admin {
     check_ajax_referer( 'ev_settings' );
 
     $options = SP_External_Videos::get_options();
-    $old_slug = isset( $options['slug'] ) ? $options['slug'] : '';
+    $old_slug = $options['slug'];
     $message = '';
 
     $fields = array();
@@ -204,9 +207,9 @@ class SP_EV_Admin {
 
     // Get EV options once now for the helper functions
     $options = SP_External_Videos::get_options();
-    $AUTHORS = SP_EV_Admin::get_authors();
+    $AUTHORS = SP_EV_Admin::get_authors( $options );
     $HOSTS = $options['hosts'];
-    $delete = isset( $options['delete'] ) ? $options['delete'] : null;
+    $delete = $options['delete'];
 
     $new_messages = $trash_messages = '';
 
@@ -221,16 +224,14 @@ class SP_EV_Admin {
       // get the relevant local author. easier in hosts array. go direct to avoid possible $AUTHORS name duplicates
       $update_authors = array( $this_author=>$HOSTS[$this_host]['authors'][$this_author] ); // has to stay indexed and loopable
       $update_hosts = array( $this_host=>$HOSTS[$this_host] ); // has to stay indexed and loopable
-      $single = true;
 
     } else { // it's update all
       $update_authors = $AUTHORS;
       $update_hosts = $HOSTS;
-      $single = null;
     }
 
     // post_new_videos() gets everything new and returns messages about it
-    $post_results = $this->post_new_videos( $update_authors, $update_hosts, $single );
+    $post_results = $this->post_new_videos( $update_authors, $update_hosts );
     $new_messages = $post_results['messages'];
     $new_video_ids = $post_results['new_video_ids'];
 
@@ -252,17 +253,17 @@ class SP_EV_Admin {
   *  Used by update_videos_handler() and daily_function()
   *  Saves any new videos from host channels to the database.
   *  Returns messages about number of video posts added.
-  *  Works for single-author and update-all via $single param
+  *  Works for single-author and update-all
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $update_authors, $update_hosts, $single
+  *  @param   $update_authors, $update_hosts
   *  @return  array( html $messages, array $new_video_ids )
   */
 
-  function post_new_videos( $update_authors, $update_hosts, $single ) {
+  function post_new_videos( $update_authors, $update_hosts ) {
 
     $new_video_ids = array();
     $new_videos = $this->fetch_new_videos( $update_authors, $update_hosts );
@@ -275,7 +276,7 @@ class SP_EV_Admin {
         $hostlist[] = $host['host_name'];
       }
       $hostlist = implode( ', ', $hostlist );
-      $zero_message = __( "No videos found on " . $hostlist . "." );
+      $zero_message = __( "No new videos found on " . $hostlist . "." );
       $zero_message = $this->wrap_admin_notice( $zero_message, 'info' );
 
       return array(
@@ -312,7 +313,7 @@ class SP_EV_Admin {
         $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $host_name );
       }
       else {
-        $no_messages .= "No videos found on " . $host_name . '.';
+        $no_messages .= "No new videos found on " . $host_name . '.';
       }
     }
     // after looping to get all add/no messages, wrap them up for delivery
@@ -370,6 +371,9 @@ class SP_EV_Admin {
       $video_id = get_post_meta( $old_video->ID, 'video_id', true );
       $host = get_post_meta( $old_video->ID, 'host_id', true );
 
+      // next video if we're looking at a video not on a updated site
+      if ( !in_array( $host, $update_hosts ) ) continue;
+
       // Move external-video to trash if not in array of $new_video_ids passed from the post_new_videos() function
       if ( $video_id != NULL && !in_array( $video_id, $new_video_ids ) ) {
         $post = get_post( $old_video->ID );
@@ -389,11 +393,12 @@ class SP_EV_Admin {
 
     if( isset( $trash_messages ) ) {
       $trash_messages = $this->wrap_admin_notice( $trash_messages, 'warning' );
+
+      // return the messages
+      return $trash_messages;
     }
 
-    // return the messages
-    return $trash_messages;
-
+    return '';
   }
 
 
@@ -417,6 +422,7 @@ class SP_EV_Admin {
     $new_videos = $videos = array();
 
     foreach ( $update_authors as $author ) {
+      if (empty($author)) continue;
 
       // $output = ;
       $host = $author['host_id'];
@@ -474,9 +480,8 @@ class SP_EV_Admin {
     $video_content .= "\n\n";
     $video_content .= '<p>'.trim( $video['description'] ).'</p>';
 
-    // check options, if user wants the rest of content
-    $options = get_option( 'sp_external_videos_options' );
-    if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
+    // get options, to check if user wants the rest of content
+    $options = SP_External_Videos::get_options();
 
     if( $options['attrib'] == true ) {
       $video_content .= '<p><small>';
@@ -646,8 +651,7 @@ class SP_EV_Admin {
     check_ajax_referer( 'ev_settings' );
 
     // faster with one query
-    $options = SP_External_Videos::get_options();
-    $HOSTS = $options['hosts'];
+    $HOSTS = SP_EV_Admin::get_hosts();
 
     $html = '<div class="limited-width"><span class="feedback"></span></div>';
     $html .= '<table class="wp-list-table ev-table widefat">';
@@ -997,7 +1001,6 @@ class SP_EV_Admin {
 
     // get existing options
     $options = SP_External_Videos::get_options();
-
     $messages = '';
 
     $author = array();
@@ -1224,7 +1227,7 @@ class SP_EV_Admin {
         break;
 
       case 'thumbnail':
-        echo "<img src='".$thumbnail."' width='120px' height='90px'/>";
+        echo "<img src='".$thumbnail."' style='width:100%'/>";
         break;
 
       case 'duration':
@@ -1285,13 +1288,9 @@ class SP_EV_Admin {
 
     $options = SP_External_Videos::get_options();
     if( !isset( $options['hosts'] ) ) return;
-    $update_hosts = $options['hosts']; // get all hosts
-    foreach( $update_hosts as $host ) {
-      if( isset( $host['authors'] ) ) { // if we have authors
-        $update_authors = $host['authors'];
-        $this->post_new_videos( $update_authors, $update_hosts, false ); // one host at a time
-      }
-    }
+    $update_hosts = $options['hosts']; // all hosts
+    $update_authors = SP_EV_Admin::get_authors(); // all authors
+    $this->post_new_videos( $update_authors, $update_hosts );
 
   }
 

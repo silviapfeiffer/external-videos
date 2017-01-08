@@ -43,7 +43,7 @@ $HOSTS = $options['hosts'];
             <div class="inside big">
               <p>
                 <?php esc_attr_e(
-                  'External Videos allows your WordPress site to connect to your accounts at video hosting sites. For each video it finds on a channel, it creates a new post in WordPress. For example, EV can find all the videos of the user "Fred" on YouTube, and add each of them as a new "external-videos" post.',
+                  'External Videos (EV) allows your WordPress site to connect to your accounts at video hosting sites. For each video it finds on a channel, it creates a new post in WordPress. For example, EV can find all the videos of the user "Fred" on YouTube, and add each of them as a new "external-videos" post.',
                   'external-videos'
                 ); ?>
               </p>
