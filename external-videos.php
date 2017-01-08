@@ -105,7 +105,7 @@ class SP_External_Videos {
 
     // load the saved options or initialize with default values
     $options = $this->get_options();
-echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
+    //echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
 
 
     // create "external videos" post type
