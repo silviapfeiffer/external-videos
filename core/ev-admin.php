@@ -105,10 +105,14 @@ class SP_EV_Admin {
     $AUTHORS = array();
 
     foreach( $HOSTS as $host ){
-      if( isset( $host['authors'] ) );
-      array_push( $AUTHORS, $host['authors'] );
+      if( isset( $host['authors'] ) ) { // add all authors
+        foreach( $host['authors'] as $author ) {
+          array_push( $AUTHORS, $author );
+        }
+      }
     }
 
+    //error_log(print_r($AUTHORS,true));
     return $AUTHORS;
   }
 
@@ -1283,13 +1287,10 @@ class SP_EV_Admin {
 
     $options = SP_External_Videos::get_options();
     if( !isset( $options['hosts'] ) ) return;
-    $update_hosts = $options['hosts']; // get all hosts
-    foreach( $update_hosts as $host ) {
-      if( isset( $host['authors'] ) ) { // if we have authors
-        $update_authors = $host['authors'];
-        $this->post_new_videos( $update_authors, $update_hosts, false ); // one host at a time
-      }
-    }
+    $update_hosts = $options['hosts']; // all hosts
+    $update_authors = SP_EV_Admin::get_authors(); // all authors
+    $single = false;
+    $this->post_new_videos( $update_authors, $update_hosts, $single );
 
   }
 

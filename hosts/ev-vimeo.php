@@ -221,7 +221,7 @@ class SP_EV_Vimeo {
         $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
 
         // Interpret errors from the API - should really raise this as an exception
-        if ( $body['error'] ) {
+        if ( isset($body['error']) ) {
 //          print_r( $body['error'] );
           return [];
         }
