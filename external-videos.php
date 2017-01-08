@@ -103,12 +103,10 @@ class SP_External_Videos {
     // create a "video" category to store posts against
     wp_create_category(__( 'External Videos', 'external-videos' ) );
 
-    $options = get_option( 'sp_external_videos_options' );
-    if( $options && isset( $options['slug'] ) ){
-      $rewrite = $options['slug'];
-    } else {
-      $rewrite = 'external-videos';
-    }
+    // load the saved options or initialize with default values
+    $options = $this->get_options();
+echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
+
 
     // create "external videos" post type
     register_post_type( 'external-videos', array(
@@ -124,16 +122,13 @@ class SP_External_Videos {
       'supports'        => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'post-formats' ),
       'taxonomies'      => array( 'post_tag', 'category' ),
       'has_archive'     => true,
-      'rewrite'         => array( 'slug' => $rewrite ),
+      'rewrite'         => array( 'slug' => $options['slug'] ),
       'yarpp_support'   => true
     ));
 
     // enable thickbox use for gallery
     wp_enqueue_style( 'thickbox' );
     wp_enqueue_script( 'thickbox' );
-
-    // move author options to hosts
-    $this->convert_author_options();
 
   }
 
@@ -250,8 +245,8 @@ class SP_External_Videos {
   /*
   *  get_options
   *
-  *  Used by ev-admin.php, feed_request(), daily_function()
   *  Gets sp_external_videos_options, returns usable array $options
+  *  which is stored into the SP_External_Videos class
   *
   *  @type  function
   *  @date  31/10/16
@@ -263,23 +258,26 @@ class SP_External_Videos {
 
   static function get_options(){
 
-    // Load existing plugin options for this form
+    // Load existing plugin options
     $raw_options = get_option( 'sp_external_videos_options' );
     // echo '<pre>$raw_options: '; print_r($raw_options); echo '</pre>';
 
     // Set defaults for the basic options
     if( !$raw_options ) {
-      $options = array( 'version' => 1, 'hosts' => array(), 'rss' => false, 'delete' => true, 'attrib' => false, 'loop' => false );
+      $options = array( 'version' => 1, 'rss' => false, 'delete' => true, 'hosts' => array(), 'attrib' => false, 'loop' => false, 'slug' => 'external-videos');
     } else {
-      $options = $raw_options;
+
+      // Upgrade options to v1.0: move author options to hosts
+      $options = SP_External_Videos::convert_author_options( $raw_options );
+
       // below is needed, because if anything gets unset it throws an error
       if( !array_key_exists( 'version', $options ) ) $options['version'] = 1;
-      if( !array_key_exists( 'authors', $options ) ) $options['authors'] = array();
-      if( !array_key_exists( 'hosts', $options ) ) $options['hosts'] = array();
       if( !array_key_exists( 'rss', $options ) ) $options['rss'] = false;
       if( !array_key_exists( 'delete', $options ) ) $options['delete'] = false;
+      if( !array_key_exists( 'hosts', $options ) ) $options['hosts'] = array();
       if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
       if( !array_key_exists( 'loop', $options ) ) $options['loop'] = false;
+      if( !array_key_exists( 'slug', $options ) ) $options['slug'] = 'external-videos';
     };
     // echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
 
@@ -290,6 +288,7 @@ class SP_External_Videos {
   /*
   *  convert_author_options
   *
+  *  This is for an update of the plugin to version 1.0.
   *  Move authors array under respective hosts for much easier indexing.
   *  This is a database conversion function that is light and runs automatically
   *  but is really needed once only. Could be moved to settings-page AJAX
@@ -303,12 +302,10 @@ class SP_External_Videos {
   *  @return
   */
 
-  function convert_author_options(){
+  static function convert_author_options( $options ){
 
-    $options = get_option( "sp_external_videos_options" );
-
-    if( !array_key_exists( 'hosts', $options ) ) return;
-    if( !array_key_exists( 'authors', $options ) ) return;
+    if( !array_key_exists( 'hosts', $options ) ) return $options;
+    if( !array_key_exists( 'authors', $options ) ) return $options;
 
     $AUTHORS = $options['authors'];
 
@@ -320,6 +317,8 @@ class SP_External_Videos {
 
     unset( $options['authors'] );
     update_option( 'sp_external_videos_options', $options );
+
+    return $options;
 
   }
 
@@ -379,9 +378,8 @@ class SP_External_Videos {
 
   function add_to_main_query( $query ) {
 
-    $options = SP_External_Videos::get_options();
-
-    if( !isset( $options['loop'] ) || $options['loop'] == false ) return;
+    $options = $this->get_options();
+    if( $options['loop'] == false ) return;
 
     if( is_home() ) {
       $post_type = get_query_var( 'post_type' );
@@ -628,8 +626,7 @@ class SP_External_Videos {
 
   function feed_request( $qv ) {
 
-    $options = SP_External_Videos::get_options();
-
+    $options = $this->get_options();
     if ( $options['rss'] == true ) {
       if ( isset( $qv['feed'] ) && !isset( $qv['post_type'] ) )
         $qv['post_type'] = array( 'external-videos', 'post' );
@@ -728,4 +725,5 @@ endif;
 
 global $SP_External_Videos;
 $SP_External_Videos = new SP_External_Videos();
+
 ?>

@@ -89,19 +89,18 @@ class SP_EV_Admin {
   *
   *  Settings page
   *  Used by
-  *  Returns full array of authors from options['authors'];
+  *  Returns full array of authors from options['hosts'];
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param
+  *  @param   $options
   *  @returns $AUTHORS
   */
 
-  static function get_authors(){
+  static function get_authors( $options ){
 
-    $options = SP_External_Videos::get_options();
     $HOSTS = $options['hosts'];
     $AUTHORS = array();
 
@@ -156,7 +155,7 @@ class SP_EV_Admin {
     check_ajax_referer( 'ev_settings' );
 
     $options = SP_External_Videos::get_options();
-    $old_slug = isset( $options['slug'] ) ? $options['slug'] : '';
+    $old_slug = $options['slug'];
     $message = '';
 
     $fields = array();
@@ -204,9 +203,9 @@ class SP_EV_Admin {
 
     // Get EV options once now for the helper functions
     $options = SP_External_Videos::get_options();
-    $AUTHORS = SP_EV_Admin::get_authors();
+    $AUTHORS = SP_EV_Admin::get_authors( $options );
     $HOSTS = $options['hosts'];
-    $delete = isset( $options['delete'] ) ? $options['delete'] : null;
+    $delete = $options['delete'];
 
     $new_messages = $trash_messages = '';
 
@@ -389,11 +388,12 @@ class SP_EV_Admin {
 
     if( isset( $trash_messages ) ) {
       $trash_messages = $this->wrap_admin_notice( $trash_messages, 'warning' );
+
+      // return the messages
+      return $trash_messages;
     }
 
-    // return the messages
-    return $trash_messages;
-
+    return '';
   }
 
 
@@ -417,6 +417,7 @@ class SP_EV_Admin {
     $new_videos = $videos = array();
 
     foreach ( $update_authors as $author ) {
+      if (empty($author)) continue;
 
       // $output = ;
       $host = $author['host_id'];
@@ -474,9 +475,8 @@ class SP_EV_Admin {
     $video_content .= "\n\n";
     $video_content .= '<p>'.trim( $video['description'] ).'</p>';
 
-    // check options, if user wants the rest of content
-    $options = get_option( 'sp_external_videos_options' );
-    if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
+    // get options, to check if user wants the rest of content
+    $options = SP_External_Videos::get_options();
 
     if( $options['attrib'] == true ) {
       $video_content .= '<p><small>';
@@ -646,8 +646,7 @@ class SP_EV_Admin {
     check_ajax_referer( 'ev_settings' );
 
     // faster with one query
-    $options = SP_External_Videos::get_options();
-    $HOSTS = $options['hosts'];
+    $HOSTS = SP_EV_Admin::get_hosts();
 
     $html = '<div class="limited-width"><span class="feedback"></span></div>';
     $html .= '<table class="wp-list-table ev-table widefat">';
@@ -997,7 +996,6 @@ class SP_EV_Admin {
 
     // get existing options
     $options = SP_External_Videos::get_options();
-
     $messages = '';
 
     $author = array();
@@ -1224,7 +1222,7 @@ class SP_EV_Admin {
         break;
 
       case 'thumbnail':
-        echo "<img src='".$thumbnail."' width='120px' height='90px'/>";
+        echo "<img src='".$thumbnail."' style='width:100%'/>";
         break;
 
       case 'duration':
