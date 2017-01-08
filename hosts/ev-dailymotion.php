@@ -111,16 +111,15 @@ class SP_EV_Dailymotion {
 
   public static function embed_code( $video_id ) {
 
-    return "//www.dailymotion.com/embed/video/$video_id";
+    return esc_url( sprintf( "https://www.dailymotion.com/embed/video/%s", $video_id ) );
 
   }
 
   /*
   *  fetch
   *
-  *  NEW VIMEO API 3.0 oAuth2
-  *  Requires client identifier (developer_key) and client secret (secret_key)
-  *  Optional personal access token gives you access to private videos
+  *  Dailymotion requires author_id and developer_key
+  *  https://developer.dailymotion.com/api
   *
   *  @type  function
   *  @date  31/10/16

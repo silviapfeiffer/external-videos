@@ -123,7 +123,7 @@ class SP_EV_YouTube {
 
   public static function embed_code( $video_id ) {
 
-    return "//www.youtube.com/embed/$video_id";
+    return esc_url( sprintf( "https://www.youtube.com/embed/%s", $video_id ) );
 
   }
 

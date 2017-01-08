@@ -128,7 +128,7 @@ class SP_EV_Wistia {
 
   public static function embed_code( $video_id ) {
 
-    return "//fast.wistia.net/embed/iframe/$video_id";
+    return esc_url( sprintf( "https://fast.wistia.net/embed/iframe/%s", $video_id ) );
 
   }
 

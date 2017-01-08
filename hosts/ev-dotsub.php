@@ -32,8 +32,8 @@ class SP_EV_Dotsub {
 
     // host_name must be the last part of the Class Name
     $class = get_class();
-    $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
-    $host_name = $host_name[0];
+    $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
+    $hostname = $hostname[0];
 
     $options = SP_External_Videos::get_options();
     if( !isset( $options['hosts']['dotsub']['authors'] ) ) {
@@ -44,7 +44,7 @@ class SP_EV_Dotsub {
 
     $options['hosts']['dotsub'] = array(
       'host_id' => 'dotsub',
-      'host_name' => $host_name,
+      'host_name' => $hostname,
       'api_keys' => array(
         array(
           'id' => 'author_id',
@@ -53,9 +53,9 @@ class SP_EV_Dotsub {
           'explanation' => ''
         )
       ),
-      'introduction' => "DotSub only requires a User ID in order to access your videos from another site. Note: the DotSub server is quite slow - if you get an error adding an author, try again.",
+      'introduction' => "Dotsub only requires a User ID in order to access your videos from another site. Note: the Dotsub server is quite slow - if you get an error adding an author, try again.",
       'api_url' => 'https://dotsub.com',
-      'api_link_title' => 'DotSub',
+      'api_link_title' => 'Dotsub',
       'authors' => $authors
     );
 
@@ -119,7 +119,7 @@ class SP_EV_Dotsub {
 
   public static function embed_code( $video_id ) {
 
-    return "//dotsub.com/media/$video_id/embed/";
+    return esc_url( sprintf( "https://dotsub.com/media/%s/embed/", $video_id ) );
 
   }
 

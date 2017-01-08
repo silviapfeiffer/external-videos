@@ -132,7 +132,7 @@ class SP_EV_Vimeo {
 
     $parts = explode( "/", $video_id );
     $actual_id = $parts[2];
-    return "//player.vimeo.com/video/$video_id";
+    return esc_url( sprintf( "https://player.vimeo.com/video/%s", $video_id ) );
 
   }
 
