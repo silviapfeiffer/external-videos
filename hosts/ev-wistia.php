@@ -159,7 +159,6 @@ class SP_EV_Wistia {
     $thumb_w = ( null !== get_option( "thumbnail_size_w" ) ) ? get_option( "thumbnail_size_w" ) : 180;
     $thumb_h = ( null !== get_option( "thumbnail_size_h" ) ) ? get_option( "thumbnail_size_h" ) : 135;
 
-
     $baseurl = "https://api.wistia.com/v1/medias.json?sort_by=created&sort_direction=1&per_page=" . $per_page;
     // part of the url changes on subsequent page requests:
     $url = $baseurl . "&page=" . $page;
