@@ -276,7 +276,7 @@ class SP_EV_Admin {
         $hostlist[] = $host['host_name'];
       }
       $hostlist = implode( ', ', $hostlist );
-      $zero_message = __( "No videos found on " . $hostlist . "." );
+      $zero_message = __( "No new videos found on " . $hostlist . "." );
       $zero_message = $this->wrap_admin_notice( $zero_message, 'info' );
 
       return array(
@@ -313,7 +313,7 @@ class SP_EV_Admin {
         $add_messages .= sprintf( _n( 'Found %1$s video on %2$s.', 'Found %1$s videos on %2$s.', $num, 'external-videos' ), $num, $host_name );
       }
       else {
-        $no_messages .= "No videos found on " . $host_name . '.';
+        $no_messages .= "No new videos found on " . $host_name . '.';
       }
     }
     // after looping to get all add/no messages, wrap them up for delivery
