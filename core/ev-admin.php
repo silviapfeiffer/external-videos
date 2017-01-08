@@ -224,16 +224,14 @@ class SP_EV_Admin {
       // get the relevant local author. easier in hosts array. go direct to avoid possible $AUTHORS name duplicates
       $update_authors = array( $this_author=>$HOSTS[$this_host]['authors'][$this_author] ); // has to stay indexed and loopable
       $update_hosts = array( $this_host=>$HOSTS[$this_host] ); // has to stay indexed and loopable
-      $single = true;
 
     } else { // it's update all
       $update_authors = $AUTHORS;
       $update_hosts = $HOSTS;
-      $single = null;
     }
 
     // post_new_videos() gets everything new and returns messages about it
-    $post_results = $this->post_new_videos( $update_authors, $update_hosts, $single );
+    $post_results = $this->post_new_videos( $update_authors, $update_hosts );
     $new_messages = $post_results['messages'];
     $new_video_ids = $post_results['new_video_ids'];
 
@@ -255,17 +253,17 @@ class SP_EV_Admin {
   *  Used by update_videos_handler() and daily_function()
   *  Saves any new videos from host channels to the database.
   *  Returns messages about number of video posts added.
-  *  Works for single-author and update-all via $single param
+  *  Works for single-author and update-all
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $update_authors, $update_hosts, $single
+  *  @param   $update_authors, $update_hosts
   *  @return  array( html $messages, array $new_video_ids )
   */
 
-  function post_new_videos( $update_authors, $update_hosts, $single ) {
+  function post_new_videos( $update_authors, $update_hosts ) {
 
     $new_video_ids = array();
     $new_videos = $this->fetch_new_videos( $update_authors, $update_hosts );
@@ -1289,8 +1287,7 @@ class SP_EV_Admin {
     if( !isset( $options['hosts'] ) ) return;
     $update_hosts = $options['hosts']; // all hosts
     $update_authors = SP_EV_Admin::get_authors(); // all authors
-    $single = false;
-    $this->post_new_videos( $update_authors, $update_hosts, $single );
+    $this->post_new_videos( $update_authors, $update_hosts );
 
   }
 
