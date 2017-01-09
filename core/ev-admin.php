@@ -191,7 +191,6 @@ class SP_EV_Admin {
       // get the relevant local author from host
       $update_hosts = array( $this_host=>$HOSTS[$this_host] ); // has to stay indexed and loopable
       $update_author = $HOSTS[$this_host]['authors'][$this_author]; // has to be whole author array
-      error_log( print_r( $update_author, true ) );
 
     } else {
 
@@ -233,7 +232,7 @@ class SP_EV_Admin {
   *  @return  array( html $messages, array $new_video_ids )
   */
 
-  function post_new_videos( $update_hosts, $update_author ) {
+  function post_new_videos( $update_hosts, $update_author = null ) {
 
     $new_video_ids = array();
     $new_videos = $this->fetch_new_videos( $update_hosts, $update_author );
@@ -408,7 +407,7 @@ class SP_EV_Admin {
   *  @return  $new_videos (array of videos)
   */
 
-  function fetch_new_videos( $update_hosts, $update_author = null ) {
+  function fetch_new_videos( $update_hosts, $update_author ) {
 
     $new_videos = array();
 
