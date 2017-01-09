@@ -1,9 +1,17 @@
-- fix dotsub
+Media Gallery:
+After WP 3.5, Media moved to backbone.js and media upload filters longer work.
+-  To do: make extension of Media Explorer plugin (MEXP) to enable these features
+-  https://github.com/Automattic/media-explorer
+-  https://vip.wordpress.com/documentation/extending-media-explorer/
+-  https://gist.github.com/paulgibbs/c4b50d07d04fd8da9410
+-  https://gist.github.com/Fab1en/4586865
+
+- fix dotsub *DONE
 
 - allow pulling in playlists
 - allow filtering display based on a tag and channel (shortcode)
 - allow to add single videos, too
-- update to videos of a single author only
+- update to videos of a single author only *DONE
 - add option to extract comments for videos from sites
 - introduce next/prev buttons into thickbox with videos
 - add link to post into video post page, potentially with a redirect
@@ -13,10 +21,10 @@
 - fix up translations see http://codex.wordpress.org/I18n_for_WordPress_Developers
 - Auto excerpts with thumbnail images (as used in the gallery) so that if a video shows up in a tag page, search query or the external videos category page it shows the description only and the thumbnail on the left.
 - display date below latest video when using latest video shortcode like the full list shows
-- Change the publication date of the post to be the date of the publication of the video and not the date of the import
+- Change the publication date of the post to be the date of the publication of the video and not the date of the import *DONE
 - Add tags from videos to post tags (well, this works, but a bug on youtube does not expose keywords)
 - Allow installer to configure the videos custom post types slug, e.g. from  website/external-videos/ to website/videos/ (rewrite slug in register_post_type)
-- Add support for Blip & Dailymotion
+- Add support for Blip & Dailymotion*DONE
 
 Improvements to the shortcode:
 - add authorname in Gallery mode in ev-shortcode, see http://wordpress.org/support/topic/plugin-external-videos-different-authot-for-each-page?replies=2
