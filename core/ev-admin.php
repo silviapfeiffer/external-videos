@@ -223,7 +223,7 @@ class SP_EV_Admin {
   *  Used by update_videos_handler() and daily_function()
   *  Saves any new videos from host channels to the database.
   *  Returns messages about number of video posts added.
-  *  Works for single-author and update-all via $single param
+  *  Works for single-author and update-all
   *
   *  @type  function
   *  @date  31/10/16
@@ -385,11 +385,11 @@ class SP_EV_Admin {
     if( isset( $trash_messages ) ) {
       // All trash messages in one wrap
       $trash_messages = $this->wrap_admin_notice( $trash_messages, 'warning' );
+      // return the messages
+      return $trash_messages;
     }
 
-    // return the messages
-    return $trash_messages;
-
+    return '';
   }
 
 

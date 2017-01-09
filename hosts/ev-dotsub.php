@@ -119,7 +119,7 @@ class SP_EV_Dotsub {
 
   public static function embed_code( $video_id ) {
 
-    return esc_url( sprintf( "https://dotsub.com/media/%s/embed/", $video_id ) );
+    return esc_url( sprintf( "https://dotsub.com/view/%s", $video_id ) );
 
   }
 

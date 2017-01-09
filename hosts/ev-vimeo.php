@@ -222,7 +222,7 @@ class SP_EV_Vimeo {
 
         // Interpret errors from the API - should really raise this as an exception
         if ( isset($body['error']) ) {
-//          print_r( $body['error'] );
+          // print_r( $body['error'] );
           return [];
         }
 
