@@ -48,18 +48,18 @@ class SP_EV_Wistia {
       'api_keys' => array(
         array(
           'id' => 'author_id',
-          'label' => 'Account Name',
+          'label' => __( "Account Name", "external-videos" ),
           'required' => true,
           'explanation' => ''
         ),
         array(
           'id' => 'developer_key',
-          'label' => 'API Token',
+          'label' => __( "API Token", "external-videos" ),
           'required' => true,
-          'explanation' => 'This needs to be generated in your Wistia account'
+          'explanation' => __( "This needs to be generated in your Wistia account", "external-videos" )
         )
       ),
-      'introduction' => "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one).",
+      'introduction' => __( "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one). To display your videos properly in your theme, you may also need to install the plugin FitVids for Wordpress.", "external-videos" ),
       'api_url' => 'https://wistia.com',
       'api_link_title' => 'Wistia',
       'authors' => $authors
@@ -112,11 +112,11 @@ class SP_EV_Wistia {
   }
 
   /*
-  *  embed_code
+  *  embed_url
   *
-  *  Used by save_video()
-  *  Embed code is stored as postmeta in external-video posts.
-  *  Code is specific to each host site's embed API.
+  *  Used by fetch() and SP_EV_Admin::save_video()
+  *  Embed url is stored as postmeta in external-video posts.
+  *  Url is specific to each host site's embed API.
   *
   *  @type  function
   *  @date  31/10/16
@@ -126,9 +126,63 @@ class SP_EV_Wistia {
   *  @return  <iframe>
   */
 
-  public static function embed_code( $video_id ) {
+  public static function embed_url( $video_id ) {
 
     return esc_url( sprintf( "https://fast.wistia.net/embed/iframe/%s", $video_id ) );
+
+  }
+
+  /*
+  *  compose_video
+  *
+  *  Used by fetch(), and eventually passed to SP_EV_Admin::save_video()
+  *  Composes standardized $video array from idiosyncratic host data
+  *  Data correspondence is specific to each host site's embed API
+  *
+  *  @type  function
+  *  @date  12/1/17
+  *  @since  1.0
+  *
+  *  @param   $vid array
+  *  @return  $video array
+  */
+
+  public static function compose_video( $vid, $author ) {
+
+    $video = array();
+    // extract fields
+    $video['host_id']        = 'wistia';
+    $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
+    $video['video_id']       = sanitize_text_field( $vid['hashed_id'] );
+    $video['title']          = sanitize_text_field( $vid['name'] );
+    $video['description']    = sanitize_text_field( $vid['description'] );
+    $video['author_name']    = sanitize_text_field( $author['author_id'] );
+    $video['video_url']      = esc_url( "https://" . $author['author_id'] . ".wistia.com/medias/" . $vid['hashed_id'] );
+    $video['embed_url']      = SP_EV_Wistia::embed_url( $vid['hashed_id'] );
+    $video['published']      = date( "Y-m-d H:i:s", strtotime( esc_attr( $vid['created'] ) ) );
+    $video['author_url']     = esc_url( "https://" . $author['author_id'] . ".wistia.com/projects" );
+    $video['category']       = array();
+    $video['tags']           = array();
+    // $video['thumbnail']   = $vid['thumbnail']['url'];
+
+    // Wistia API delivers a huge thumbnail by default. But also an endpoint.
+    // If we want a smaller thumbnail, we have to trim off the url after the "="
+    // then append "$widthx$height". Size could alternatively be set in options.
+    // get_option( "thumbnail_size_w" ) checks WordPress Media "thumbnail" size setting, defaults 180x135
+    $thumb_w = 180;
+    $thumb_h = 135;
+    $thumbnail_url           = esc_url( $vid['thumbnail']['url'] );
+    $equipos                 = strripos( $thumbnail_url, "=" ) ? strripos( $thumbnail_url, "=" ) : 0;
+    $thumbnail_url           = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "x" . $thumb_h;
+
+    $video['thumbnail_url']  = $thumbnail_url;
+    $video['duration']       = sp_ev_sec2hms( $vid['duration'] );
+    $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
+    $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
+    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
+    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
+
+    return $video;
 
   }
 
@@ -146,7 +200,7 @@ class SP_EV_Wistia {
   *  @return  $new_videos
   */
 
-  static function fetch( $author ) {
+  public static function fetch( $author ) {
 
     $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
@@ -154,10 +208,6 @@ class SP_EV_Wistia {
     // set other options
     $page = 0;
     $per_page = 1;  // One by one because we get no next-page info from Wistia
-    // Size could alternatively be set in options at some point
-    // below is the WordPress Media "thumbnail" image setting, with defaults at 180x135
-    $thumb_w = ( null !== get_option( "thumbnail_size_w" ) ) ? get_option( "thumbnail_size_w" ) : 180;
-    $thumb_h = ( null !== get_option( "thumbnail_size_h" ) ) ? get_option( "thumbnail_size_h" ) : 135;
 
     $baseurl = "https://api.wistia.com/v1/medias.json?sort_by=created&sort_direction=1&per_page=" . $per_page;
     // part of the url changes on subsequent page requests:
@@ -186,36 +236,8 @@ class SP_EV_Wistia {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      // loop through videos returned & extract fields
       foreach ($body as $vid) {
-        $video = array();
-        $video['host_id']     = 'wistia';
-        $video['author_id']   = strtolower($author_id);
-        $video['video_id']    = $vid['hashed_id'];
-        $video['title']       = $vid['name'];
-        $video['description'] = $vid['description'];
-        $video['authorname']  = $author_id;
-        $video['videourl']    = "https://$author_id.wistia.com/medias/" . $vid['hashed_id'];
-        $video['published']   = date( "Y-m-d H:i:s", strtotime( $vid['created'] ));
-        $video['author_url']  = "https://$author_id.wistia.com/projects";
-        $video['category']    = '';
-        $video['keywords']    = array();
-        // $video['thumbnail']   = $vid['thumbnail']['url'];
-
-        // WISTIA DELIVERS HUGE THUMBNAILS AUTO CROPPED FROM THEIR API.
-        // IF YOU WANT A SMALLER CROP OF THE THUMBNAIL,
-        // RIGHT TRIM THE URL UNTIL THE EQUALS, THEN ADD WIDTH . x . HEIGHT
-        $thumbnail_url  = $vid['thumbnail']['url'];
-        $equipos = strripos( $thumbnail_url, "=" ) ? strripos( $thumbnail_url, "=" ) : 0;
-        $thumbnail_url = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "x" . $thumb_h;
-
-        $video['thumbnail']   = $thumbnail_url;
-        $video['duration']    = $vid['duration'];
-        $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
-        $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
-        $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
-        $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
-
+        $video = SP_EV_Wistia::compose_video( $vid, $author );
         // add $video to the end of $new_videos array
         array_push( $new_videos, $video );
       }

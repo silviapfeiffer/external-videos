@@ -47,30 +47,30 @@ class SP_EV_Vimeo {
       'api_keys' => array(
         array(
           'id' => 'author_id',
-          'label' => 'User ID Number',
+          'label' => __( "User ID Number", "external-videos" ),
           'required' => true,
-          'explanation' => 'Note this is a number. Available at ...vimeo.com/settings/account/general'
+          'explanation' => __( "Note this is a number. Available at ...vimeo.com/settings/account/general", "external-videos" )
         ),
         array(
           'id' => 'developer_key',
-          'label' => 'Client Identifier',
+          'label' => __( "Client Identifier", "external-videos" ),
           'required' => true,
-          'explanation' => 'This needs to be generated in your Vimeo API Apps'
+          'explanation' => __( "This needs to be generated in your Vimeo API Apps", "external-videos" )
         ),
         array(
           'id' => 'secret_key',
-          'label' => 'Client Secret',
+          'label' => __( "Client Secret", "external-videos" ),
           'required' => true,
-          'explanation' => 'This needs to be generated in your Vimeo API Apps'
+          'explanation' => __( "This needs to be generated in your Vimeo API Apps", "external-videos" )
         ),
         array(
           'id' => 'auth_token',
-          'label' => 'Personal Access Token',
+          'label' => __( "Personal Access Token", "external-videos" ),
           'required' => false,
-          'explanation' => 'This gives you access to both your public and private videos'
+          'explanation' => __( "This gives you access to both your public and private videos", "external-videos" )
         )
       ),
-      'introduction' => "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier and Client Secret from your account, in order to access your videos from another site (like this one). ",
+      'introduction' => __( "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier and Client Secret from your account, in order to access your videos from another site (like this one).", "external-videos" ),
       'api_url' => 'https://developer.vimeo.com/apps',
       'api_link_title' => 'Vimeo API',
       'authors' => $authors
@@ -113,26 +113,76 @@ class SP_EV_Vimeo {
   }
 
   /*
-  *  embed_code
+  *  embed_url
   *
-  *  Used by save_video()
-  *  Embed code is stored as postmeta in external-video posts.
-  *  Code is specific to each host site's embed API.
+  *  Used by fetch() and SP_EV_Admin::save_video()
+  *  Embed url is stored as postmeta in external-video posts.
+  *  Url is specific to each host site's embed API.
   *
+  *  This function is a bit more involved on Vimeo because they give you
+  *  a useless "uri" containing the regex /videos/ before the proper videoID.
+  *  This regex is not any part of the embedabble uri of the video! Remove!
+
   *  @type  function
   *  @date  31/10/16
   *  @since  0.23
   *
-  *  @param   $video_id is in format "/videos/123255" - this is useless because
-  *           /videos/ is not any part of the embedabble uri of the video!
+  *  @param   $video_id
   *  @return  <iframe>
   */
 
-  public static function embed_code( $video_id ) {
+  public static function embed_url( $video_id ) {
 
     $parts = explode( "/", $video_id );
-    $actual_id = $parts[2];
+    $video_id = $parts[2];
     return esc_url( sprintf( "https://player.vimeo.com/video/%s", $video_id ) );
+
+  }
+
+  /*
+  *  compose_video
+  *
+  *  Used by fetch(), and eventually passed to SP_EV_Admin::save_video()
+  *  Composes standardized $video array from idiosyncratic host data
+  *  Data correspondence is specific to each host site's embed API
+  *
+  *  @type  function
+  *  @date  12/1/17
+  *  @since  1.0
+  *
+  *  @param   $vid array
+  *  @return  $video array
+  */
+
+  public static function compose_video( $vid, $author ) {
+
+    $video = array();
+    // extract fields
+    $video['host_id']        = 'vimeo';
+    $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
+    $video['video_id']       = sanitize_text_field( $vid['uri'] );
+    $video['title']          = sanitize_text_field( $vid['name'] );
+    $video['description']    = sanitize_text_field( $vid['description'] );
+    $video['author_name']    = sanitize_text_field( $vid['user']['name'] );
+    $video['video_url']      = esc_url( $vid['link'] );
+    $video['embed_url']      = SP_EV_Vimeo::embed_url( $vid['uri'] );
+    $video['published']      = gmdate( "Y-m-d H:i:s", strtotime( $vid['release_time'] ) );
+    $video['author_url']     = esc_url( $vid['user']['link'] );
+    $video['category']       = array();
+    if ( isset( $vid['tags'] ) && is_array( $vid['tags'] ) ) {
+      $video['tags'] = array();
+      foreach ( $vid['tags'] as $tag ) {
+        array_push( $video['tags'], esc_attr( $tag['tag'] ) ); // yep, it's $tag['tag'] at vimeo
+      }
+    }
+    $video['thumbnail_url']  = esc_url( $vid['pictures']['sizes'][2]['link'] );
+    $video['duration']       = sp_ev_sec2hms( $vid['duration'] );
+    $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
+    $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
+    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
+    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
+
+    return $video;
 
   }
 
@@ -141,7 +191,7 @@ class SP_EV_Vimeo {
   *
   *  NEW VIMEO API 3.0 oAuth2
   *  Requires client identifier (developer_key) and client secret (secret_key)
-  *  Optional personal access token gives you access to private videos
+  *  Optional personal access token (auth_token) gives you access to private videos
   *
   *  @type  function
   *  @date  31/10/16
@@ -151,7 +201,7 @@ class SP_EV_Vimeo {
   *  @return  $new_videos
   */
 
-  static function fetch( $author ) {
+  public static function fetch( $author ) {
 
     $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
@@ -219,51 +269,23 @@ class SP_EV_Vimeo {
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
         $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+        // Adjust array to get to the data
+        $data = $body['data'];
+        $next = $body['paging']['next'];
 
         // Interpret errors from the API - should really raise this as an exception
-        if ( isset($body['error']) ) {
+        if ( isset( $body['error'] ) ) {
           // print_r( $body['error'] );
           return [];
         }
 
-        // Adjust array to get to the data
-        $data = $body['data'];
-        $next = $body['paging']['next'];
-        // $page = $body->page;
-        // $per_page = $body->per_page;
-        // $total = $body->total;
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $data as $vid )
-      {
-        // extract fields
-        $video = array();
-        $video['host_id']     = 'vimeo';
-        $video['author_id']   = strtolower( $author_id );
-        $video['video_id']    = $vid['uri'];
-        $video['title']       = $vid['name'];
-        $video['description'] = $vid['description'];
-        $video['authorname']  = $vid['user']['name'];
-        $video['videourl']    = $vid['link'];
-        $video['published']   = $vid['release_time'];
-        $video['author_url']  = $vid['user']['link'];
-        $video['category']    = '';
-        $video['keywords']    = array();
-        if ( $vid['tags'] ) {
-          foreach ( $vid['tags'] as $tag ) {
-            array_push( $video['keywords'], $tag['tag'] );
-          }
-        }
-        $video['thumbnail']   = $vid['pictures']['sizes'][2]['link'];
-        $video['duration']    = sp_ev_sec2hms( $vid['duration'] );
-        $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
-        $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
-        $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
-        $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
-
+      foreach ( $data as $vid ) {
+        $video = SP_EV_Vimeo::compose_video( $vid, $author );
         // add $video to the end of $new_videos
         array_push( $new_videos, $video );
         $count++;

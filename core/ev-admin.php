@@ -246,7 +246,7 @@ class SP_EV_Admin {
         $hostlist[] = $host['host_name'];
       }
       $hostlist = implode( ', ', $hostlist );
-      $zero_message = __( "No new videos found on " . $hostlist . "." );
+      $zero_message = esc_attr__( "No new videos found on " . $hostlist . "." );
       $zero_message = $this->wrap_admin_notice( $zero_message, 'info' );
 
       return array(
@@ -410,15 +410,20 @@ class SP_EV_Admin {
 
   function fetch_new_videos( $update_hosts, $update_author ) {
 
+    // error_log( '$update_hosts: ' .  print_r( $update_hosts, true ) );
+    // error_log( '$update_author: ' .  print_r( $update_author, true ) );
+
     $new_videos = array();
 
     foreach ( $update_hosts as $host ) {
 
       $host_name = $host['host_name'];
       $ClassName = "SP_EV_".$host_name;
+      // error_log( '$ClassName: ' .  print_r( $ClassName, true ) );
 
       if( $update_author == null ){
         // fetch all hosts, all authors
+        error_log( 'update author was null. <br />' );
         foreach( $host['authors'] as $author ){
           $author_videos = $ClassName::fetch( $author );
           $new_videos = array_merge( $author_videos, $new_videos );
@@ -438,8 +443,8 @@ class SP_EV_Admin {
   *
   *  Used by update_videos() and update_videos_handler()
   *  Creates a post of type "external-videos" and saves it.
-  *  The passed $video variable contains the fields we need to make the post,
-  *  all except "embed_code" (provided by embed_code()).
+  *  The passed $video array contains the fields we need to make the post,
+  *  all except "embed_url" (provided by embed_url()).
   *
   *
   *  @type  function
@@ -469,9 +474,9 @@ class SP_EV_Admin {
 
     // put content together
     $video_content = "\n";
-    $video_content .= $video['videourl'];
+    $video_content .= esc_url( $video['embed_url'] );
     $video_content .= "\n\n";
-    $video_content .= '<p>'.trim( $video['description'] ).'</p>';
+    $video_content .= '<p>' . sanitize_text_field( trim( $video['description'] ) ) . '</p>';
 
     // get options, to check if user wants the rest of content
     $options = SP_External_Videos::get_options();
@@ -479,26 +484,31 @@ class SP_EV_Admin {
     if( $options['attrib'] == true ) {
       $video_content .= '<p><small>';
       if ( $video['category'] != '' ) {
-        $video_content .= __( '<i>Category:</i>', 'external-videos' ) . ' ' .$video['category'];
+        $video_content .= '<i>' . esc_attr__( "Category:" , 'external-videos' ) . ' </i>';
+        $video_content .= array_map( 'esc_attr', $video['ev_category'] );
         $video_content .= '<br/>';
       }
-      $video_content .= __( '<i>Uploaded by:</i>', 'external-videos' ) . ' <a href="'.$video['author_url'].'">'.$video['authorname'].'</a>';
+      $video_content .= '<i>' . esc_attr__( "Uploaded by:" , 'external-videos' ) . ' </i>';
+      $video_content .= '<a href="' . esc_url( $video['author_url'] ) . '">';
+      $video_content .= sanitize_text_field( $video['author_name'] ) . '</a>';
       $video_content .= '<br/>';
-      $video_content .= __( '<i>Hosted:</i>', 'external-videos' ) . ' <a href="'.$video['videourl'].'">'.$video['host_id'].'</a>';
+      $video_content .= '<i>' . esc_attr__( "Hosted:" , 'external-videos' ) . ' </i>';
+      $video_content .= '<a href="' . esc_url( $video['video_url'] ) . '">';
+      $video_content .= sanitize_text_field( $video['host_id'] ) . '</a>';
       $video_content .= '</small></p>';
     }
 
     // prepare post
     $video_post = array();
     $video_post['post_type']      = 'external-videos';
-    $video_post['post_title']     = $video['title'];
-    $video_post['post_content']   = $video_content;
-    $video_post['post_status']    = $video['ev_post_status'];
-    $video_post['post_author']    = $video['ev_author'];
-    $video_post['post_date']      = $video['published'];
-    $video_post['tags_input']     = $video['keywords'];
+    $video_post['post_title']     = sanitize_text_field( $video['title'] );
+    $video_post['post_content']   = apply_filters( 'the_content', $video_content );
+    $video_post['post_status']    = sanitize_text_field( $video['ev_post_status'] );
+    $video_post['post_author']    = sanitize_user( $video['ev_author'] );
+    $video_post['post_date']      = gmdate( "Y-m-d H:i:s", strtotime( $video['published'] ) );
+    $video_post['tags_input']     = array_map( 'esc_attr', $video['tags'] );
     $video_post['post_mime_type'] = 'import';
-    $video_post['post_excerpt']   = trim( strip_tags( $video['description'] ) );
+    $video_post['post_excerpt']   = sanitize_text_field( $video['description'] );
 
     // save to DB
     $post_id = wp_insert_post( $video_post );
@@ -511,31 +521,33 @@ class SP_EV_Admin {
     }
 
     // add post meta
-    add_post_meta( $post_id, 'host_id',       $video['host_id'] );
-    add_post_meta( $post_id, 'author_id',     $video['author_id'] );
-    add_post_meta( $post_id, 'video_id',      $video['video_id'] );
-    add_post_meta( $post_id, 'duration',      $video['duration'] );
-    add_post_meta( $post_id, 'author_url',    $video['author_url'] );
-    add_post_meta( $post_id, 'video_url',     $video['videourl'] );
-    add_post_meta( $post_id, 'thumbnail_url', $video['thumbnail'] );
+    add_post_meta( $post_id, 'host_id',       sanitize_text_field( $video['host_id'] ) );
+    add_post_meta( $post_id, 'author_id',     sanitize_text_field( $video['author_id'] ) );
+    add_post_meta( $post_id, 'video_id',      sanitize_text_field( $video['video_id'] ) );
+    add_post_meta( $post_id, 'duration',      $video['duration'] ); // how to sanitize? 
+    add_post_meta( $post_id, 'author_url',    esc_url( $video['author_url'] ) );
+    add_post_meta( $post_id, 'video_url',     esc_url( $video['video_url'] ) );
+    add_post_meta( $post_id, 'thumbnail_url', esc_url( $video['thumbnail_url'] ) );
     // Cheat here with a dummy image so we can show thumbnails properly
     add_post_meta( $post_id, '_wp_attached_file', 'dummy.png' );
-    add_post_meta( $post_id, 'description',   trim( $video['description'] ) );
-    // video embed code
-    add_post_meta( $post_id, 'embed_code', $this->embed_code( $video['host_id'], $video['video_id'] ) );
+    add_post_meta( $post_id, 'description',   sanitize_text_field( $video['description'] ) );
+    // video embed code. To do: meta key should be converted to "embed_url" for consistency
+    add_post_meta( $post_id, 'embed_code',    esc_url( $this->embed_url( $video['host_id'], $video['video_id'] ) ) );
 
     // category id & tag attribution
-    wp_set_post_categories( $post_id, $video['ev_category'] );
-    wp_set_post_tags( $post_id, $video['keywords'], 'post_tag' );
+    if( !is_array( $video['ev_category'] ) ) $video['ev_category'] = (array) $video['ev_category'];
+    wp_set_post_categories( $post_id,         array_map( 'esc_attr', $video['ev_category'] ) );
+    if( !is_array( $video['tags'] ) ) $video['tags'] = (array) $video['tags'];
+    wp_set_post_tags( $post_id,               array_map( 'esc_attr', $video['tags'] ), 'post_tag' );
 
     return true;
   }
 
   /*
-  *  embed_code
+  *  embed_url
   *
   *  Used by save_video()
-  *  Embed code is stored as postmeta in external-video posts.
+  *  Embed url is stored as postmeta in external-video posts.
   *  Format is specific to each host site's embed API.
   *
   *  @type  function
@@ -546,15 +558,15 @@ class SP_EV_Admin {
   *  @return  <iframe>
   */
 
-  function embed_code( $host, $video_id ) {
+  function embed_url( $host, $video_id ) {
 
     $HOSTS = SP_EV_Admin::get_hosts();
     $host_name = $HOSTS[$host]['host_name'];
     $ClassName = "SP_EV_" . $host_name;
 
-    $embed_code = $ClassName::embed_code( $video_id );
+    $embed_url = $ClassName::embed_url( $video_id );
 
-    return $embed_code;
+    return $embed_url;
 
   }
 
@@ -627,8 +639,8 @@ class SP_EV_Admin {
   /*
   *  author_list_handler
   *
-  *  Used by settings page
-  *  AJAX handler to reload the author list form with fresh db info
+  *  Used by settings page "Update Videos" section
+  *  AJAX handler to reload the main author list form with fresh db info
   *  Should exactly mirror the html in ev-settings-forms.php
   *
   *  @type  function
@@ -738,7 +750,7 @@ class SP_EV_Admin {
       'secret_key' => '',
       'auth_token' => '',
       'ev_author' => '',
-      'ev_category' => '',
+      'ev_category' => array(),
       'ev_post_format' => '',
       'ev_post_status' => ''
     );
@@ -1049,7 +1061,7 @@ class SP_EV_Admin {
         'secret_key' => $author['secret_key'],
         'auth_token' => $author['auth_token'],
         'ev_author' => $author['user'],
-        'ev_category' => isset( $author['post_category'] ) ? $author['post_category'] : '',
+        'ev_category' => isset( $author['post_category'] ) ? $author['post_category'] : array(),
         'ev_post_format' => $author['post_format'],
         'ev_post_status' => $author['post_status']
       );

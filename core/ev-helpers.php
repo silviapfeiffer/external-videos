@@ -58,4 +58,10 @@ function sp_ev_shorten_text($input, $length = 36, $ellipses = true) {
   return $trimmed_text;
 }
 
+function sp_ev_convert_youtube_time($youtube_time){
+  $start = new DateTime('@0'); // Unix epoch
+  $start->add(new DateInterval($youtube_time));
+  return $start->format('H:i:s');
+}
+
 ?>
