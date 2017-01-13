@@ -28,7 +28,7 @@ $HOSTS = $options['hosts'];
     <a class="nav-tab nav-tab-active" href="#" data-div-name="settings-tab">Settings</a>
     <?php foreach( $HOSTS as $host ) {
       echo '<a class="nav-tab" data-div-name="' . $host['host_id'] . '-tab" href="#">' . $host['host_name'] . '</a>';
-    } // This doesn't really save work. what if they are re-ordered? better re-order sections below*/?>
+    } ?>
 
   </h2>
 

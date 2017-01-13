@@ -47,18 +47,18 @@ class SP_EV_YouTube {
       'api_keys' => array(
         array(
           'id' => 'author_id',
-          'label' => 'Channel Name',
+          'label' => __( "Channel Name", "external-videos" ),
           'required' => true,
           'explanation' => ''
         ),
         array(
           'id' => 'developer_key',
-          'label' => 'API Key',
+          'label' => __( "API Key", "external-videos" ),
           'required' => true,
-          'explanation' => 'This needs to be generated in your API console at YouTube'
+          'explanation' => __( "This needs to be generated in your API console at YouTube", "external-videos" )
         )
       ),
-      'introduction' => "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).",
+      'introduction' => __( "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).", "external-videos" ),
       'api_url' => 'https://console.developers.google.com/apis/credentials',
       'api_link_title' => 'YouTube API',
       'authors' => $authors
@@ -107,11 +107,11 @@ class SP_EV_YouTube {
   }
 
   /*
-  *  embed_code
+  *  embed_url
   *
-  *  Used by save_video()
-  *  Embed code is stored as postmeta in external-video posts.
-  *  Code is specific to each host site's embed API.
+  *  Used by fetch() and SP_EV_Admin::save_video()
+  *  Embed url is stored as postmeta in external-video posts.
+  *  Url is specific to each host site's embed API.
   *
   *  @type  function
   *  @date  31/10/16
@@ -121,9 +121,65 @@ class SP_EV_YouTube {
   *  @return  <iframe>
   */
 
-  public static function embed_code( $video_id ) {
+  public static function embed_url( $video_id ) {
 
     return esc_url( sprintf( "https://www.youtube.com/embed/%s", $video_id ) );
+
+  }
+
+  /*
+  *  compose_video
+  *
+  *  Used by fetch(), and eventually passed to SP_EV_Admin::save_video()
+  *  Composes standardized $video array from idiosyncratic host data
+  *  Data correspondence is specific to each host site's embed API
+  *
+  *  @type  function
+  *  @date  12/1/17
+  *  @since  1.0
+  *
+  *  @param   $vid array
+  *  @return  $video array
+  */
+
+  public static function compose_video( $vid, $author ) {
+
+    // Google Get marathon. Let's fill this out.
+    $endpoint = "https://www.googleapis.com/youtube/v3/videos";
+    $url = $endpoint . "?part=contentDetails,snippet&key=" . $author['developer_key'] . "&id=" . $vid['contentDetails']['videoId'];
+    $response = wp_remote_get( $url );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+
+    $items = $body['items'][0];
+    $tags = (array) $items['snippet']['tags'];
+    $duration = $items['contentDetails']['duration'];
+    // echo '<pre>$tags: <br />'; print_r( $tags ); echo '</pre>';
+    // echo '<pre>$duration: <br />'; print_r( $duration ); echo '</pre>';
+
+    $video = array();
+    // extract fields
+    $video['host_id']        = 'youtube';
+    $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
+    $video['video_id']       = sanitize_text_field( $vid['contentDetails']['videoId'] ); // not ID!!!
+    $video['title']          = sanitize_text_field( $vid['snippet']['title'] );
+    $video['description']    = sanitize_text_field( $vid['snippet']['description'] );
+    $video['author_name']    = sanitize_text_field( $vid['snippet']['channelTitle'] );
+    $video['video_url']      = esc_url( "https://www.youtube.com/watch?v=" . $vid['contentDetails']['videoId'] );
+    $video['embed_url']      = SP_EV_YouTube::embed_url( $vid['contentDetails']['videoId'] );
+    $video['published']      = gmdate( "Y-m-d H:i:s", strtotime( $vid['snippet']['publishedAt'] ) );
+    $video['author_url']     = esc_url( "https://www.youtube.com/user/".$video['author_id'] );
+    $video['category']       = array();
+    $video['tags']           = array_map( 'esc_attr', $tags );
+    $video['thumbnail_url']  = esc_url( $vid['snippet']['thumbnails']['default']['url'] );
+    $video['duration']       = sp_ev_convert_youtube_time( $duration );
+    $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
+    $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
+    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
+    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
+
+    return $video;
 
   }
 
@@ -140,7 +196,7 @@ class SP_EV_YouTube {
   *  @return  $new_videos
   */
 
-  static function fetch( $author ) {
+  public static function fetch( $author ) {
 
     $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
@@ -211,26 +267,7 @@ class SP_EV_YouTube {
 
       foreach ( $items as $vid )
       {
-        // extract fields
-        $video = array();
-        $video['host_id']     = 'youtube';
-        $video['author_id']   = strtolower( $author_id );
-        $video['video_id']    = $vid['id'];
-        $video['title']       = $vid['snippet']['title'];
-        $video['description'] = $vid['snippet']['description'];
-        $video['authorname']  = $vid['snippet']['channelTitle'];
-        $video['videourl']    = 'https://www.youtube.com/watch?v=' . $vid['snippet']['resourceId']['videoId'];
-        $video['published']   = date( "Y-m-d H:i:s", strtotime( $vid['snippet']['publishedAt'] ) );
-        $video['author_url']  = "https://www.youtube.com/user/".$video['author_id'];
-        $video['category']    = '';
-        $video['keywords']    = array();
-        $video['thumbnail']   = $vid['snippet']['thumbnails']['default']['url'];
-        $video['duration']    = '';
-        $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
-        $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
-        $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
-        $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
-
+        $video = SP_EV_YouTube::compose_video( $vid, $author );
         // add $video to the end of $new_videos
         array_push( $new_videos, $video );
       }
