@@ -47,12 +47,12 @@ class SP_EV_Dailymotion {
       'api_keys' => array(
         array(
           'id' => 'author_id',
-          'label' => 'User ID',
+          'label' => __( "User ID", "external-videos" ),
           'required' => true,
           'explanation' => ''
         )
       ),
-      'introduction' => "Dailymotion only requires a User ID in order to access your videos from another site.",
+      'introduction' => __( "Dailymotion only requires a User ID in order to access your videos from another site. To display your videos properly in your theme, you may also need to install the plugin FitVids for Wordpress.", "external-videos" ),
       'api_url' => 'http://www.dailymotion.com/settings/developer',
       'api_link_title' => 'Dailymotion API',
       'authors' => $authors
@@ -95,23 +95,70 @@ class SP_EV_Dailymotion {
   }
 
   /*
-  *  embed_code
+  *  embed_url
   *
-  *  Used by save_video()
-  *  Embed code is stored as postmeta in external-video posts.
-  *  Code is specific to each host site's embed API.
+  *  Used by fetch() and SP_EV_Admin::save_video()
+  *  Embed url is stored as postmeta in external-video posts
+  *  Url is specific to each host site's embed API
   *
   *  @type  function
-  *  @date  31/10/16
-  *  @since  0.23
+  *  @date  31/12/16
+  *  @since  1.0
   *
   *  @param   $video_id
   *  @return  <iframe>
   */
 
-  public static function embed_code( $video_id ) {
+  public static function embed_url( $video_id ) {
 
     return esc_url( sprintf( "https://www.dailymotion.com/embed/video/%s", $video_id ) );
+
+  }
+
+  /*
+  *  compose_video
+  *
+  *  Used by fetch(), and eventually passed to SP_EV_Admin::save_video()
+  *  Composes standardized $video array from idiosyncratic host data
+  *  Data correspondence is specific to each host site's embed API
+  *
+  *  @type  function
+  *  @date  12/1/17
+  *  @since  1.0
+  *
+  *  @param   $vid array
+  *  @return  $video array
+  */
+
+  public static function compose_video( $vid, $author ) {
+
+    $video = array();
+    // extract fields
+    $video['host_id']        = 'dailymotion';
+    $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
+    $video['video_id']       = sanitize_text_field( $vid['id'] );
+    $video['title']          = sanitize_text_field( $vid['title'] );
+    $video['description']    = sanitize_text_field( $vid['description'] );
+    $video['author_name']    = sanitize_text_field( $vid['owner.screenname'] );
+    $video['video_url']      = esc_url( $vid['url'] );
+    $video['embed_url']      = SP_EV_Dailymotion::embed_url( $vid['id'] );
+    $video['published']      = gmdate( "Y-m-d H:i:s", $vid['created_time'] );
+    $video['author_url']     = esc_url( $vid['owner.url'] );
+    $video['category']       = array();
+    if ( $vid['tags'] ) {
+      $video['tags'] = array();
+      foreach ( $vid['tags'] as $tag ) {
+        array_push( $video['tags'], sanitize_text_field( $tag ) );
+      }
+    }
+    $video['thumbnail_url']  = esc_url( $vid['thumbnail_url'] );
+    $video['duration']       = gmdate( "H:i:s", $vid['duration'] );
+    $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
+    $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
+    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
+    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
+
+    return $video;
 
   }
 
@@ -129,7 +176,7 @@ class SP_EV_Dailymotion {
   *  @return  $new_videos
   */
 
-  static function fetch( $author ) {
+  public static function fetch( $author ) {
 
     $author_id = $author['author_id'];
 
@@ -177,31 +224,10 @@ class SP_EV_Dailymotion {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $list as $vid )
-      {
-        // extract fields
-        $video = array();
-        $video['host_id']     = 'dailymotion';
-        $video['author_id']   = strtolower($author_id);
-        $video['video_id']    = $vid['id'];
-        $video['title']       = $vid['title'];
-        $video['description'] = $vid['description'];
-        $video['authorname']  = $vid['owner.screenname'];
-        $video['videourl']    = $vid['url'];
-        $video['published']   = date("Y-m-d H:i:s", strtotime($vid['created_time']));
-        $video['author_url']  = $vid['owner.url'];
-        $video['category']    = '';
-        $video['keywords']    = $vid['tags'];
-        $video['thumbnail']   = $vid['thumbnail_url'];
-        $video['duration']    = $vid['duration'];
-        $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
-        $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
-        $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
-        $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
-
+      foreach ( $list as $vid ) {
+        $video = SP_EV_Dailymotion::compose_video( $vid, $author );
         // add $video to the end of $new_videos
         array_push( $new_videos, $video );
-
       }
 
       // next page

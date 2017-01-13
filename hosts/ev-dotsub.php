@@ -48,12 +48,12 @@ class SP_EV_Dotsub {
       'api_keys' => array(
         array(
           'id' => 'author_id',
-          'label' => 'User ID',
+          'label' => __( "User ID", "external-videos" ),
           'required' => true,
           'explanation' => ''
         )
       ),
-      'introduction' => "Dotsub only requires a User ID in order to access your videos from another site. Note: the Dotsub server is quite slow - if you get an error adding an author, try again.",
+      'introduction' => __( "Dotsub only requires a User ID in order to access your videos from another site. Note: the Dotsub server is quite slow - if you get an error adding an author, try again. To display your videos properly in your theme, you may also need to install the plugin FitVids for Wordpress.", "external-videos" ),
       'api_url' => 'https://dotsub.com',
       'api_link_title' => 'Dotsub',
       'authors' => $authors
@@ -103,11 +103,11 @@ class SP_EV_Dotsub {
   }
 
   /*
-  *  embed_code
+  *  embed_url
   *
-  *  Used by save_video()
-  *  Embed code is stored as postmeta in external-video posts.
-  *  Code is specific to each host site's embed API.
+  *  Used by fetch() and SP_EV_Admin::save_video()
+  *  Embed url is stored as postmeta in external-video posts.
+  *  Url is specific to each host site's embed API.
   *
   *  @type  function
   *  @date  31/10/16
@@ -117,9 +117,51 @@ class SP_EV_Dotsub {
   *  @return  <iframe>
   */
 
-  public static function embed_code( $video_id ) {
+  public static function embed_url( $video_id ) {
 
-    return esc_url( sprintf( "https://dotsub.com/media/%s/embed/", $video_id ) );
+    return esc_url( sprintf( "https://dotsub.com/view/%s", $video_id ) );
+
+  }
+
+  /*
+  *  compose_video
+  *
+  *  Used by fetch(), and eventually passed to SP_EV_Admin::save_video()
+  *  Composes standardized $video array from idiosyncratic host data
+  *  Data correspondence is specific to each host site's embed API
+  *
+  *  @type  function
+  *  @date  12/1/17
+  *  @since  1.0
+  *
+  *  @param   $vid array
+  *  @return  $video array
+  */
+
+  public static function compose_video( $vid, $author ) {
+
+    $video = array();
+    // extract fields
+    $video['host_id']        = 'dotsub';
+    $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
+    $video['video_id']       = sanitize_text_field( $vid['uuid'] );
+    $video['title']          = sanitize_text_field( $vid['title'] );
+    $video['description']    = sanitize_text_field( $vid['description'] );
+    $video['author_name']    = sanitize_text_field( $vid['user'] );
+    $video['video_url']      = esc_url( $vid['displayURI'] );
+    $video['embed_url']      = SP_EV_Dotsub::embed_url( $vid['uuid'] );
+    $video['published']      = gmdate( "Y-m-d H:i:s", $vid['dateCreated']/1000 );
+    $video['author_url']     = esc_url( $vid['externalIdentifier'] );
+    $video['category']       = array();
+    $video['tags']           = array();
+    $video['thumbnail_url']  = esc_url( $vid['screenshotURI'] );
+    $video['duration']       = gmdate( "H:i:s", $vid['duration']/1000 );
+    $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
+    $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
+    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
+    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
+
+    return $video;
 
   }
 
@@ -137,26 +179,26 @@ class SP_EV_Dotsub {
   *  @return  $new_videos
   */
 
-  static function fetch( $author ) {
+  public static function fetch( $author ) {
 
     $author_id = $author['author_id'];
 
-    $baseurl = "https://dotsub.com/api/user/" . $author_id . "/media";
+    $baseurl = "https://dotsub.com/api/user/" . $author['author_id'] . "/media";
     $pagesize = 20;  // pagesize is automatically 20 at dotsub
     $offset = 0; // which is fine, because the API is slow. Don't increase
-    $currentPage = 1;
     $url = $baseurl . '?pagesize=' . $pagesize .'&offset=' . $offset; // At first. Then we start adding offsets
 
     // for the request
     $headers = array(
       'Authorization' => 'Basic',
-      'Content-Type' => 'application/json'
+      'Content-Type'  => 'application/json'
     );
     $args = array(
-      'headers'     => $headers,
+      'headers' => $headers,
       'timeout' => 25
     );
 
+    $currentPage = 1;
     $new_videos = array();
 
     do {
@@ -167,45 +209,24 @@ class SP_EV_Dotsub {
         $body = json_decode( wp_remote_retrieve_body( $response ), true );
         // Adjust array to get to the "result"
         $result = $body['result'];
-        $count = count( $result );
+        // $count = count( $result );
         $totalPages = $body['totalPages'];
       }
       catch ( Exception $e ) {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $result as $vid )
-      {
-        // extract fields
-        $video = array();
-        $video['host_id']     = 'dotsub';
-        $video['author_id']   = strtolower($author_id);
-        $video['video_id']    = $vid['uuid'];
-        $video['title']       = $vid['title'];
-        $video['description'] = $vid['description'];
-        $video['authorname']  = $vid['user'];
-        $video['videourl']    = $vid['displayURI'];
-        $video['published']   = gmdate("Y-m-d\TH:i:s\Z", $vid['dateCreated']/1000);
-        $video['author_url']  = $vid['externalIdentifier'];
-        $video['category']    = '';
-        $video['keywords']    = array();
-        $video['thumbnail']   = $vid['screenshotURI'];
-        $video['duration']    = $vid['duration'];
-        $video['ev_author']   = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
-        $video['ev_category'] = isset( $author['ev_category'] ) ? $author['ev_category'] : '';
-        $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
-        $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
-
+      foreach ( $result as $vid ) {
+        $video = SP_EV_Dotsub::compose_video( $vid, $author );
         // add $video to the end of $new_videos
         array_push( $new_videos, $video );
-
       }
 
-      // next page
-      $currentPage++;
       // update request url to next page - it's offset by #videos, not pages
       $offset = $offset + $pagesize;
       $url = $baseurl . '?pagesize=' . $pagesize .'&offset=' . $offset;
+      // next page
+      $currentPage++;
 
     } while ( $totalPages > $currentPage );
 

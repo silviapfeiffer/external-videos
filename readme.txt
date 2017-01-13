@@ -30,9 +30,9 @@ Currently supported sites are: YouTube, Vimeo, Dotsub, Wistia, Dailymotion
 
 = How do I register another user account to draw videos from? =
 
-Go into the admin interface and add the site and user name.
+Go into Settings->External Videos and click on the tab of your video hosting service. Enter your user name for that service. In some cases, this is all you need.
 
-Note that for some hosts, you will have to login to your account and create API keys in order to access your videos. The plugin contains links to do this.
+For other hosts, you will have to login to your account and create API keys in order to access your videos. The plugin contains links to do this.
 
 = How often does the plugin pull videos from the registered publishers? =
 
@@ -58,6 +58,18 @@ And you can specify [external-videos link="page"] if you want to get the links o
 
 Just add the following to your Website URL: ?feed=rss2&post_type=external-videos .
 You can add a link like this to your theme layout.
+
+= How can I get external videos to appear in the Home page ("page for posts")? =
+
+In Settings->External Videos, click the checkbox for this.
+
+= How can I make it so imported videos are not automatically published on my site? =
+
+In the settings for each hosting account, you can choose whether to set default post status to "Published", "Scheduled", "Draft", "Pending", or "Private".
+
+= Can I change the permalink slug for external-videos posts? =
+
+Yes, you can pick any slug you like in Settings->External Videos, as long as it doesn't conflict with other WordPress slugs.
 
 
 == Screenshots ==
