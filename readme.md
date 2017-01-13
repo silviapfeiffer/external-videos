@@ -18,6 +18,8 @@ A WordPress plugin to add videos posted to your accounts on external video hosti
 - Requires at least: 3.4
 - Tested up to: 4.7
 - Stable Tag: 1.0
+- License: GPLv2
+- License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 
 # Description
@@ -100,12 +102,13 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 # Changelog
 
 = 1.0 =
-* Major refactor - AJAX admin forms for live plugin settings and video updates
-* All video sites work again, using their current APIs
-* YouTube - Vimeo - Dotsub - Wistia
+* Major refactor - thanks to Andrew Nimmo
+* All video sites updated to their current APIs
+* YouTube - Vimeo - Dotsub - Wistia updated
 * Dailymotion added
+* Settings: Added AJAX admin forms for live plugin settings and video updates
 * New settings option: Add external-videos to main Home page query (latest posts)
-* New settings option: Automatically append attribution (categories, author and hosting site) to external-video post content, or not
+* New settings option: Automatically append attribution (categories, author and hosting site) to external-video post content
 * New admin column to sort external-videos by category
 * Note that some time since WP 3.5, you can no longer access connected external-videos from the Media Uploader, to add them to a post or page (other than the original external-videos post). This is because of hooks inaccessible since WP Media changed to backbone.js; this part of the plugin's functionality could be integrated with the Media Explorer plugin project.
 
@@ -221,3 +224,6 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 ### 0.1
 * Initial version
+
+
+#
