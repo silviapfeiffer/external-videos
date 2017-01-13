@@ -5,6 +5,8 @@ Tags: videos, YouTube, Vimeo, DotSub, Wistia, Dailymotion, crosspost
 Requires at least: 3.4
 Tested up to: 4.7
 Stable Tag: 1.0
+License: GPLv2
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
 A WordPress plugin to add videos posted to your accounts on external video hosting sites.
 
