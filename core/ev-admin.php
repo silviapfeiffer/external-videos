@@ -425,7 +425,6 @@ class SP_EV_Admin {
 
       if( $update_author == null ){
         // fetch all hosts, all authors
-        error_log( 'update author was null. <br />' );
         foreach( $host['authors'] as $author ){
           $author_videos = $ClassName::fetch( $author );
           $new_videos = array_merge( $author_videos, $new_videos );
