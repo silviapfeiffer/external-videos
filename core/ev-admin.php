@@ -30,11 +30,13 @@ class SP_EV_Admin {
     add_action( 'wp_ajax_add_author_handler', array( $this, 'add_author_handler' ) );
 
     add_filter( 'manage_edit-external-videos_columns', array( $this, 'admin_columns' ) );
+    add_filter( 'manage_edit-external-videos_sortable_columns', array( $this, 'admin_sortable_columns' ) );
     add_action( 'manage_posts_custom_column', array( $this, 'admin_custom_columns' ) );
 
     add_action( 'ev_daily_event', array( $this, 'daily_function' ) );
 
   }
+
 
   /*
   *  initialize
@@ -423,7 +425,7 @@ class SP_EV_Admin {
 
       if( $update_author == null ){
         // fetch all hosts, all authors
-        //error_log( 'update author was null. <br />' );
+        error_log( 'update author was null. <br />' );
         foreach( $host['authors'] as $author ){
           $author_videos = $ClassName::fetch( $author );
           $new_videos = array_merge( $author_videos, $new_videos );
@@ -524,7 +526,7 @@ class SP_EV_Admin {
     add_post_meta( $post_id, 'host_id',       sanitize_text_field( $video['host_id'] ) );
     add_post_meta( $post_id, 'author_id',     sanitize_text_field( $video['author_id'] ) );
     add_post_meta( $post_id, 'video_id',      sanitize_text_field( $video['video_id'] ) );
-    add_post_meta( $post_id, 'duration',      $video['duration'] ); // how to sanitize? 
+    add_post_meta( $post_id, 'duration',      $video['duration'] ); // how to sanitize?
     add_post_meta( $post_id, 'author_url',    esc_url( $video['author_url'] ) );
     add_post_meta( $post_id, 'video_url',     esc_url( $video['video_url'] ) );
     add_post_meta( $post_id, 'thumbnail_url', esc_url( $video['thumbnail_url'] ) );
@@ -1273,6 +1275,30 @@ class SP_EV_Admin {
 
       break;
     }
+  }
+
+  /*
+  *  admin_sortable_columns
+  *
+  *  External Videos posts page
+  *  Makes custom columns sortable in list view
+  *
+  *  @type  function
+  *  @date  12/01/17
+  *  @since  1.1
+  *
+  *  @param    $sortable_columns
+  *  @return
+  */
+
+  function admin_sortable_columns( $sortable_columns ) {
+
+    $sortable_columns['duration'] = 'duration';
+    $sortable_columns['published'] = 'published';
+    $sortable_columns['host'] = 'host';
+
+    return $sortable_columns;
+
   }
 
   /*
