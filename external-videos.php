@@ -47,17 +47,17 @@ class SP_External_Videos {
 
     require_once( ABSPATH . 'wp-admin/includes/taxonomy.php' );
 
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-admin.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-helpers.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-widget.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/simple_html_dom.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-admin.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-helpers.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-widget.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/simple_html_dom.php' );
 
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-youtube.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-vimeo.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dotsub.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-wistia.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dailymotion.php' );
+    foreach( glob( plugin_dir_path( __FILE__ ) . '/hosts/*/ev-*.php' ) as $host ) {
+      require $host;
+    }
+
+    require_once( plugin_dir_path( __FILE__ ) . 'mexp/media-explorer.php' );
 
     // includes do not bring methods into the class! they're standalone functions
     register_activation_hook( __FILE__, array( $this, 'activation' ) );

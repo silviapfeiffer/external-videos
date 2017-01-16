@@ -15,9 +15,9 @@ A WordPress plugin to add videos posted to your accounts on external video hosti
 - Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 - Donate link: http://www.gingertech.net/
 - Tags: videos, YouTube, Vimeo, DotSub, Wistia, Dailymotion, crosspost
-- Requires at least: 3.4
-- Tested up to: 4.7
-- Stable Tag: 1.0
+- Requires at least: 4.4
+- Tested up to: 4.7.1
+- Stable Tag: 1.1
 - License: GPLv2
 - License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,7 +101,12 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 # Changelog
 
-= 1.0 =
+### 1.1
+* Media Uploader: External Videos can now be added to any post, like photos or other media items, once they are imported. (Functions rewritten using Media Explorer framework)
+* Updates to video host functions to check for API keys if necessary
+* Bug and code efficiency fixes
+
+### 1.0
 * Major refactor - thanks to Andrew Nimmo
 * All video sites updated to their current APIs
 * YouTube - Vimeo - Dotsub - Wistia updated

@@ -1,0 +1,273 @@
+/*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+*/
+
+.media-frame .mexp-content {
+	background: #fff;
+}
+
+.media-frame .mexp-content .mexp-error {
+	background: #fdd;
+	padding: 12px 16px;
+	margin: 0 0 10px 0;
+	bottom: auto;
+	display: none;
+}
+
+.media-frame .mexp-content .mexp-empty {
+	background: #ffd;
+	padding: 12px 16px;
+	margin: 0 0 10px 0;
+	bottom: auto;
+	display: none;
+}
+
+.media-frame .mexp-content .mexp-toolbar {
+	background: #f5f5f5;
+	padding: 0;
+	right: 0;
+}
+body.mp6 .media-frame .mexp-content .mexp-toolbar {
+	background: #fff;
+	border-bottom: 1px solid #ddd;
+}
+
+.media-frame .mexp-content .mexp-toolbar-container {
+	padding: 10px 9px;
+}
+
+.media-frame .mexp-content .attachments {
+	right: 0;
+}
+
+.media-frame .mexp-content .mexp-toolbar label,
+.media-frame .mexp-content .mexp-toolbar select,
+.media-frame .mexp-content .mexp-toolbar input {
+	float: left;
+}
+
+.media-frame .mexp-content .media-toolbar .mexp-input-search {
+	margin-left: 10px;
+}
+
+/* WP media manager style tweaks: */
+.media-frame .mexp-content .mexp-toolbar label{
+	margin: 7px;
+	color: #555;
+}
+.media-frame .mexp-content .mexp-toolbar select {
+	margin: 1px;
+	padding: 6px 6px 5px;
+	height: 2.5em;
+}
+.media-frame .mexp-content .mexp-toolbar .button {
+	margin: 1px;
+}
+
+.media-frame .mexp-content .mexp-toolbar .spinner {
+	float: left;
+	margin: 7px 10px;
+}
+
+.media-frame .mexp-content .mexp-pagination .spinner {
+	float: left;
+	margin: 3px 10px;
+}
+
+.media-frame .mexp-content .clearfix:after {
+	clear: both;
+	content: ".";
+	display: block;
+	height: 0;
+	visibility: hidden;
+}
+
+.button.mexp-pagination {
+	margin-top: 15px;
+}
+
+/* ************************** */
+/* Generic media item styles: */
+/* ************************** */
+
+.media-frame .mexp-content .mexp-items {
+	padding-top: 10px;
+}
+
+.media-frame .mexp-content .mexp-item {
+	cursor: pointer;
+	border: 1px solid #fff;
+  /*height: 15rem;
+  overflow: hidden;*/
+}
+.media-frame .mexp-item-thumb {
+  height: 9em;
+  overflow: hidden;
+  object-fit: cover;
+}
+.media-frame .mexp-item-main {
+  height: 6em;
+  overflow: hidden;
+}
+.media-frame .mexp-item-content {
+  font-weight: bold;
+}
+
+.media-frame .mexp-content .mexp-item:hover {
+	border-color: #999;
+}
+
+.media-frame .mexp-content .mexp-item.selected {
+	border-color: transparent;
+}
+
+html.ie8 .media-frame .mexp-content .mexp-item.selected {
+	border-color: #999;
+}
+
+/* ************************ */
+/* Twitter-specific styles: */
+/* ************************ */
+
+.media-frame .mexp-content-twitter .mexp-item {
+	float: none;
+	max-width: 800px;
+	text-align: left;
+	margin: 6px 10px;
+}
+
+.media-frame .mexp-content-twitter .mexp-item .mexp-item-container {
+	padding: 13px;
+}
+
+.media-frame .mexp-content-twitter .mexp-item .mexp-item-thumb {
+	float: left;
+	margin: 0 10px 10px 0;
+}
+
+.media-frame .mexp-content-twitter .mexp-item .mexp-item-thumb img {
+	width: 48px;
+	height: 48px;
+}
+
+.media-frame .mexp-content-twitter .mexp-item .mexp-item-author {
+	font-size: 18px;
+}
+
+.media-frame .mexp-content-twitter .mexp-item .mexp-item-author-screen-name {
+	color: #bbb;
+}
+
+.media-frame .mexp-content-twitter .mexp-item .mexp-item-content {
+	margin: 8px 0;
+}
+
+.media-frame .mexp-content-twitter .mexp-item .mexp-item-date {
+	color: #bbb;
+	clear: left;
+}
+
+.media-frame .mexp-content-twitter-location .mexp-toolbar {
+	height: 210px;
+}
+
+.media-frame .mexp-content-twitter-location .attachments {
+	top: 210px;
+}
+
+#mexp_twitter_map_canvas {
+	width: 100%;
+	height: 160px;
+	background: transparent no-repeat center center;
+}
+
+#twitter-loadmore {
+	display: none;
+}
+
+
+/* ************************ */
+/* YouTube-specific styles: */
+/* ************************ */
+
+#youtube-loadmore {
+	display: none !important;
+}
+
+/*.media-frame .mexp-item-youtube .mexp-item-main {
+	max-height: 48px;
+	overflow: hidden;
+}
+
+.media-frame .mexp-item-youtube .mexp-item-content {
+	font-weight: bold;
+}*/
+
+.media-frame .spinner-bottom {
+	bottom: 18px;
+	position: absolute;
+	margin: auto;
+	left: 50%;
+}
+
+.mexp-item-thumb img {
+	width: 99%;
+}
+
+/*
+ * Fixes the 180px right margin for the ul.attachments in lo-res revices
+ * */
+@media (max-width: 782px) {
+	.mp6 .mexp-content ul.mexp-items, .mp6 .mexp-content ul.mexp-items {
+		margin-right: 0px;
+		overflow: hidden;
+	}
+}
+
+/**
+ * One column layout
+ * */
+@media (max-width: 699px) {
+	.mexp-content .attachment {
+		width: 100%;
+	}
+	.media-frame .mexp-content .media-toolbar .mexp-input-search {
+		width: 128px;
+	}
+}
+
+/**
+ * Two column layout
+ * */
+@media (min-width: 700px) and (max-width: 1199px) {
+	.mexp-content .attachment {
+		width: 45%;
+	}
+}
+
+/**
+ * Three column layout
+ * */
+@media (min-width: 1200px) and (max-width: 1499px) {
+	.mexp-content .attachment {
+		width: 31%;
+	}
+}
+
+/**
+ * Four column layout
+ * */
+@media (min-width: 1500px) {
+	.mexp-content .attachment {
+		width: 23%;
+	}
+}

@@ -28,8 +28,25 @@ class SP_EV_YouTube {
 
     // Do we need to add oEmbed support for this host?
     // No, YouTube oEmbed support is built in to WordPress
+    self::setup_options();
 
-    // host_name must be the last part of the Class Name
+  }
+
+  /*
+  *  setup_options
+  *
+  *  Set up host and author options, check for missing API keys
+  *
+  *  @type  function
+  *  @date  14/1/17
+  *  @since  1.0
+  *
+  *  @param
+  *  @return  boolean
+  */
+
+  private function setup_options(){
+    // options table host_name is automatically set the last part of this Class Name
     $class = get_class();
     $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $host_name = $host_name[0];
@@ -39,8 +56,27 @@ class SP_EV_YouTube {
       $authors = array();
     } else {
       $authors = $options['hosts']['youtube']['authors'];
+      $updated_authors = array();
+
+      foreach( $authors as $author ){
+        // Check for necessary API keys
+        if( !isset( $author['developer_key'] ) || empty( $author['developer_key'] ) ){
+          // return a WP Error message so they know to update the author.
+          error_log( 'no developer key for ' . $author['author_id'] );
+
+        } else { // Get hidden user fields from YouTube API
+          if( !isset( $author['channel_id'] ) ){
+            $author['channel_id'] = $this->get_channel_id( $author );
+          }
+          if( !isset( $author['playlist_id'] ) ){
+            $author['playlist_id'] = $this->get_playlist_id( $author );
+          }
+        }
+        $updated_authors[] = $author;
+      }
     }
 
+    // rebuild options
     $options['hosts']['youtube'] = array(
       'host_id' => 'youtube',
       'host_name' => $host_name,
@@ -61,10 +97,12 @@ class SP_EV_YouTube {
       'introduction' => __( "YouTube's API v3 requires you to generate an API key from your account, in order to access your videos from another site (like this one).", "external-videos" ),
       'api_url' => 'https://console.developers.google.com/apis/credentials',
       'api_link_title' => 'YouTube API',
-      'authors' => $authors
+      'authors' => $updated_authors
     );
 
     update_option( 'sp_external_videos_options', $options );
+
+    // error_log( print_r( $options['hosts']['youtube']['authors'], true ) );
 
   }
 
@@ -103,6 +141,93 @@ class SP_EV_YouTube {
     }
 
     return true;
+
+  }
+
+  /*
+  *  These functions help setup YouTube API access, different from other hosts.
+  *  Ultimately we need their YouTube playlistId, which users don't know,
+  *  and to get that we need the user's channelId, which users also don't know.
+  */
+
+  /*
+  *  get_channel_id
+  *
+  *  Finds the author's channelId (different from username)
+  *  This additional field is needed in YouTube API video queries
+  *  Sets the youtube-only field $author['channel_id'] for this author
+  *
+  *  get it from the username, through a channels?forUsername query.
+  *  http://stackoverflow.com/questions/14925851/how-do-i-use-youtube-data-api-v3-to-fetch-channel-uploads-using-chanels-usernam?rq=1
+  *  https://developers.google.com/youtube/v3/code_samples/php#search_by_keyword
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param   $author
+  *  @return  $channelId
+  */
+
+  function get_channel_id( $author ){
+
+    if( !isset( $author['developer_key'] ) ) return;
+    $developer_key = $author['developer_key'];
+    $author_id = $author['author_id'];
+
+    // SEARCH FOR CHANNEL_ID
+    $url = "https://www.googleapis.com/youtube/v3/search";
+    $url .= "?type=channel&part=snippet&fields=items(id/channelId)&maxResults=1";
+    $url .= "&key=" . $developer_key;
+    $url .= "&q=" . $author_id;
+
+    $response = wp_remote_get( $url );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    // The first result has the channel.
+    $channelId = $body["items"][0]["id"]["channelId"];
+
+    $options = get_option( 'sp_external_videos_options' );
+
+    return $channelId;
+
+  }
+
+  /*
+  *  get_playlist_id
+  *
+  *  Finds the playlistId for a channelId's "uploads"
+  *  This additional field is needed in YouTube API video queries
+  *  Sets the youtube-only field $author['playlist_id'] for this author
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param   $author
+  *  @return  $playlistId
+  */
+
+  function get_playlist_id( $author ){
+
+    if( !isset( $author['developer_key'] ) || !isset( $author['channel_id'] ) ) return;
+    $developer_key = $author['developer_key'];
+    $channel_id = $author['channel_id'];
+
+    // SEARCH FOR PLAYLIST ID
+    $url = "https://www.googleapis.com/youtube/v3/channels";
+    $url .= "?part=snippet,contentDetails";
+    $url .= "&id=" . $channel_id;
+    $url .= "&key=" . $developer_key;
+
+    $response = wp_remote_get( $url );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+    $playlistId = $body['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+
+    return $playlistId;
 
   }
 
@@ -172,7 +297,7 @@ class SP_EV_YouTube {
     $video['author_url']     = esc_url( "https://www.youtube.com/user/".$video['author_id'] );
     $video['category']       = array();
     $video['tags']           = array_map( 'esc_attr', $tags );
-    $video['thumbnail_url']  = esc_url( $vid['snippet']['thumbnails']['default']['url'] );
+    $video['thumbnail_url']  = esc_url( $vid['snippet']['thumbnails']['medium']['url'] );
     $video['duration']       = sp_ev_convert_youtube_time( $duration );
     $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
@@ -200,40 +325,8 @@ class SP_EV_YouTube {
 
     $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
-
-    // Setup YouTube API access. Ultimately we need a YouTube playlist_id,
-    // which is hard for a user to find, and to get that we need the user's
-    // channelId, which they're also unlikely to know. So we start by getting
-    // the channelId from the username, through a channels?forUsername query.
-    // http://stackoverflow.com/questions/14925851/how-do-i-use-youtube-data-api-v3-to-fetch-channel-uploads-using-chanels-usernam?rq=1
-    // https://developers.google.com/youtube/v3/code_samples/php#search_by_keyword
-    // YouTube doesn't accept the way wp_remote_get forms args,
-    // so we have to stringify the args ourselves.
-
-    // SEARCH FOR CHANNEL_ID
-    $url = "https://www.googleapis.com/youtube/v3/search";
-    $url .= "?type=channel&part=snippet&fields=items(id/channelId)&maxResults=1";
-    $url .= "&key=" . $developer_key;
-    $url .= "&q=" . $author_id;
-
-    $response = wp_remote_get( $url );
-    $code = wp_remote_retrieve_response_code( $response );
-    $message = wp_remote_retrieve_response_message( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ), true );
-    // The first result has the channel.
-    $channelId = $body["items"][0]["id"]["channelId"];
-
-    // SEARCH FOR PLAYLIST ID
-    $url = "https://www.googleapis.com/youtube/v3/channels";
-    $url .= "?part=snippet,contentDetails";
-    $url .= "&id=" . $channelId;
-    $url .= "&key=" . $developer_key;
-
-    $response = wp_remote_get( $url );
-    $code = wp_remote_retrieve_response_code( $response );
-    $message = wp_remote_retrieve_response_message( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ), true );
-    $playlistId = $body['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+    $channelId = $author['channel_id'];
+    $playlistId = $author['playlist_id'];
 
     // And now we need those videos
     $per_page = 10;

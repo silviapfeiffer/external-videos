@@ -29,7 +29,25 @@ class SP_EV_Dailymotion {
     // Do we need to add oEmbed support for this host?
     // No, Dailymotion oEmbed support is built in to WordPress
 
-    // host_name must be the last part of the Class Name
+    self::setup_options();
+
+  }
+
+  /*
+  *  setup_options
+  *
+  *  Set up host and author options, check for missing API keys
+  *
+  *  @type  function
+  *  @date  14/1/17
+  *  @since  1.0
+  *
+  *  @param
+  *  @return  boolean
+  */
+
+  private function setup_options(){
+    // options table host_name is automatically set the last part of this Class Name
     $class = get_class();
     $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $host_name = $host_name[0];

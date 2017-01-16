@@ -2,9 +2,9 @@
 Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 Donate link: http://www.gingertech.net/
 Tags: videos, YouTube, Vimeo, DotSub, Wistia, Dailymotion, crosspost
-Requires at least: 3.4
+Requires at least: 4.4
 Tested up to: 4.7
-Stable Tag: 1.0
+Stable Tag: 1.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,11 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 6. screenshot-6.jpg : a video page as automatically created by the plugin
 
 == Changelog ==
+
+= 1.1 =
+* Media Uploader: After External Videos are imported, they can now be added to any post, like photos or other media items. (Functions rewritten using Media Explorer framework)
+* Updates to video host functions to check for API keys if necessary
+* Bug and code efficiency fixes
 
 = 1.0 =
 * Major refactor - thanks to Andrew Nimmo
