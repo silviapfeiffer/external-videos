@@ -82,6 +82,7 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 4. screenshot-4.jpg : the setup page for the widget of recent videos
 5. screenshot-5.jpg : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
 6. screenshot-6.jpg : a video page as automatically created by the plugin
+7. screenshot-7.jpg : inserting External Videos into any page or post via the Media Uploader
 
 == Changelog ==
 
