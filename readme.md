@@ -24,7 +24,7 @@ A WordPress plugin to add videos posted to your accounts on external video hosti
 
 # Description
 
-This plugin creates a new WordPress post type called "External Videos" and aggregates videos from a video hosting site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post type. The videos can be presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
+This plugin creates a new WordPress post type called "External Videos" and aggregates videos from a video hosting site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post type. The videos can be added to any post via the media library, or presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
 
 
 # Installation
