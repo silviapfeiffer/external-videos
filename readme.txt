@@ -8,11 +8,11 @@ Stable Tag: 1.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-A WordPress plugin to add videos posted to your accounts on external video hosting sites.
+Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymotion to your WordPress site.
 
 == Description ==
 
-This plugin creates a new WordPress post type called "External Videos" and aggregates videos from a video hosting site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post type. The videos can be added to any post via the media library, or presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
+This plugin connects WordPress to your video channels on YouTube, Vimeo, DotSub, Wistia, or Dailymotion, and crossposts the videos automatically. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post on WordPress. The posts are created as a separate post type, "external-videos", but can optionally be added to your posts page or news feed like regular posts. Your videos, once imported, can also be added to any other post via the media library, or presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
 
 == Installation ==
 
@@ -46,7 +46,7 @@ If you have problems with "cron", consider installing the "Core Control" plugin,
 
 We use OEmbed.
 
-= What short codes are available? =
+= What shortcodes are available? =
 
 The general shortcode is [external-videos], which creates a video gallery.
 
@@ -76,13 +76,13 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 == Screenshots ==
 
-1. screenshot-1.jpg : a list of the video posts in the admin interface
-2. screenshot-2.jpg : the setup page for the plugin
-3. screenshot-3.jpg : the setup page for a video host
-4. screenshot-4.jpg : the setup page for the widget of recent videos
-5. screenshot-5.jpg : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
-6. screenshot-6.jpg : a video page as automatically created by the plugin
-7. screenshot-7.jpg : inserting External Videos into any page or post via the Media Uploader
+1. assets/screenshot-1.jpg : a list of the video posts in the admin interface
+2. assets/screenshot-2.jpg : the setup page for the plugin
+3. assets/screenshot-3.jpg : the setup page for a video host
+4. assets/screenshot-4.jpg : the setup page for the widget of recent videos
+5. assets/screenshot-5.jpg : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
+6. assets/screenshot-6.jpg : a video page as automatically created by the plugin
+7. assets/screenshot-7.jpg : inserting External Videos into any page or post via the Media Uploader
 
 == Changelog ==
 

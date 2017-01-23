@@ -12,28 +12,28 @@ class MEXP_EV_Dotsub_Service extends MEXP_Service {
   const SERVICE = 'dotsub';
   const EV_SERVICE = 'ev_dotsub';
 
-	public function __construct() {
+  public function __construct() {
 
-		require_once dirname( __FILE__ ) . '/mexp-ev-dotsub-template.php';
-		# Go!
-		$this->set_template( new MEXP_EV_Dotsub_Template );
-	}
+    require_once dirname( __FILE__ ) . '/mexp-ev-dotsub-template.php';
+    # Go!
+    $this->set_template( new MEXP_EV_Dotsub_Template );
+  }
 
-	public function load() {
+  public function load() {
 
-		add_action( 'mexp_enqueue', array( $this, 'enqueue_statics' ) );
-		add_filter( 'mexp_tabs', array( $this, 'tabs' ), 10, 1 );
-		add_filter( 'mexp_labels', array( $this, 'labels' ), 10, 1 );
+    add_action( 'mexp_enqueue', array( $this, 'enqueue_statics' ) );
+    add_filter( 'mexp_tabs', array( $this, 'tabs' ), 10, 1 );
+    add_filter( 'mexp_labels', array( $this, 'labels' ), 10, 1 );
 
-	}
+  }
 
-	public function enqueue_statics() {
+  public function enqueue_statics() {
 
-		$mexp = Media_Explorer::init();
+    $mexp = Media_Explorer::init();
 
-	}
+  }
 
-	public function request( array $request ) {
+  public function request( array $request ) {
 
     $params = $request['params'];
     $author_id = $params['author_id'];
@@ -59,41 +59,41 @@ class MEXP_EV_Dotsub_Service extends MEXP_Service {
 
     // error_log( '$query_response: ' . print_r( $query_response, true) );
 
-		// Create the response for the API
-		$response = new MEXP_Response();
+    // Create the response for the API
+    $response = new MEXP_Response();
 
-		if ( !isset( $query_response ) )
-			return false;
+    if ( !isset( $query_response ) )
+      return false;
 
     // Set up items
-		foreach ( $query_response as $index => $video ) {
+    foreach ( $query_response as $index => $video ) {
       setup_postdata( $video );
 
-			$item = new MEXP_Response_Item();
+      $item = new MEXP_Response_Item();
 
       $embed_code = get_post_meta( $video->ID, 'embed_code' );
       $thumbnail_url = get_post_meta( $video->ID, 'thumbnail_url' );
       // error_log( '$embed_code: ' . print_r( $embed_code, true) );
 
-			$item->set_url( $embed_code[0] );
-			$item->add_meta( 'user', $author_id );
-			// $item->set_id( (int) $params['startIndex'] + (int) $index );
+      $item->set_url( $embed_code[0] );
+      $item->add_meta( 'user', $author_id );
+      // $item->set_id( (int) $params['startIndex'] + (int) $index );
       $item->set_id( (int) $index );
-			$item->set_content( $video->post_title );
-			$item->set_thumbnail( $thumbnail_url[0] );
-			$item->set_date( strtotime( $video->post_date ) );
-			$item->set_date_format( 'g:i A - j M y' );
-			$response->add_item( $item );
-		}
+      $item->set_content( $video->post_title );
+      $item->set_thumbnail( $thumbnail_url[0] );
+      $item->set_date( strtotime( $video->post_date ) );
+      $item->set_date_format( 'g:i A - j M y' );
+      $response->add_item( $item );
+    }
 
     // maybe do a calculation to figure out whether to send $paged for this batch
 
-		return $response;
-	}
+    return $response;
+  }
 
   // EV media explorer tabs are by author
-	public function tabs( array $tabs ) {
-		$tabs[self::EV_SERVICE] = array();
+  public function tabs( array $tabs ) {
+    $tabs[self::EV_SERVICE] = array();
 
     $options = class_exists( 'SP_External_Videos' ) ? SP_External_Videos::get_options() : array();
     if( !isset( $options['hosts'][self::SERVICE]['authors'] ) ) {
@@ -112,24 +112,24 @@ class MEXP_EV_Dotsub_Service extends MEXP_Service {
       }
     }
 
-		return $tabs;
-	}
+    return $tabs;
+  }
 
-	public function labels( array $labels ) {
+  public function labels( array $labels ) {
 
-		$labels[self::EV_SERVICE] = array(
-			'title'     => __( 'Insert Dotsub EV', 'mexp' ),
-			'insert'    => __( 'Insert', 'mexp' ),
-			'noresults' => __( 'No videos matched your search query.', 'mexp' ),
-		);
+    $labels[self::EV_SERVICE] = array(
+      'title'     => __( 'Insert Dotsub EV', 'mexp' ),
+      'insert'    => __( 'Insert', 'mexp' ),
+      'noresults' => __( 'No videos matched your search query.', 'mexp' ),
+    );
 
-		return $labels;
-	}
+    return $labels;
+  }
 }
 
 add_filter( 'mexp_services', 'mexp_service_ev_dotsub' );
 
 function mexp_service_ev_dotsub( array $services ) {
-	$services['ev_dotsub'] = new MEXP_EV_Dotsub_Service;
-	return $services;
+  $services['ev_dotsub'] = new MEXP_EV_Dotsub_Service;
+  return $services;
 }
