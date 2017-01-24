@@ -30,7 +30,25 @@ class SP_EV_Dotsub {
     // Oembed support for dotsub
     wp_oembed_add_provider( '#https://(www\.)?dotsub\.com/view/.*#i', 'https://dotsub.com/services/oembed?url=', true );
 
-    // host_name must be the last part of the Class Name
+    self::setup_options();
+
+  }
+
+  /*
+  *  setup_options
+  *
+  *  Set up host and author options, check for missing API keys
+  *
+  *  @type  function
+  *  @date  14/1/17
+  *  @since  1.0
+  *
+  *  @param
+  *  @return  boolean
+  */
+
+  private function setup_options(){
+    // options table host_name is automatically set the last part of this Class Name
     $class = get_class();
     $hostname = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $hostname = $hostname[0];

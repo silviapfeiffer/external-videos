@@ -55,7 +55,7 @@ function sp_ev_shorten_text($input, $length = 36, $ellipses = true) {
     $trimmed_text .= '...';
   }
 
-  return $trimmed_text;
+  return sanitize_text_field( $trimmed_text );
 }
 
 function sp_ev_convert_youtube_time($youtube_time){

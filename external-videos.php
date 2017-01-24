@@ -2,9 +2,9 @@
 /*
 * Plugin Name: External Videos
 * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
-* Description: This is a WordPress post types plugin for videos posted to external social networking sites. It creates a new WordPress post type called "External Videos" and aggregates videos from a external social networking site's user channel to the WordPress instance. For example, it finds all the videos of the user "Fred" on YouTube and addes them each as a new post type.
+* Description: Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymotion to your WordPress site as new posts.
 * Author: Silvia Pfeiffer and Andrew Nimmo
-* Version: 1.0
+* Version: 1.1
 * Author URI: http://www.gingertech.net/
 * License: GPL2
 * Text Domain: external-videos
@@ -47,17 +47,17 @@ class SP_External_Videos {
 
     require_once( ABSPATH . 'wp-admin/includes/taxonomy.php' );
 
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-admin.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-helpers.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-widget.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'core/simple_html_dom.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-admin.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-helpers.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-widget.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/simple_html_dom.php' );
 
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-youtube.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-vimeo.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dotsub.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-wistia.php' );
-    require_once( plugin_dir_path( __FILE__ ) . 'hosts/ev-dailymotion.php' );
+    foreach( glob( plugin_dir_path( __FILE__ ) . '/hosts/*/ev-*.php' ) as $host ) {
+      require $host;
+    }
+
+    require_once( plugin_dir_path( __FILE__ ) . 'mexp/media-explorer.php' );
 
     // includes do not bring methods into the class! they're standalone functions
     register_activation_hook( __FILE__, array( $this, 'activation' ) );
@@ -405,7 +405,6 @@ class SP_External_Videos {
   *  @return   shortcode HTML
   */
 
-
   function gallery( $atts, $content = null ) {
 
     global $wp_query, $post;
@@ -438,8 +437,8 @@ class SP_External_Videos {
         // extract the video for the feature
         the_post();
 
-        $videourl  = get_post_meta( get_the_ID(), 'video_url' );
-        $video = trim( $videourl[0] );
+        $embed_url  = get_post_meta( get_the_ID(), 'embed_url' );
+        $video = trim( $embed_url[0] );
         // get oEmbed code
         $oembed = new WP_Embed();
         $html = $oembed->shortcode( null, $video );
@@ -507,20 +506,20 @@ class SP_External_Videos {
       <?php
       while ( have_posts() ) {
         the_post();
-        $thumbnail = get_post_meta(get_the_ID(), 'thumbnail_url');
+        $thumbnail = esc_url( get_post_meta( get_the_ID(), 'thumbnail_url' ) );
         $thumb = $thumbnail[0];
-        $videourl  = get_post_meta(get_the_ID(), 'video_url');
-        $video = trim($videourl[0]);
-        $description = get_post_meta(get_the_ID(), 'description');
+        $embed_url  = esc_url( get_post_meta( get_the_ID(), 'embed_url' ) );
+        $video = trim( $embed_url[0] );
+        $description = esc_attr( get_post_meta( get_the_ID(), 'description' ) );
         $desc = $description[0];
-        $short_title = sp_ev_shorten_text(get_the_title(), 33);
-        $thickbox_title = sp_ev_shorten_text(get_the_title(), 90);
+        $short_title = sp_ev_shorten_text( get_the_title(), 33 );
+        $thickbox_title = sp_ev_shorten_text( get_the_title(), 90 );
         // get oEmbed code
         $oembed = new WP_Embed();
         $html = $oembed->shortcode( null, $video );
         // replace width with 600, height with 360
-        $html = preg_replace ( '/width="\d+"/', 'width="'.$width.'"', $html );
-        $html = preg_replace ( '/height="\d+"/', 'height="'.$height.'"', $html );
+        $html = preg_replace ( '/width="\d+"/', 'width="' . $width . '"', $html );
+        $html = preg_replace ( '/height="\d+"/', 'height="' . $height . '"', $html );
       ?>
       <div style="margin:2px; height:auto; width:auto; float:left;">
         <?php
@@ -564,7 +563,7 @@ class SP_External_Videos {
             </p>
             <div style="margin-bottom:10px;">
               <?php
-              if ($post->post_parent > 0) {
+              if ( $post->post_parent > 0 ) {
               ?>
                 <a href="<?php echo get_permalink( $post->post_parent ) ?>"><?php _e( 'Blog post related to this video', 'external-videos' ); ?></a>
               <?php
@@ -572,7 +571,7 @@ class SP_External_Videos {
               ?>
               <br/>
               <?php
-              if ($features_3_0) {
+              if ( $features_3_0 ) {
               ?>
               <a href="<?php the_permalink(); ?>"><?php _e( 'Video page', 'external-videos' ); ?></a>
               <?php
