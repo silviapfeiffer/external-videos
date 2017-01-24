@@ -1,7 +1,7 @@
 === External Videos ===
 Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 Donate link: http://www.gingertech.net/
-Tags: videos, YouTube, Vimeo, DotSub, Wistia, Dailymotion, crosspost
+Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
 Requires at least: 4.4
 Tested up to: 4.7
 Stable Tag: 1.1
@@ -76,13 +76,13 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 == Screenshots ==
 
-1. assets/screenshot-1.jpg : a list of the video posts in the admin interface
-2. assets/screenshot-2.jpg : the setup page for the plugin
-3. assets/screenshot-3.jpg : the setup page for a video host
-4. assets/screenshot-4.jpg : the setup page for the widget of recent videos
-5. assets/screenshot-5.jpg : a gallery created by the [external-videos] shortcode; also note the recent videos widget on the right
-6. assets/screenshot-6.jpg : a video page as automatically created by the plugin
-7. assets/screenshot-7.jpg : inserting External Videos into any page or post via the Media Uploader
+1. List of the video posts in the admin interface
+2. Setup page for the plugin
+3. Setup page for a video host
+4. Setup page for the widget of recent videos
+5. Gallery created by the [external-videos] shortcode; also note recent videos widget on the right
+6. Video page (archive) as automatically created by the plugin
+7. Media Uploader: inserting External Videos into any page or post
 
 == Changelog ==
 
