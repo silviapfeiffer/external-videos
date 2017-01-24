@@ -29,7 +29,25 @@ class SP_EV_Vimeo {
     // Do we need to add oEmbed support for this host?
     // No, Vimeo oEmbed support is built in to WordPress
 
-    // host_name must be the last part of the Class Name
+    self::setup_options();
+
+  }
+
+  /*
+  *  setup_options
+  *
+  *  Set up host and author options, check for missing API keys
+  *
+  *  @type  function
+  *  @date  14/1/17
+  *  @since  1.0
+  *
+  *  @param
+  *  @return  boolean
+  */
+
+  private function setup_options(){
+    // options table host_name is automatically set the last part of this Class Name
     $class = get_class();
     $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $host_name = $host_name[0];
@@ -39,8 +57,28 @@ class SP_EV_Vimeo {
       $authors = array();
     } else {
       $authors = $options['hosts']['vimeo']['authors'];
+      $updated_authors = array();
+
+      foreach( $authors as $author ){
+        // Check for necessary API keys
+        if( !isset( $author['developer_key'] ) || empty( $author['developer_key'] ) ){
+          // to do: return a WP Error message so they know to update the author.
+          error_log( 'no client identifier for ' . $author['author_id'] );
+
+        } else { // Only continue if we have a developer_key
+
+          if( !isset( $author['secret_key'] ) || empty( $author['secret_key'] ) ){
+            // to do: return a WP Error message so they know to update the author.
+            error_log( 'no client secret for ' . $author['author_id'] );
+
+          } else { // Only update if we have developer_key & secret_key
+            $updated_authors[] = $author;
+          }
+        }
+      }
     }
 
+    // rebuild options
     $options['hosts']['vimeo'] = array(
       'host_id' => 'vimeo',
       'host_name' => $host_name,
@@ -73,10 +111,12 @@ class SP_EV_Vimeo {
       'introduction' => __( "Vimeo's API v3.0 requires you to generate an oAuth2 Client Identifier and Client Secret from your account, in order to access your videos from another site (like this one).", "external-videos" ),
       'api_url' => 'https://developer.vimeo.com/apps',
       'api_link_title' => 'Vimeo API',
-      'authors' => $authors
+      'authors' => $updated_authors
     );
 
     update_option( 'sp_external_videos_options', $options );
+
+    // error_log( print_r( $options['hosts']['vimeo']['authors'], true ) );
 
   }
 
@@ -187,6 +227,48 @@ class SP_EV_Vimeo {
   }
 
   /*
+  *  get_temporary_token
+  *
+  *  Helps setup Vimeo API access, different from other hosts
+  *  Users should have a personal access token for full access to their channel
+  *  but if they don't have it, get a temporary access token for public videos
+  *
+  *  @type  function
+  *  @date  14/1/17
+  *  @since  1.1
+  *
+  *  @param   $author
+  *  @return  $access_token
+  */
+
+  private static function get_temporary_token( $author ){
+
+    $developer_key = $author['developer_key'];
+    $secret_key = $author['secret_key'];
+
+    // send request
+    $url = "https://api.vimeo.com/oauth/authorize/client?grant_type=client_credentials";
+    $auth = base64_encode( $developer_key . ':' . $secret_key );
+    $headers = array(
+      'Authorization' => 'Basic ' . $auth,
+      'Content-Type' => 'application/json'
+    );
+    $args = array(
+      'headers'     => $headers
+    );
+
+    $response = wp_remote_post( $url, $args );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+
+    $access_token = $body['access_token'];
+
+    return $access_token;
+
+  }
+
+  /*
   *  fetch
   *
   *  NEW VIMEO API 3.0 oAuth2
@@ -209,23 +291,7 @@ class SP_EV_Vimeo {
     $access_token = $author['auth_token'];
 
     if( ! $access_token ) {
-      // send request
-      $url = 'https://api.vimeo.com/oauth/authorize/client?grant_type=client_credentials';
-      $auth = base64_encode( $developer_key . ':' . $secret_key );
-      $headers = array(
-        'Authorization' => 'Basic ' . $auth,
-        'Content-Type' => 'application/json'
-      );
-      $args = array(
-        'headers'     => $headers
-      );
-
-      $response = wp_remote_post( $url, $args );
-      $code = wp_remote_retrieve_response_code( $response );
-      $message = wp_remote_retrieve_response_message( $response );
-      $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
-
-      $access_token = $body['access_token'];
+      $access_token = self::get_temporary_token( $author );
     }
 
     // Now we should have an access token.

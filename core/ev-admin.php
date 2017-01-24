@@ -252,7 +252,7 @@ class SP_EV_Admin {
       $zero_message = $this->wrap_admin_notice( $zero_message, 'info' );
 
       return array(
-        'messages'      => esc_html( $zero_message ),
+        'messages'      => $zero_message,
         'new_video_ids' => $new_video_ids
       );
     }
@@ -282,7 +282,7 @@ class SP_EV_Admin {
     foreach ( $count_added as $host_id=>$num ) {
       $host_name = $update_hosts[$host_id]['host_name'];
       if ( $num > 0 ) {
-        $add_messages .= sprintf( _n( 'Found %1$s new video on %2$s.', 'Found %1$s new videos on %2$s.', $num, 'external-videos' ), $num, $host_name );
+        $add_messages .= sprintf( _n( 'Found %1$s new video on %2$s. ', 'Found %1$s new videos on %2$s. ', $num, 'external-videos' ), $num, $host_name );
       }
       else {
         $no_messages .= "No new videos found on " . $host_name . '.';
@@ -486,7 +486,8 @@ class SP_EV_Admin {
       $video_content .= '<p><small>';
       if ( $video['category'] != '' ) {
         $video_content .= '<i>' . esc_attr__( "Category:" , 'external-videos' ) . ' </i>';
-        $video_content .= array_map( 'esc_attr', $video['ev_category'] );
+        $categories = array_map( 'esc_attr', (array) $video['ev_category'] );
+        $video_content .= implode( ', ', $categories );
         $video_content .= '<br/>';
       }
       $video_content .= '<i>' . esc_attr__( "Uploaded by:" , 'external-videos' ) . ' </i>';

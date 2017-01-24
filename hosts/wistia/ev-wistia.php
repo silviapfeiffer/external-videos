@@ -30,7 +30,25 @@ class SP_EV_Wistia {
     // Oembed support for wistia
     wp_oembed_add_provider( '/https?:\/\/(.+)?(wistia\.(com|net)|wi\.st)\/.*/', 'http://fast.wistia.net/oembed', true );
 
-    // host_name must be the last part of the Class Name
+    self::setup_options();
+
+  }
+
+  /*
+  *  setup_options
+  *
+  *  Set up host and author options, check for missing API keys
+  *
+  *  @type  function
+  *  @date  14/1/17
+  *  @since  1.0
+  *
+  *  @param
+  *  @return  boolean
+  */
+
+  private function setup_options(){
+    // options table host_name is automatically set the last part of this Class Name
     $class = get_class();
     $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $host_name = $host_name[0];
@@ -40,6 +58,16 @@ class SP_EV_Wistia {
       $authors = array();
     } else {
       $authors = $options['hosts']['wistia']['authors'];
+      $updated_authors = array();
+
+      foreach( $authors as $author ){
+        // Check for necessary API keys
+        if( !isset( $author['developer_key'] ) || empty( $author['developer_key'] ) ){
+          // return a WP Error message so they know to update the author.
+          error_log( 'no developer key for ' . $author['author_id'] );
+        }
+        $updated_authors[] = $author;
+      }
     }
 
     $options['hosts']['wistia'] = array(
@@ -62,7 +90,7 @@ class SP_EV_Wistia {
       'introduction' => __( "Wistia's API requires you to generate an API token from your account, in order to access your videos from another site (like this one). To display your videos properly in your theme, you may also need to install the plugin FitVids for Wordpress.", "external-videos" ),
       'api_url' => 'https://wistia.com',
       'api_link_title' => 'Wistia',
-      'authors' => $authors
+      'authors' => $updated_authors
     );
 
     update_option( 'sp_external_videos_options', $options );
