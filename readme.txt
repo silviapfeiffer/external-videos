@@ -3,7 +3,7 @@ Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 Donate link: http://www.gingertech.net/
 Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
 Requires at least: 4.4
-Tested up to: 4.7
+Tested up to: 4.8
 Stable Tag: 1.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymoti
 
 == Description ==
 
-This plugin connects WordPress to your video channels on YouTube, Vimeo, DotSub, Wistia, or Dailymotion, and crossposts the videos automatically. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post on WordPress. The posts are created as a separate post type, "external-videos", but can optionally be added to your posts page or news feed like regular posts. Your videos, once imported, can also be added to any other post via the media library, or presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
+This plugin connects WordPress to your video channels on YouTube, Vimeo, DotSub, Wistia, or Dailymotion, and cross-posts the videos in WordPress automatically. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post on WordPress. The posts are created as a separate post type, "external-videos", but can optionally be added to your posts page or news feed like regular posts. Your videos, once imported, can also be added to any other post via the media library, or presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
 
 == Installation ==
 
