@@ -16,8 +16,8 @@ Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymoti
 - Donate link: http://www.gingertech.net/
 - Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
 - Requires at least: 4.4
-- Tested up to: 4.8
-- Stable Tag: 1.1.1
+- Tested up to: 4.8.2
+- Stable Tag: 1.2
 - License: GPLv2
 - License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,6 +101,9 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 
 # Changelog
+
+### 1.2
+* Massive bug fix! /hosts folder was missing from WP SVN repository.
 
 ### 1.1
 * Media Uploader: External Videos can now be added to any post, like photos or other media items, once they are imported. (Functions rewritten using Media Explorer framework)
