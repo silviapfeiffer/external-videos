@@ -50,13 +50,15 @@ class SP_EV_YouTube {
     $class = get_class();
     $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $host_name = $host_name[0];
+    $updated_authors = array();
 
     $options = SP_External_Videos::get_options();
+    // error_log( 'options: ' . print_r( $options, true ) );
+
     if( !isset( $options['hosts']['youtube']['authors'] ) ) {
       $authors = array();
     } else {
       $authors = $options['hosts']['youtube']['authors'];
-      $updated_authors = array();
 
       foreach( $authors as $author ){
         // Check for necessary API keys
@@ -64,9 +66,10 @@ class SP_EV_YouTube {
           // return a WP Error message so they know to update the author.
           error_log( 'no developer key for ' . $author['author_id'] );
 
-        } else { // Get hidden user fields from YouTube API
+        } else { // Get hidden user fields from YouTube API xxx from author ID
           if( !isset( $author['channel_id'] ) ){
-            $author['channel_id'] = $this->get_channel_id( $author );
+            // $author['channel_id'] = $this->get_channel_id( $author );
+            $author['channel_id'] = $author['author_id'];
           }
           if( !isset( $author['playlist_id'] ) ){
             $author['playlist_id'] = $this->get_playlist_id( $author );
@@ -81,11 +84,17 @@ class SP_EV_YouTube {
       'host_id' => 'youtube',
       'host_name' => $host_name,
       'api_keys' => array(
+        // array(
+        //   'id' => 'author_id',
+        //   'label' => __( "Channel Name", "external-videos" ),
+        //   'required' => false,
+        //   'explanation' => ''
+        // ),
         array(
           'id' => 'author_id',
-          'label' => __( "Channel Name", "external-videos" ),
+          'label' => __( "Channel ID", "external-videos" ),
           'required' => true,
-          'explanation' => ''
+          'explanation' => "Copy this from your account's \"advanced\" settings at YouTube", "external-videos"
         ),
         array(
           'id' => 'developer_key',
@@ -122,18 +131,27 @@ class SP_EV_YouTube {
 
   public static function remote_author_exists( $host_id, $author_id, $developer_key ){
 
-    // SEARCH FOR CHANNEL_ID
+    /*
+    // SEARCH FOR AUTHOR
     $url = "https://www.googleapis.com/youtube/v3/search";
     $url .= "?type=channel&part=snippet&fields=items(id/channelId)&maxResults=1";
     $url .= "&key=" . $developer_key;
     $url .= "&q=" . $author_id;
+    */
+    // SEARCH FOR CHANNEL
+    $url = "https://www.googleapis.com/youtube/v3/channels";
+    $url .= "?&part=snippet&maxResults=1";
+    $url .= "&key=" . $developer_key;
+    $url .= "&id=" . $author_id;
 
     $response = wp_remote_get( $url );
     $code = wp_remote_retrieve_response_code( $response );
     $message = wp_remote_retrieve_response_message( $response );
     $body = json_decode( wp_remote_retrieve_body( $response ), true );
-    // The first result has the channel.
-    $channelId = $body["items"][0]["id"]["channelId"];
+
+    // error_log( '$body' . print_r( $body, true ) );
+    // The first result has the channel?
+    $channelId = $body["items"][0]["id"];
 
     // return false on error
     if( !$channelId || preg_match('/^[45]/', $code ) ) {
@@ -151,7 +169,7 @@ class SP_EV_YouTube {
   */
 
   /*
-  *  get_channel_id
+  *  get_channel_id NOT NECESSARY ANYMORE, WE ARE REQUIRING THE CHANNEL ID. BACKWARDS COMPATIBLE THOUGH? CHECK.
   *
   *  Finds the author's channelId (different from username)
   *  This additional field is needed in YouTube API video queries
@@ -211,21 +229,31 @@ class SP_EV_YouTube {
 
   function get_playlist_id( $author ){
 
-    if( !isset( $author['developer_key'] ) || !isset( $author['channel_id'] ) ) return;
+    if( !isset( $author['developer_key'] ) || !isset( $author['author_id'] ) ) return;
     $developer_key = $author['developer_key'];
-    $channel_id = $author['channel_id'];
+    $channel_id = $author['author_id']; // was channel_id
 
     // SEARCH FOR PLAYLIST ID
+    /*
     $url = "https://www.googleapis.com/youtube/v3/channels";
     $url .= "?part=snippet,contentDetails";
     $url .= "&id=" . $channel_id;
+    $url .= "&key=" . $developer_key;
+    */
+    $url = "https://www.googleapis.com/youtube/v3/playlists";
+    $url .= "?part=snippet,contentDetails";
+    $url .= "&channelId=" . $channel_id;
     $url .= "&key=" . $developer_key;
 
     $response = wp_remote_get( $url );
     $code = wp_remote_retrieve_response_code( $response );
     $message = wp_remote_retrieve_response_message( $response );
     $body = json_decode( wp_remote_retrieve_body( $response ), true );
-    $playlistId = $body['items'][0]['contentDetails']['relatedPlaylists']['uploads'];
+
+    // NOTE you could let them pick the playlist here, if you get more than one
+    // error_log( 'playlist search result $body ' . print_r( $body, true ) );
+
+    $playlistId = $body['items'][0]['id'];
 
     return $playlistId;
 
@@ -278,7 +306,8 @@ class SP_EV_YouTube {
     $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
 
     $items = $body['items'][0];
-    $tags = (array) $items['snippet']['tags'];
+    // $tags = (array) $items['snippet']['tags'];
+    $tags = array();
     $duration = $items['contentDetails']['duration'];
     // echo '<pre>$tags: <br />'; print_r( $tags ); echo '</pre>';
     // echo '<pre>$duration: <br />'; print_r( $duration ); echo '</pre>';
@@ -325,11 +354,11 @@ class SP_EV_YouTube {
 
     $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
-    $channelId = $author['channel_id'];
+    $channelId = $author['author_id']; // was channel_id
     $playlistId = $author['playlist_id'];
 
     // And now we need those videos
-    $per_page = 10;
+    $per_page = 30;
     $pageToken = '1';
 
     $baseurl = "https://www.googleapis.com/youtube/v3/playlistItems";
