@@ -823,7 +823,7 @@ class SP_EV_Admin {
       $html .= '<a href="#" class="edit-author button" data-toggle="collapse">';
       $html .= '<span class="closed">' . esc_attr__( '+', 'external-videos' ) . '</span>';
       $html .= '<span class="open">' . esc_attr__( 'Cancel', 'external-videos' ) . '</span></a>';
-  }
+    }
     $html .= '</td>';
     $html .= '</tr>';
     $html .= '</thead>';
@@ -845,7 +845,7 @@ class SP_EV_Admin {
       $html .= '<span>' . esc_attr( $key['label'] ) . '</span>';
       $html .= '</th>';
       $html .= '<td>';
-      $html .= '<input type="text large-text" name="' . esc_attr( $key_id ) . '" value="' . esc_attr( $$key_id ) . '" name="' . esc_attr( $key_id ) . '"/>';
+      $html .= '<input type="text" class="regular-text" name="' . esc_attr( $key_id ) . '" value="' . esc_attr( $$key_id ) . '" name="' . esc_attr( $key_id ) . '"/>';
       $html .= '<span class="description">' . esc_attr( $required . $explanation ) . '</span>';
       $html .= '</td>';
       $html .= '</tr>';
@@ -1029,7 +1029,10 @@ class SP_EV_Admin {
     }
 
     // Check if local author already exists
-    elseif ( ( $author['edit_form'] != "true" ) && $this->local_author_exists( $author['host_id'], $author['author_id'], $options ) ) {
+    elseif ( ( $author['edit_form'] != "true" ) &&
+             $this->local_author_exists( $author['host_id'],
+                                         $author['author_id'],
+                                         $options ) ) {
       $message = __( 'Channel already exists.', 'external-videos' );
       $message = $this->wrap_admin_notice( $message, 'error' );
       $messages .= $message;
