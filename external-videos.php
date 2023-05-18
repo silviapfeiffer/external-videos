@@ -4,7 +4,7 @@
 * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
 * Description: Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymotion to your WordPress site as new posts.
 * Author: Silvia Pfeiffer and Andrew Nimmo
-* Version: 1.3
+* Version: 1.3.0
 * Author URI: http://www.gingertech.net/
 * License: GPL2
 * Text Domain: external-videos
@@ -32,7 +32,7 @@
   @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>, Andrew Nimmo <andrnimm@fastmail.fm>
   @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    1.2
+  @version    1.2.1
   @link       http://wordpress.org/extend/plugins/external-videos/
 
 */
@@ -66,7 +66,6 @@ class SP_External_Videos {
 
     add_action( 'init', array( $this, 'initialize' ) );
 
-    // add_action( 'admin_head', array( $this, 'menu_icon' ) ); can skip, defined in registration
     add_action( 'admin_menu', array( $this, 'admin_settings' ) );
     add_action( 'admin_enqueue_scripts', array( $this, 'admin_scripts' ) );
 
@@ -96,7 +95,6 @@ class SP_External_Videos {
   */
 
   function initialize() {
-
     $plugin_dir = basename( dirname( __FILE__ ) );
     load_plugin_textdomain( 'external-videos', false, $plugin_dir . '/localization/' );
 
@@ -109,52 +107,30 @@ class SP_External_Videos {
 
     // create "external videos" post type
     register_post_type( 'external-videos', array(
-      'label'           => __( 'External Videos', 'external-videos' ),
-      'singular_label'  => __( 'External Video', 'external-videos' ),
-      'description'     => __( 'Pulls in videos from external hosting sites', 'external-videos' ),
-      'public'          => true,
+      'label'            => __( 'External Videos', 'external-videos' ),
+      'singular_label'   => __( 'External Video', 'external-videos' ),
+      'description'      => __( 'Pulls in videos from external hosting sites', 'external-videos' ),
+      'public'           => true,
       'publicly_queryable' => true,
-      'show_ui'         => true,
-      'menu_position'   => 47,
-      'menu_icon'       => 'dashicons-video-alt',
-      'capability_type' => 'post',
-      'hierarchical'    => false,
-      'query_var'       => true,
-      'supports'        => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'post-formats' ),
-      'taxonomies'      => array( 'post_tag', 'category' ),
-      'has_archive'     => true,
-      'rewrite'         => array( 'slug' => $options['slug'] ),
-      'yarpp_support'   => true
+      'show_ui'          => true,
+      'show_in_menu'     => true,
+      'menu_position'    => 42,
+      'menu_icon'        => 'dashicons-embed-video',
+      'capability_type'  => 'post',
+      'hierarchical'     => false,
+      'query_var'        => true,
+      'supports'         => array( 'title', 'editor', 'author', 'thumbnail', 'excerpt', 'trackbacks', 'custom-fields', 'comments', 'revisions', 'post-formats' ),
+      'taxonomies'       => array( 'post_tag', 'category' ),
+      'has_archive'      => true,
+      'rewrite'          => array( 'slug' => $options['slug'] ),
+      'yarpp_support'    => true
     ));
 
     // enable thickbox use for gallery
     wp_enqueue_style( 'thickbox' );
     wp_enqueue_script( 'thickbox' );
 
-  }
-
-  /*
-  *  menu_icon
-  *
-  *  Icon for External Videos post type in admin menu
-  *
-  *  @type  function
-  *  @date  31/10/16
-  *  @since  1.0
-  *
-  *  @param
-  *  @return
-  */
-
-  function menu_icon(){  ?>
-
-    <style type="text/css" media="screen">
-      #menu-posts-external-videos .dashicons-admin-post:before {
-        content: "\f126";
-      }
-    </style>
-    <?php
-
+    // error_log( print_r( get_post_types(), true ));
   }
 
   /*
