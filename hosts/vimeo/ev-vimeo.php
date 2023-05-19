@@ -72,7 +72,7 @@ class SP_EV_Vimeo {
             error_log( 'no client secret for ' . $author['author_id'] );
 
           } else { // Only update if we have developer_key & secret_key
-            $updated_authors[] = $author;
+            $updated_authors[$author['author_id']] = $author;
           }
         }
       }
