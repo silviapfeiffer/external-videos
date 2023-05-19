@@ -4,7 +4,7 @@ Donate link: http://www.gingertech.net/
 Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
 Requires at least: 4.4
 Tested up to: 6.2.1
-Stable Tag: 1.2.1
+Stable Tag: 1.3.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,6 +85,14 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 7. Media Uploader: inserting External Videos into any page or post
 
 == Changelog ==
+
+= 1.3.0 =
+* Fix to work with YouTube's evolving API 3.0, which changed and broke the plugin in 2017
+
+= 1.2.1 =
+* Bump WP tested-with version to current 6.2.1
+* Layout fix for settings add/edit channel HTML form
+* Bug fix
 
 = 1.2 =
 * Massive bug fix! /hosts folder was missing from WP SVN repository. Thanks to @ianmacin!

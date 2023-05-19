@@ -938,6 +938,8 @@ class SP_EV_Admin {
     $this_author = $_POST['author_id'];
     $message = '';
 
+    // error_log('$_POST:\n' . print_r( $_POST, true));
+
     // Does author even exist?
     if ( !$this->local_author_exists( $this_host, $this_author, $options ) ) {
       $message = __( "Can't delete a channel that doesn't exist.", 'external-videos' );
@@ -1008,6 +1010,8 @@ class SP_EV_Admin {
 
     // get existing options
     $options = SP_External_Videos::get_options();
+    // error_log( 'options before: \n' . print_r( $options, true ) );
+
     $messages = '';
 
     $author = array();
@@ -1071,7 +1075,7 @@ class SP_EV_Admin {
         'ev_post_status' => $author['post_status']
       );
 
-      // error_log( print_r( $options, true ) );
+      // error_log( 'options after: \n' . print_r( $options, true ) );
 
       if( update_option( 'sp_external_videos_options', $options ) ){
         if( $author['edit_form'] == "true" ){
@@ -1105,6 +1109,8 @@ class SP_EV_Admin {
   */
 
   function local_author_exists( $host_id, $author_id, $options ) {
+
+    // error_log("local_author_exists:\n" . print_r( $options, true ));
 
     if ( isset( $options['hosts'][$host_id]['authors'][$author_id] ) ) {
       return true;
@@ -1261,10 +1267,9 @@ class SP_EV_Admin {
         break;
 
       case 'parent':
-        if ( $post->post_parent > 0 ) {
-          if ( get_post( $post->post_parent ) ) {
-              $title =_draft_or_post_title( $post->post_parent );
-          }
+        if ( $post->post_parent > 0 &&
+             $parent = get_post( $post->post_parent ) ) {
+          $title =_draft_or_post_title( $parent );
           ?>
           <strong><a href="<?php echo get_edit_post_link( $post->post_parent ); ?>"><?php echo $title ?></a></strong>, <?php echo get_the_time( __( 'Y/m/d', 'external-videos' ) ); ?><br/>
           <a class="hide-if-no-js" onclick="findPosts.open( 'media[]','<?php echo $post->ID ?>' );return false;" href="#the-list"><?php _e( 'Change' ); ?></a>

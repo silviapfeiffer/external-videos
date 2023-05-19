@@ -51,13 +51,13 @@ class SP_EV_Vimeo {
     $class = get_class();
     $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $host_name = $host_name[0];
+    $updated_authors = array();
 
     $options = SP_External_Videos::get_options();
     if( !isset( $options['hosts']['vimeo']['authors'] ) ) {
       $authors = array();
     } else {
       $authors = $options['hosts']['vimeo']['authors'];
-      $updated_authors = array();
 
       foreach( $authors as $author ){
         // Check for necessary API keys
@@ -72,7 +72,7 @@ class SP_EV_Vimeo {
             error_log( 'no client secret for ' . $author['author_id'] );
 
           } else { // Only update if we have developer_key & secret_key
-            $updated_authors[] = $author;
+            $updated_authors[$author['author_id']] = $author;
           }
         }
       }
