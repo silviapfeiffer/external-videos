@@ -86,6 +86,14 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 == Changelog ==
 
+= 1.3.0 =
+* Fix to work with YouTube's evolving API 3.0, which changed and broke the plugin in 2017
+
+= 1.2.1 =
+* Bump WP tested-with version to current 6.2.1
+* Layout fix for settings add/edit channel HTML form
+* Bug fix
+
 = 1.2 =
 * Massive bug fix! /hosts folder was missing from WP SVN repository. Thanks to @ianmacin!
 

@@ -95,7 +95,7 @@ class SP_EV_YouTube {
           'id' => 'author_id',
           'label' => __( "YouTube username", "external-videos" ),
           'required' => true,
-          'explanation' => "Copy this from your account's url at YouTube", "external-videos"
+          'explanation' => "Copy this from your account's url at YouTube (youtube.com/yourusername)", "external-videos"
         ),
         array(
           'id' => 'developer_key',
