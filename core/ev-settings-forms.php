@@ -73,6 +73,7 @@ $HOSTS = $options['hosts'];
               <?php // get saved options
                 $ev_rss = $options['rss'];
                 $ev_del = $options['delete'];
+                $ev_embed = $options['embed'];
                 $ev_attrib = $options['attrib'];
                 $ev_loop = $options['loop'];
                 $ev_slug = $options['slug'];
@@ -81,6 +82,12 @@ $HOSTS = $options['hosts'];
                 <label for="ev-loop">
                   <input type="checkbox" id="ev-loop" name="ev-loop" value="loop" <?php if ( $ev_loop == true ) echo "checked"; ?>/>
                   <span><?php esc_attr_e('Add external-video posts to the Home loop (latest Posts page)', 'external-videos'); ?></span>
+                </label>
+              </fieldset>
+              <fieldset>
+                <label for="ev-embed">
+                  <input type="checkbox" id="ev-embed" name="ev-embed" value="embed" <?php if ( $ev_embed == true ) echo "checked"; ?>/>
+                  <span><?php esc_attr_e('Embed video in video post content? (This is the default. Otherwise, video must be manually added to a template by a developer using post_meta attributes)', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
