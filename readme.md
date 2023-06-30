@@ -16,7 +16,7 @@ Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymoti
 - Donate link: http://www.gingertech.net/
 - Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
 - Requires at least: 4.4
-- Tested up to: 6.2.1
+- Tested up to: 6.2.2
 - Stable Tag: 1.3.1
 - License: GPLv2
 - License URI: http://www.gnu.org/licenses/gpl-2.0.html
