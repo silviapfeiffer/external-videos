@@ -480,13 +480,17 @@ class SP_EV_Admin {
     // get options, to check if user wants the rest of content
     $options = SP_External_Videos::get_options();
 
+    // embed the video at the top if option selected
     if( $options['embed'] == true ) {
       $video_content = "\n";
       $video_content .= esc_url( $video['embed_url'] );
       $video_content .= "\n\n";
-      $video_content .= '<p>' . sanitize_text_field( trim( $video['description'] ) ) . '</p>';
     }
 
+    // add the description no matter what
+    $video_content .= '<p>' . sanitize_text_field( trim( $video['description'] ) ) . '</p>';
+
+    // add the attribution if that option is selected
     if( $options['attrib'] == true ) {
       $video_content .= '<p><small>';
       if ( $video['category'] != '' ) {
