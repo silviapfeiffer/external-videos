@@ -87,7 +87,7 @@ $HOSTS = $options['hosts'];
               <fieldset>
                 <label for="ev-embed">
                   <input type="checkbox" id="ev-embed" name="ev-embed" value="embed" <?php if ( $ev_embed == true ) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Embed video in video post content? (This is the default. Otherwise, video must be manually added to a template by a developer using post_meta attributes)', 'external-videos'); ?></span>
+                  <span><?php esc_attr_e('Embed video in video post content? (This is the default. Otherwise, video can be manually added to template by a developer using `get_post_meta(get_the_ID(), "video_url");`)', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
