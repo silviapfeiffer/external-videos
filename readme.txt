@@ -3,8 +3,8 @@ Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 Donate link: http://www.gingertech.net/
 Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
 Requires at least: 4.4
-Tested up to: 6.2.1
-Stable Tag: 1.3.0
+Tested up to: 6.2.2
+Stable Tag: 1.3.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -86,8 +86,11 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 == Changelog ==
 
+= 1.3.1 =
+* New option to *not* automatically embed the video in `post_content` when fetching from the service. The video URL is already stored in `post_meta`. This allows developers to manually add the video elsewhere in the template markup.
+
 = 1.3.0 =
-* Fix to work with YouTube's evolving API 3.0, which changed and broke the plugin in 2017
+* YouTube API changed since EV 1.2, regarding channel/username URLs. This updates EV's username check accordingly. (If your channel was broken or not updating, visit the EV YouTube settings page and inter your YouTube username. EV will pull from your default YouTube "uploads" video channel now. Custom channels are not available.)
 
 = 1.2.1 =
 * Bump WP tested-with version to current 6.2.1

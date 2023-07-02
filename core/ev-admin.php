@@ -139,6 +139,7 @@ class SP_EV_Admin {
 
     $options['rss'] = ( array_key_exists( 'ev-rss', $fields ) ? true : false );
     $options['delete'] = ( array_key_exists( 'ev-delete', $fields ) ? true : false );
+    $options['embed'] = ( array_key_exists( 'ev-embed', $fields ) ? true : false );
     $options['attrib'] = ( array_key_exists( 'ev-attrib', $fields ) ? true : false );
     $options['loop'] = ( array_key_exists( 'ev-loop', $fields ) ? true : false );
     $options['slug'] = ( array_key_exists( 'ev-slug', $fields ) ? sanitize_title_with_dashes( $fields['ev-slug'] ) : '' );
@@ -442,7 +443,7 @@ class SP_EV_Admin {
   /*
   *  save_video
   *
-  *  Used by update_videos() and update_videos_handler()
+  *  Used by post_new_videos() and update_videos_handler()
   *  Creates a post of type "external-videos" and saves it.
   *  The passed $video array contains the fields we need to make the post,
   *  all except "embed_url" (provided by embed_url()).
@@ -472,16 +473,24 @@ class SP_EV_Admin {
         return false;
       }
     }
-
+    // NEW 1.3.1: Make the embed in content optional too
     // put content together
-    $video_content = "\n";
-    $video_content .= esc_url( $video['embed_url'] );
-    $video_content .= "\n\n";
-    $video_content .= '<p>' . sanitize_text_field( trim( $video['description'] ) ) . '</p>';
+    $video_content = "";
 
     // get options, to check if user wants the rest of content
     $options = SP_External_Videos::get_options();
 
+    // embed the video at the top if option selected
+    if( $options['embed'] == true ) {
+      $video_content = "\n";
+      $video_content .= esc_url( $video['embed_url'] );
+      $video_content .= "\n\n";
+    }
+
+    // add the description no matter what
+    $video_content .= '<p>' . sanitize_text_field( trim( $video['description'] ) ) . '</p>';
+
+    // add the attribution if that option is selected
     if( $options['attrib'] == true ) {
       $video_content .= '<p><small>';
       if ( $video['category'] != '' ) {
