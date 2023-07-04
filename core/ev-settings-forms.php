@@ -87,7 +87,7 @@ $HOSTS = $options['hosts'];
               <fieldset>
                 <label for="ev-embed">
                   <input type="checkbox" id="ev-embed" name="ev-embed" value="embed" <?php if ( $ev_embed == true ) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Embed video in video post content? (This is the default. Otherwise, video can be manually added to template by a developer using `get_post_meta(get_the_ID(), "video_url");`)', 'external-videos'); ?></span>
+                  <span><?php esc_attr_e('Embed video in external-video post content? (This is the default. Only disable this if you are writing a custom theme.)', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
@@ -137,7 +137,7 @@ $HOSTS = $options['hosts'];
             <input type="hidden" name="action" value="ev_update_videos" />
             <p class="">
               <input type="submit" name="Submit" class="button" value="<?php esc_attr_e( 'Update videos from all channels', 'external-videos' ); ?>" />
-              <div class="spinner inline"></div>
+              <span class="spinner inline"></span>
             </p>
           </form>
 
@@ -145,6 +145,26 @@ $HOSTS = $options['hosts'];
             <?php /* This is loaded by ajax now. */ ?>
           </form>
           <!-- end of Update Videos -->
+
+          <br class="clear"/>
+
+          <h3><?php esc_attr_e( 'Remove embedded videos from existing external-video post_content', 'external-videos' ); ?></h3>
+          <p>
+            <?php esc_attr_e( 'As of v1.3.1, videos don\'t have to be embedded directly in `post_content`. A developer can code the video to appear elsewhere on the page within a custom template, using something like `get_post_meta(get_the_ID(), "video_url");`.', 'external-videos' ); ?>
+          <p>
+          </p>
+            <?php esc_attr_e( 'Click the button below to remove the embedded videos from all external-video post_content. Please only use this if you know what you\'re doing.' ); ?>
+          </p>
+
+          <form id="ev_unembed_videos" method="post" action="">
+            <div class="feedback"></div>
+            <!-- <input type="hidden" name="external_videos" value="Y" /> -->
+            <input type="hidden" name="action" value="ev_unembed_videos" />
+            <p class="">
+              <input type="submit" name="Submit" class="button" value="<?php esc_attr_e( 'Remove embedded videos from all external-videos post content', 'external-videos' ); ?>" />
+              <span class="spinner inline"></span>
+            </p>
+          </form>
 
           <br class="clear"/>
 
@@ -159,7 +179,7 @@ $HOSTS = $options['hosts'];
             <input type="hidden" name="action" value="ev_delete_videos" />
             <p class="">
               <input type="submit" name="Submit" class="button" value="<?php esc_attr_e('Move all external videos to trash', 'external-videos'); ?>" />
-              <div class="spinner inline"></div>
+              <span class="spinner inline"></span>
             </p>
           </form>
           <!-- end of Delete All Videos -->

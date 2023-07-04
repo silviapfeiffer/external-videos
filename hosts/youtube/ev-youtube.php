@@ -215,6 +215,11 @@ class SP_EV_YouTube {
 
     // error_log( '$body' . print_r( $body, true ) );
     // The first result has the channel.
+    // if( !is_array( $body ) ) {
+    //   error_log( print_r($body, true) );
+    //   return;
+    // }
+
     $channelId = $body["items"][0]["id"];
     $uploadsPlaylistId = $body["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"];
 

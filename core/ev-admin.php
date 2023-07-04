@@ -23,6 +23,7 @@ class SP_EV_Admin {
 
     add_action( 'wp_ajax_plugin_settings_handler', array( $this, 'plugin_settings_handler' ) );
     add_action( 'wp_ajax_update_videos_handler', array( $this, 'update_videos_handler' ) );
+    add_action( 'wp_ajax_unembed_videos_handler', array( $this, 'unembed_videos_handler' ) );
     add_action( 'wp_ajax_delete_all_videos_handler', array( $this, 'delete_all_videos_handler' ) );
     add_action( 'wp_ajax_author_list_handler', array( $this, 'author_list_handler' ) );
     add_action( 'wp_ajax_author_host_list_handler', array( $this, 'author_host_list_handler' ) );
@@ -286,7 +287,7 @@ class SP_EV_Admin {
         $add_messages .= sprintf( _n( 'Found %1$s new video on %2$s. ', 'Found %1$s new videos on %2$s. ', $num, 'external-videos' ), $num, $host_name );
       }
       else {
-        $no_messages .= "No new videos found on " . $host_name . '.';
+        $no_messages .= "No new videos found on " . $host_name . '. ';
       }
     }
     // after looping to get all add/no messages, wrap them up for delivery
@@ -336,10 +337,7 @@ class SP_EV_Admin {
 
     if( $update_author == null ){
 
-      $existing_videos = new WP_Query( array(
-        'post_type'  => 'external-videos',
-        'nopaging' => 1
-      ) );
+      $existing_videos = $this->get_all_videos();
 
     } else {
 
@@ -582,6 +580,92 @@ class SP_EV_Admin {
   }
 
   /*
+  *  unembed_videos_handler
+  *
+  *  AJAX handler for
+  *  "Remove embedded videos from all external-videos post content"
+  *  Used by settings page
+  *
+  *  @type  function
+  *  @date  03/07/23
+  *  @since  1.3.2
+  *
+  *  @param
+  *  @return html $messages
+  */
+
+  function unembed_videos_handler() {
+
+    check_ajax_referer( 'ev_settings' );
+
+    $count_updated = $this->unembed_videos();
+    $messages = sprintf( _n( 'Removed embedded video from %d post.',
+                             'Removed embedded video from %d posts.',
+                             $count_updated, 'external-videos' ),
+                             $count_updated );
+    $messages = esc_attr( $messages );
+    $messages = $this->wrap_admin_notice( $messages, 'info' );
+
+    wp_send_json( $messages );
+
+  }
+
+  /*
+  *  unembed_videos
+  *
+  *  Used by unembed_videos_handler()
+  *  Removes embedded videos from all external-videos post content
+  *
+  *  @type  function
+  *  @date  03/07/23
+  *  @since  1.3.2
+  *
+  *  @param
+  *  @return $count_updated
+  */
+
+  function unembed_videos() {
+
+    $count_updated = 0;
+    // query all of post_type: external-videos
+    $ev_posts = $this->get_all_videos();
+
+    if( $ev_posts->have_posts() ) {
+      while ( $ev_posts->have_posts() ) : $ev_posts->the_post();
+
+        $post = get_post( get_the_ID() );
+        $post_content = $post->post_content;
+        // Only checking embeds at the very beginning of post_content.
+        preg_match_all('/\A<p><iframe[^>]*>.*?<\/iframe><\/p>\n(.*?)$/',
+                       $post_content, $matches);
+
+        if( !is_array( $matches ) ) {
+          continue;
+        } elseif( count($matches) == 2 ) {
+          $content_without_embed = $matches[1];
+        // } elseif( count($matches) > 2 ) {
+          // error_log( "complicated: " . $post->ID . " has " . count($matches) );
+        }
+
+        if( !is_array( $content_without_embed ) || !$content_without_embed ) {
+          continue;
+        } else {
+          // error_log( "Post " . $post->ID . ":");
+          // error_log( print_r( $content_without_embed, true ) );
+          $post->post_content = array_shift($content_without_embed);
+          wp_update_post( $post );
+        }
+        $count_updated += 1;
+
+      endwhile;
+      wp_reset_postdata();
+    }
+
+    return $count_updated;
+
+  }
+
+  /*
   *  delete_all_videos_handler
   *
   *  AJAX handler for "Delete videos from all channels" form
@@ -600,7 +684,10 @@ class SP_EV_Admin {
     check_ajax_referer( 'ev_settings' );
 
     $count_deleted = $this->delete_all_videos();
-    $messages = sprintf( _n( 'Moved %d video into trash.', 'Moved %d videos into trash.', $count_deleted, 'external-videos' ), $count_deleted );
+    $messages = sprintf( _n( 'Moved %d video into trash.',
+                             'Moved %d videos into trash.',
+                             $count_deleted, 'external-videos' ),
+                             $count_deleted );
     $messages = esc_attr( $messages );
     $messages = $this->wrap_admin_notice( $messages, 'info' );
 
@@ -626,10 +713,7 @@ class SP_EV_Admin {
 
     $count_deleted = 0;
     // query all of post_type: external-videos
-    $ev_posts = new WP_Query( array(
-      'post_type' => 'external-videos',
-      'nopaging' => 1
-    ) );
+    $ev_posts = $this->get_all_videos();
 
     if( $ev_posts->have_posts() ) {
       while ( $ev_posts->have_posts() ) : $ev_posts->the_post();
@@ -644,6 +728,33 @@ class SP_EV_Admin {
     }
 
     return $count_deleted;
+
+  }
+
+  /*
+  *  get_all_videos
+  *
+  *  Used by unembed_all_videos(), delete_all_videos() and
+  *  trash_deleted_videos()
+  *  Query for all external video posts
+  *
+  *  @type  function
+  *  @date  03/07/23
+  *  @since  1.3.2
+  *
+  *  @param
+  *  @return $ev_posts
+  */
+
+  function get_all_videos() {
+
+    // query all of post_type: external-videos
+    $ev_posts = new WP_Query( array(
+      'post_type' => 'external-videos',
+      'nopaging' => 1
+    ) );
+
+    return $ev_posts;
 
   }
 

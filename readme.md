@@ -17,7 +17,7 @@ Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymoti
 - Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
 - Requires at least: 4.4
 - Tested up to: 6.2.2
-- Stable Tag: 1.3.1
+- Stable Tag: 1.3.2
 - License: GPLv2
 - License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,6 +101,9 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 
 # Changelog
+
+### 1.3.2
+* New developer option to *remove* embedded videos from `post_content`. (See notes for 1.3.1)
 
 ### 1.3.1
 * New option to *not* automatically embed the video in `post_content` when fetching from the service. The video URL is already stored in `post_meta`. This allows developers to manually add the video elsewhere in the template markup.
