@@ -83,6 +83,7 @@ class SP_External_Videos {
 
   }
 
+  // https://wordpress.stackexchange.com/questions/18268/i-want-to-get-a-plugin-version-number-dynamically
   function constants() {
     if (!defined('EXTERNAL_VIDEOS_VERSION')) {
       $plugin_data = get_file_data( __FILE__,
