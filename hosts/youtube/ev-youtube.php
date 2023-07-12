@@ -344,6 +344,7 @@ class SP_EV_YouTube {
     $video['category']       = array();
     $video['tags']           = array_map( 'esc_attr', $tags );
     $video['thumbnail_url']  = esc_url( $vid['snippet']['thumbnails']['medium']['url'] );
+    $video['poster_url']     = esc_url( $vid['snippet']['thumbnails']['maxres']['url'] ) ?: esc_url( $vid['snippet']['thumbnails']['high']['url'] );
     $video['duration']       = sp_ev_convert_youtube_time( $duration );
     $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
@@ -369,9 +370,9 @@ class SP_EV_YouTube {
 
   public static function fetch( $author ) {
 
-    $author_id = $author['author_id'];
+    // $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
-    $channelId = $author['channel_id']; // was channel_id
+    // $channelId = $author['channel_id'];
     $playlistId = $author['playlist_id'];
 
     // And now we need those videos
@@ -396,16 +397,17 @@ class SP_EV_YouTube {
         $response = wp_remote_get( $url );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+        // set json_decode `true` to return array, not object
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
         $items = isset( $body['items'] ) ? $body['items'] : array();
         $pageToken = isset( $body['nextPageToken'] ) ? true : null;
       }
       catch ( Exception $e ) {
-        echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
+        echo "Encountered an API error -- code " .
+             "{$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $items as $vid )
-      {
+      foreach ( $items as $vid ) {
         $video = SP_EV_YouTube::compose_video( $vid, $author );
         // add $video to the end of $new_videos
         array_push( $new_videos, $video );

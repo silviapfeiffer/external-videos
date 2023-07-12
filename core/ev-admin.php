@@ -308,6 +308,52 @@ class SP_EV_Admin {
 
   }
 
+
+  /*
+  *  fetch_new_videos
+  *
+  *  Used by post_new_videos()
+  *  Fetch new videos from a registered, externally hosted channel, or from all.
+  *  The various API functions are defined in separate classes for each host.
+  *
+  *  @type  function
+  *  @date  31/10/16
+  *  @since  1.0
+  *
+  *  @param   $update_hosts, $update_author
+  *  @return  $new_videos (array of videos)
+  */
+
+  function fetch_new_videos( $update_hosts, $update_author ) {
+
+    // error_log( '$update_hosts: ' .  print_r( $update_hosts, true ) );
+    // error_log( '$update_author: ' .  print_r( $update_author, true ) );
+
+    $new_videos = array();
+
+    foreach ( $update_hosts as $host ) {
+
+      $host_name = $host['host_name'];
+      $ClassName = "SP_EV_".$host_name;
+      // error_log( '$ClassName: ' .  print_r( $ClassName, true ) );
+
+      if( $update_author == null ){
+        // fetch all hosts, all authors
+        foreach( $host['authors'] as $author ){
+          $author_videos = $ClassName::fetch( $author );
+          $new_videos = array_merge( $author_videos, $new_videos );
+        }
+      } else {
+        // fetch single author's videos
+        $new_videos = $ClassName::fetch( $update_author );
+      }
+    }
+
+    return $new_videos;
+
+  }
+
+
   /*
   *  trash_deleted_videos()
   *
@@ -324,7 +370,8 @@ class SP_EV_Admin {
   *  @return  html $trash_messages
   */
 
-  function trash_deleted_videos( $update_hosts, $update_author, $new_video_ids ) {
+  function trash_deleted_videos( $update_hosts, $update_author,
+                                 $new_video_ids ) {
 
     // we're going to count how many were deleted at each host
     // must fill out this array with zeros, or error
@@ -395,56 +442,14 @@ class SP_EV_Admin {
 
 
   /*
-  *  fetch_new_videos
-  *
-  *  Used by post_new_videos()
-  *  Fetch new videos from a registered, externally hosted channel, or from all.
-  *  The various API functions are defined in separate classes for each host.
-  *
-  *  @type  function
-  *  @date  31/10/16
-  *  @since  1.0
-  *
-  *  @param   $update_hosts, $update_author
-  *  @return  $new_videos (array of videos)
-  */
-
-  function fetch_new_videos( $update_hosts, $update_author ) {
-
-    // error_log( '$update_hosts: ' .  print_r( $update_hosts, true ) );
-    // error_log( '$update_author: ' .  print_r( $update_author, true ) );
-
-    $new_videos = array();
-
-    foreach ( $update_hosts as $host ) {
-
-      $host_name = $host['host_name'];
-      $ClassName = "SP_EV_".$host_name;
-      // error_log( '$ClassName: ' .  print_r( $ClassName, true ) );
-
-      if( $update_author == null ){
-        // fetch all hosts, all authors
-        foreach( $host['authors'] as $author ){
-          $author_videos = $ClassName::fetch( $author );
-          $new_videos = array_merge( $author_videos, $new_videos );
-        }
-      } else {
-        // fetch single author's videos
-        $new_videos = $ClassName::fetch( $update_author );
-      }
-    }
-
-    return $new_videos;
-
-  }
-
-  /*
   *  save_video
   *
   *  Used by post_new_videos() and update_videos_handler()
-  *  Creates a post of type "external-videos" and saves it.
+  *  Checks if video exists (by `video_id`), because the API returns all videos.
+  *  Maybe updates `poster_url` as of 1.4.0
+  *  If not exists, creates a post of type `external-videos` and saves it.
   *  The passed $video array contains the fields we need to make the post,
-  *  all except "embed_url" (provided by embed_url()).
+  *  all except `embed_url` (provided by embed_url()).
   *
   *
   *  @type  function
@@ -467,7 +472,12 @@ class SP_EV_Admin {
 
     while( $ev_query->have_posts() ) {
       $query_video = $ev_query->next_post();
+
+      // Check if the video exists in WP and has a host_id
       if( get_post_meta( $query_video->ID, 'host_id', true ) ) {
+        // TODO: Update everything here, in case updated on host.
+        $this->update_new_post_meta( $query_video->ID, $video );
+        // Post exists already; skip creating a post for this one
         return false;
       }
     }
@@ -537,6 +547,7 @@ class SP_EV_Admin {
     add_post_meta( $post_id, 'author_url',    esc_url( $video['author_url'] ) );
     add_post_meta( $post_id, 'video_url',     esc_url( $video['video_url'] ) );
     add_post_meta( $post_id, 'thumbnail_url', esc_url( $video['thumbnail_url'] ) );
+    add_post_meta( $post_id, 'poster_url', esc_url( $video['poster_url'] ) );
     // Cheat here with a dummy image so we can show thumbnails properly
     add_post_meta( $post_id, '_wp_attached_file', 'dummy.png' );
     add_post_meta( $post_id, 'description',   sanitize_text_field( $video['description'] ) );
@@ -550,6 +561,35 @@ class SP_EV_Admin {
     wp_set_post_tags( $post_id,               array_map( 'esc_attr', $video['tags'] ), 'post_tag' );
 
     return true;
+  }
+
+  /*
+  *  update_new_post_meta()
+  *
+  *  Used by save_video() in case there's new `post_meta` since post created.
+  *  First used for `poster_url`. Could also be used to update all attributes
+  *
+  *  @type  function
+  *  @date  11/07/23
+  *  @since  1.4.0
+  *
+  *  @param   $query_video - existing ev post from the db
+  *  @param   $video - updated array of attributes from API
+  *  @return  Could return an array of messages about the updates
+  */
+
+  function update_new_post_meta( $ev_post_id, $video ) {
+
+    // New in 1.4.0 - Check if the new post_meta `poster_url` exists.
+    // If not, and if we did get a `poster_url` from the API, add it.
+    if( !get_post_meta( $ev_post_id, 'poster_url', true ) &&
+        $video['poster_url'] ) {
+      add_post_meta( $ev_post_id, 'poster_url',
+                     esc_url( $video['poster_url'] ) );
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /*

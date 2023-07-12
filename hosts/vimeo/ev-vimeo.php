@@ -199,7 +199,9 @@ class SP_EV_Vimeo {
     $video = array();
     // extract fields
     $video['host_id']        = 'vimeo';
-    $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
+    $video['author_id']      = sanitize_text_field(
+                                 strtolower( $author['author_id'] )
+                               );
     $video['video_id']       = sanitize_text_field( $vid['uri'] );
     $video['title']          = sanitize_text_field( $vid['name'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
@@ -215,12 +217,19 @@ class SP_EV_Vimeo {
         array_push( $video['tags'], esc_attr( $tag['tag'] ) ); // yep, it's $tag['tag'] at vimeo
       }
     }
+    // Size 2 is our thumbnail, 295x166.
     $video['thumbnail_url']  = esc_url( $vid['pictures']['sizes'][2]['link'] );
+    // Size 4 is 960x540, better for poster preview
+    $video['poster_url']     = esc_url( $vid['pictures']['sizes'][4]['link'] );
     $video['duration']       = sp_ev_sec2hms( $vid['duration'] );
-    $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
-    $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
-    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
-    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
+    $video['ev_author']      = isset( $author['ev_author'] ) ?
+                               $author['ev_author'] : '';
+    $video['ev_category']    = isset( $author['ev_category'] ) ?
+                               $author['ev_category'] : array();
+    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ?
+                               $author['ev_post_format'] : '';
+    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ?
+                               $author['ev_post_status'] : '';
 
     return $video;
 

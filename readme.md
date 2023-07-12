@@ -102,6 +102,9 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 # Changelog
 
+### 1.4.0
+* New field requested from API calls: `poster_url`. If it exists, it's added to `post_meta` for new **or existing** posts. Allows developers to use the image url in a custom `<video>` element.
+
 ### 1.3.2
 * New developer option to *remove* embedded videos from `post_content`. (See notes for 1.3.1)
 

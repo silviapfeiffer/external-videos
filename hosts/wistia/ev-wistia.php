@@ -191,7 +191,6 @@ class SP_EV_Wistia {
     $video['author_url']     = esc_url( "https://" . $author['author_id'] . ".wistia.com/projects" );
     $video['category']       = array();
     $video['tags']           = array();
-    // $video['thumbnail']   = $vid['thumbnail']['url'];
 
     // Wistia API delivers a huge thumbnail by default. But also an endpoint.
     // If we want a smaller thumbnail, we have to trim off the url after the "="
@@ -204,6 +203,7 @@ class SP_EV_Wistia {
     $thumbnail_url           = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "x" . $thumb_h;
 
     $video['thumbnail_url']  = $thumbnail_url;
+    $video['poster_url']     = esc_url( $vid['thumbnail']['url'] );
     $video['duration']       = sp_ev_sec2hms( $vid['duration'] );
     $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();

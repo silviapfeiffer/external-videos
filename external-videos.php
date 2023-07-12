@@ -4,7 +4,7 @@
 * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
 * Description: Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymotion to your WordPress site as new posts.
 * Author: Silvia Pfeiffer and Andrew Nimmo
-* Version: 1.3.2
+* Version: 1.4.0
 * Author URI: http://www.gingertech.net/
 * License: GPL2
 * Text Domain: external-videos
@@ -32,7 +32,7 @@
   @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>, Andrew Nimmo <andrnimm@fastmail.fm>
   @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    1.3.1
+  @version    1.4.0
   @link       http://wordpress.org/extend/plugins/external-videos/
 
 */
@@ -44,6 +44,8 @@ if( ! class_exists( 'SP_External_Videos' ) ) :
 class SP_External_Videos {
 
   public function __construct() {
+
+    $this->constants();
 
     require_once( ABSPATH . 'wp-admin/includes/taxonomy.php' );
 
@@ -79,6 +81,15 @@ class SP_External_Videos {
     add_filter( 'pre_get_posts', array( $this, 'add_to_main_query' ) );
     add_filter( 'request', array( $this, 'feed_request' ) );
 
+  }
+
+  function constants() {
+    if (!defined('EXTERNAL_VIDEOS_VERSION')) {
+      $plugin_data = get_file_data( __FILE__,
+                                    array('Version' => 'Version'),
+                                    false );
+      define('EXTERNAL_VIDEOS_VERSION', $plugin_data['Version']);
+    }
   }
 
   /*
