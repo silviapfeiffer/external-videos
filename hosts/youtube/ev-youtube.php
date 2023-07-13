@@ -365,7 +365,7 @@ class SP_EV_YouTube {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
@@ -388,7 +388,7 @@ class SP_EV_YouTube {
 
     $url = $baseurl;
 
-    $new_videos = array();
+    $current_videos = array();
 
     // /*
     do {
@@ -409,15 +409,17 @@ class SP_EV_YouTube {
 
       foreach ( $items as $vid ) {
         $video = SP_EV_YouTube::compose_video( $vid, $author );
-        // add $video to the end of $new_videos
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos
+        array_push( $current_videos, $video );
       }
       // next page
       $url = $baseurl . "&pageToken=" . $pageToken;
 
     } while ( $pageToken );
 
-    return $new_videos;
+    // error_log(print_r($current_videos, true));
+
+    return $current_videos;
 
   }
 

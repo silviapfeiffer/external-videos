@@ -159,7 +159,7 @@ class SP_EV_Vimeo {
   *  Embed url is stored as postmeta in external-video posts.
   *  Url is specific to each host site's embed API.
   *
-  *  This function is a bit more involved on Vimeo because they give you
+  *  This function was a bit more involved on Vimeo because they give you
   *  a useless "uri" containing the regex /videos/ before the proper videoID.
   *  This regex is not any part of the embedabble uri of the video! Remove!
 
@@ -173,8 +173,8 @@ class SP_EV_Vimeo {
 
   public static function embed_url( $video_id ) {
 
-    $parts = explode( "/", $video_id );
-    $video_id = $parts[2];
+    // $parts = explode( "/", $video_id );
+    // $video_id = $parts[2];
     return esc_url( sprintf( "https://player.vimeo.com/video/%s", $video_id ) );
 
   }
@@ -202,7 +202,14 @@ class SP_EV_Vimeo {
     $video['author_id']      = sanitize_text_field(
                                  strtolower( $author['author_id'] )
                                );
-    $video['video_id']       = sanitize_text_field( $vid['uri'] );
+    // Vimeo doesn't store the video_id separately, we have to extract from uri
+    // We assume it still follows the pattern "/videos/24234325"
+    $vimeo_uri               = sanitize_text_field( $vid['uri'] );
+    $id_pos                  = strpos( $vimeo_uri, "/videos/" );
+    $video['video_id']       = ( $id_pos === 0 ) ?
+                               substr( $vimeo_uri, 8 ) : $vimeo_uri;
+    // error_log(print_r( $id_pos, true ));
+
     $video['title']          = sanitize_text_field( $vid['name'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $vid['user']['name'] );
@@ -289,7 +296,7 @@ class SP_EV_Vimeo {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
@@ -336,7 +343,7 @@ class SP_EV_Vimeo {
 
     // loop through all feed pages
     $count = 0;
-    $new_videos = array();
+    $current_videos = array();
     do {
       // Do an authenticated call
       try {
@@ -361,8 +368,8 @@ class SP_EV_Vimeo {
 
       foreach ( $data as $vid ) {
         $video = SP_EV_Vimeo::compose_video( $vid, $author );
-        // add $video to the end of $new_videos
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos
+        array_push( $current_videos, $video );
         $count++;
       }
 
@@ -371,8 +378,11 @@ class SP_EV_Vimeo {
 
     } while ( $next );
 
-    // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($new_videos); echo '</pre>';
-    return $new_videos;
+    // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($current_videos); echo '</pre>';
+
+    // error_log(print_r($current_videos, true));
+
+    return $current_videos;
 
   }
 

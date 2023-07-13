@@ -225,7 +225,7 @@ class SP_EV_Wistia {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
@@ -250,7 +250,7 @@ class SP_EV_Wistia {
       'timeout' => 25
     );
 
-    $new_videos = array();
+    $current_videos = array();
 
     do {
       // fetch videos
@@ -266,8 +266,8 @@ class SP_EV_Wistia {
 
       foreach ($body as $vid) {
         $video = SP_EV_Wistia::compose_video( $vid, $author );
-        // add $video to the end of $new_videos array
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos array
+        array_push( $current_videos, $video );
       }
 
       // next page
@@ -277,7 +277,7 @@ class SP_EV_Wistia {
 
     } while ( $body );
 
-    return $new_videos;
+    return $current_videos;
 
   }
 

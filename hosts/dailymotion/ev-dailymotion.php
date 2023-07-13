@@ -193,7 +193,7 @@ class SP_EV_Dailymotion {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
@@ -227,7 +227,7 @@ class SP_EV_Dailymotion {
       'headers'     => $headers
     );
 
-    $new_videos = array();
+    $current_videos = array();
 
     // /*
     do {
@@ -246,8 +246,8 @@ class SP_EV_Dailymotion {
 
       foreach ( $list as $vid ) {
         $video = SP_EV_Dailymotion::compose_video( $vid, $author );
-        // add $video to the end of $new_videos
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos
+        array_push( $current_videos, $video );
       }
 
       // next page
@@ -257,8 +257,8 @@ class SP_EV_Dailymotion {
 
     } while ( $has_more );
 
-    // echo '<pre>'; print_r( $new_videos); echo '</pre>';
-    return $new_videos;
+    // echo '<pre>'; print_r( $current_videos); echo '</pre>';
+    return $current_videos;
 
   }
 

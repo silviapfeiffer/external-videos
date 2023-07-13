@@ -204,14 +204,18 @@ class SP_EV_Admin {
 
     }
 
-    // post_new_videos() gets everything new and returns messages about it
+    // post_new_videos() gets everything current and returns messages about it
+    // it also updates post_meta to current state
     $post_results = $this->post_new_videos( $update_hosts, $update_author );
     $new_messages = $post_results['messages'];
-    $new_video_ids = $post_results['new_video_ids'];
+    $current_video_ids = $post_results['current_video_ids'];
 
-    // trash_deleted_videos() checks for videos deleted on host and returns messages about it
+    // trash_deleted_videos() checks for videos deleted on host
+    // and returns messages about it
     if( $delete ) {
-      $trash_messages = $this->trash_deleted_videos( $update_hosts, $update_author, $new_video_ids );
+      $trash_messages = $this->trash_deleted_videos( $update_hosts,
+                                                     $update_author,
+                                                     $current_video_ids );
     }
 
     $messages = $new_messages . $trash_messages;
@@ -223,8 +227,8 @@ class SP_EV_Admin {
   /*
   *  post_new_videos
   *
-  *  Uses save_video()
   *  Used by update_videos_handler() and daily_function()
+  *  Uses fetch_current_videos(), wrap_admin_notice() and save_video()
   *  Saves any new videos from host channels to the database.
   *  Returns messages about number of video posts added.
   *  Works for single-author and update-all
@@ -234,17 +238,19 @@ class SP_EV_Admin {
   *  @since  1.0
   *
   *  @param   $update_hosts, $update_author
-  *  @return  array( html $messages, array $new_video_ids )
+  *  @return  array( html $messages, array $current_video_ids )
   */
 
   function post_new_videos( $update_hosts, $update_author = null ) {
 
-    $new_video_ids = array();
-    $new_videos = $this->fetch_new_videos( $update_hosts, $update_author );
+    $current_video_ids = array();
+    $current_videos = $this->fetch_current_videos( $update_hosts,
+                                                   $update_author );
     $messages = $add_messages = $no_messages = $zero_message = '';
 
-    // If there's nothing new, return with message and the empty array of $new_video_ids
-    if ( !$new_videos ) {
+    // If there's nothing on the channels, return with a message and the
+    // empty array of $current_video_ids
+    if ( !$current_videos ) {
       $hostlist = array();
       foreach( $update_hosts as $host ){
         $hostlist[] = $host['host_name'];
@@ -254,8 +260,8 @@ class SP_EV_Admin {
       $zero_message = $this->wrap_admin_notice( $zero_message, 'info' );
 
       return array(
-        'messages'      => $zero_message,
-        'new_video_ids' => $new_video_ids
+        'messages'          => $zero_message,
+        'current_video_ids' => $current_video_ids
       );
     }
 
@@ -268,11 +274,12 @@ class SP_EV_Admin {
       $count_added[$host_id] = 0;
     }
 
-    // save new videos & build list of all new video_ids
-    foreach ( $new_videos as $video ) {
-      // $new_video_ids is an array of the added video ids
-      array_push( $new_video_ids, $video['video_id'] );
+    // save or update current videos & build list of all new video_ids
+    foreach ( $current_videos as $video ) {
+      // $current_video_ids is an array of all current video ids
+      array_push( $current_video_ids, $video['video_id'] );
       // save_video() checks if is new, and saves video post
+      // But it also might just update the video post_meta
       $is_new = $this->save_video( $video );
       if ( $is_new ) {
         $host_id = $video['host_id'];
@@ -300,36 +307,39 @@ class SP_EV_Admin {
       $messages .= $no_messages;
     }
 
-    // return the messages and the array of new video ids, needed by trash_deleted_videos()
+    // return the messages and the array of current_video_ids,
+    // needed by trash_deleted_videos()
     return array(
-      'messages'      => $messages,
-      'new_video_ids' => $new_video_ids
+      'messages'          => $messages,
+      'current_video_ids' => $current_video_ids
     );
 
   }
 
 
   /*
-  *  fetch_new_videos
+  *  fetch_current_videos
   *
   *  Used by post_new_videos()
-  *  Fetch new videos from a registered, externally hosted channel, or from all.
+  *  Fetch all current videos from a registered, externally hosted channel,
+  *  or from all channels.
   *  The various API functions are defined in separate classes for each host.
+  *  save_video() is what checks if it exists in WP or not.
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
   *  @param   $update_hosts, $update_author
-  *  @return  $new_videos (array of videos)
+  *  @return  $current_videos (array of videos)
   */
 
-  function fetch_new_videos( $update_hosts, $update_author ) {
+  function fetch_current_videos( $update_hosts, $update_author ) {
 
     // error_log( '$update_hosts: ' .  print_r( $update_hosts, true ) );
     // error_log( '$update_author: ' .  print_r( $update_author, true ) );
 
-    $new_videos = array();
+    $current_videos = array();
 
     foreach ( $update_hosts as $host ) {
 
@@ -341,15 +351,17 @@ class SP_EV_Admin {
         // fetch all hosts, all authors
         foreach( $host['authors'] as $author ){
           $author_videos = $ClassName::fetch( $author );
-          $new_videos = array_merge( $author_videos, $new_videos );
+          $current_videos = array_merge( $author_videos, $current_videos );
         }
       } else {
         // fetch single author's videos
-        $new_videos = $ClassName::fetch( $update_author );
+        $current_videos = $ClassName::fetch( $update_author );
       }
     }
 
-    return $new_videos;
+    // error_log( print_r( $current_videos, true ) );
+
+    return $current_videos;
 
   }
 
@@ -357,21 +369,23 @@ class SP_EV_Admin {
   /*
   *  trash_deleted_videos()
   *
-  *  Used by post_new_videos() and implicitly by update_videos_handler() and daily_function()
+  *  Used by update_videos_handler() and daily_function()
   *  Trashes any videos on WordPress that have been deleted from host channels.
   *  Returns messages about number of video posts trashed.
-  *  We're only iterating by host, since we have a list of $new_video_ids to compare with existing posts.
+  *  We're iterating by host for more specific messages, since we have a list
+  *  of $current_video_ids to compare with existing posts.
   *
   *  @type  function
   *  @date  31/10/16
   *  @since  1.0
   *
-  *  @param   $update_hosts, $new_video_ids - passed from post_new_videos()
+  *  @param   $update_hosts, $current_video_ids - passed from post_new_videos()
   *  @return  html $trash_messages
   */
 
-  function trash_deleted_videos( $update_hosts, $update_author,
-                                 $new_video_ids ) {
+  function trash_deleted_videos( $update_hosts,
+                                 $update_author,
+                                 $current_video_ids ) {
 
     // we're going to count how many were deleted at each host
     // must fill out this array with zeros, or error
@@ -407,18 +421,22 @@ class SP_EV_Admin {
       ) );
     }
 
+    // error_log( print_r( $current_video_ids, true ) );
+
+    // Check this is working. Value could be an array
     while( $existing_videos->have_posts() ) {
 
       $existing_video = $existing_videos->next_post();
       $video_id = get_post_meta( $existing_video->ID, 'video_id', true );
       $host = get_post_meta( $existing_video->ID, 'host_id', true );
 
-      // Move external-video to trash if not in array of $new_video_ids passed from the post_new_videos() function
-      if ( $video_id != NULL && !in_array( $video_id, $new_video_ids ) ) {
+      // Move external-video to trash if not in array of $current_video_ids
+      // passed from the post_new_videos() function
+      if ( $video_id != NULL && !in_array( $video_id, $current_video_ids ) ) {
         $post = get_post( $existing_video->ID );
         $post->post_status = 'trash';
         wp_update_post( $post );
-        //update count of deleted videos on this host
+        // update count of deleted videos on this host
         $count_deleted[$host]++;
       }
     }
@@ -467,16 +485,17 @@ class SP_EV_Admin {
       'post_type' => 'external-videos',
       'post_status' => 'any',
       'meta_key' => 'video_id',
-      'meta_value' => $video['video_id']
+      'meta_value' => $video['video_id'],
+      'meta_compare' => 'LIKE' // because of old vimeo uris
     ) );
 
     while( $ev_query->have_posts() ) {
       $query_video = $ev_query->next_post();
-
       // Check if the video exists in WP and has a host_id
       if( get_post_meta( $query_video->ID, 'host_id', true ) ) {
-        // TODO: Update everything here, in case updated on host.
-        $this->update_new_post_meta( $query_video->ID, $video );
+        // Update all the details here, in case updated on host.
+        // What's not updated is title, content cats n tags.
+        $this->update_post_meta( $query_video->ID, $video );
         // Post exists already; skip creating a post for this one
         return false;
       }
@@ -539,32 +558,26 @@ class SP_EV_Admin {
       set_post_format( $post, $video['ev_post_format'] );
     }
 
-    // add post meta
-    add_post_meta( $post_id, 'host_id',       sanitize_text_field( $video['host_id'] ) );
-    add_post_meta( $post_id, 'author_id',     sanitize_text_field( $video['author_id'] ) );
-    add_post_meta( $post_id, 'video_id',      sanitize_text_field( $video['video_id'] ) );
-    add_post_meta( $post_id, 'duration',      $video['duration'] ); // how to sanitize?
-    add_post_meta( $post_id, 'author_url',    esc_url( $video['author_url'] ) );
-    add_post_meta( $post_id, 'video_url',     esc_url( $video['video_url'] ) );
-    add_post_meta( $post_id, 'thumbnail_url', esc_url( $video['thumbnail_url'] ) );
-    add_post_meta( $post_id, 'poster_url', esc_url( $video['poster_url'] ) );
-    // Cheat here with a dummy image so we can show thumbnails properly
-    add_post_meta( $post_id, '_wp_attached_file', 'dummy.png' );
-    add_post_meta( $post_id, 'description',   sanitize_text_field( $video['description'] ) );
-    // video embed code. To do: meta key should be converted to "embed_url" for consistency
-    add_post_meta( $post_id, 'embed_code',    esc_url( $this->embed_url( $video['host_id'], $video['video_id'] ) ) );
+    // add or update post meta (update will add if not exists)
+    $this->update_post_meta( $post_id, $video );
 
     // category id & tag attribution
-    if( !is_array( $video['ev_category'] ) ) $video['ev_category'] = (array) $video['ev_category'];
-    wp_set_post_categories( $post_id,         array_map( 'esc_attr', $video['ev_category'] ) );
-    if( !is_array( $video['tags'] ) ) $video['tags'] = (array) $video['tags'];
-    wp_set_post_tags( $post_id,               array_map( 'esc_attr', $video['tags'] ), 'post_tag' );
+    if( !is_array( $video['ev_category'] ) ) {
+      $video['ev_category'] = (array) $video['ev_category'];
+    }
+    wp_set_post_categories( $post_id,
+                            array_map( 'esc_attr', $video['ev_category'] ) );
+    if( !is_array( $video['tags'] ) ) {
+      $video['tags'] = (array) $video['tags'];
+    }
+    wp_set_post_tags( $post_id,
+                      array_map( 'esc_attr', $video['tags'] ), 'post_tag' );
 
     return true;
   }
 
   /*
-  *  update_new_post_meta()
+  *  update_post_meta()
   *
   *  Used by save_video() in case there's new `post_meta` since post created.
   *  First used for `poster_url`. Could also be used to update all attributes
@@ -578,18 +591,43 @@ class SP_EV_Admin {
   *  @return  Could return an array of messages about the updates
   */
 
-  function update_new_post_meta( $ev_post_id, $video ) {
+  function update_post_meta( $post_id, $video ) {
 
     // New in 1.4.0 - Check if the new post_meta `poster_url` exists.
     // If not, and if we did get a `poster_url` from the API, add it.
-    if( !get_post_meta( $ev_post_id, 'poster_url', true ) &&
-        $video['poster_url'] ) {
-      add_post_meta( $ev_post_id, 'poster_url',
-                     esc_url( $video['poster_url'] ) );
-      return true;
-    } else {
-      return false;
-    }
+    // if( !get_post_meta( $ev_post_id, 'poster_url', true ) &&
+    //     $video['poster_url'] ) {
+    //   add_post_meta( $ev_post_id, 'poster_url',
+    //                  esc_url( $video['poster_url'] ) );
+    //   return true;
+    // } else {
+    //   return false;
+    // }
+    update_post_meta( $post_id, 'host_id',
+                      sanitize_text_field( $video['host_id'] ) );
+    update_post_meta( $post_id, 'author_id',
+                      sanitize_text_field( $video['author_id'] ) );
+    update_post_meta( $post_id, 'video_id',
+                      sanitize_text_field( $video['video_id'] ) );
+    update_post_meta( $post_id, 'duration',
+                      $video['duration'] ); // how to sanitize?
+    update_post_meta( $post_id, 'author_url',
+                      esc_url( $video['author_url'] ) );
+    update_post_meta( $post_id, 'video_url',
+                      esc_url( $video['video_url'] ) );
+    update_post_meta( $post_id, 'thumbnail_url',
+                      esc_url( $video['thumbnail_url'] ) );
+    update_post_meta( $post_id, 'poster_url',
+                      esc_url( $video['poster_url'] ) );
+    // Cheat here with a dummy image so we can show thumbnails properly
+    update_post_meta( $post_id, '_wp_attached_file', 'dummy.png' );
+    update_post_meta( $post_id, 'description',
+                      sanitize_text_field( $video['description'] ) );
+    // video embed code.
+    // TODO: meta key could be converted to "embed_url" for consistency
+    update_post_meta( $post_id, 'embed_code',
+                      esc_url( $this->embed_url( $video['host_id'],
+                                                 $video['video_id'] ) ) );
   }
 
   /*
