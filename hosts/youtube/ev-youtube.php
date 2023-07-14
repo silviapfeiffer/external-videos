@@ -62,7 +62,8 @@ class SP_EV_YouTube {
 
       foreach( $authors as $author ){
         // Check for necessary API keys
-        if( !isset( $author['developer_key'] ) || empty( $author['developer_key'] ) ){
+        if( !isset( $author['developer_key'] ) ||
+            empty( $author['developer_key'] ) ){
           // return a WP Error message so they know to update the author.
           error_log( 'no developer key for ' . $author['author_id'] );
 

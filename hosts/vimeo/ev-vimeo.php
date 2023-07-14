@@ -61,13 +61,15 @@ class SP_EV_Vimeo {
 
       foreach( $authors as $author ){
         // Check for necessary API keys
-        if( !isset( $author['developer_key'] ) || empty( $author['developer_key'] ) ){
+        if( !isset( $author['developer_key'] ) ||
+            empty( $author['developer_key'] ) ){
           // to do: return a WP Error message so they know to update the author.
           error_log( 'no client identifier for ' . $author['author_id'] );
 
         } else { // Only continue if we have a developer_key
 
-          if( !isset( $author['secret_key'] ) || empty( $author['secret_key'] ) ){
+          if( !isset( $author['secret_key'] ) ||
+              empty( $author['secret_key'] ) ){
             // to do: return a WP Error message so they know to update the author.
             error_log( 'no client secret for ' . $author['author_id'] );
 
@@ -237,6 +239,8 @@ class SP_EV_Vimeo {
                                $author['ev_post_format'] : '';
     $video['ev_post_status'] = isset( $author['ev_post_status'] ) ?
                                $author['ev_post_status'] : '';
+    // Could store privacy.embed or privacy.view
+    // https://developer.vimeo.com/api/reference/response/video
 
     return $video;
 
