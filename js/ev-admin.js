@@ -115,7 +115,7 @@
       var feedback = $("#ev_unembed_videos .feedback"),
         spinner = $("#ev_unembed_videos .spinner");
 
-      if (!confirm('This will effectively remove the videos from your site, unless your theme is specifically coded otherwise.')) {
+      if (!confirm('This will effectively remove the videos from appearing in your `external-videos` posts, unless your theme is specifically coded to include them another way.')) {
         return false;
       }
       $(spinner).addClass("is-active");
