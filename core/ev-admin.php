@@ -405,20 +405,7 @@ class SP_EV_Admin {
       $host_id = $update_hosts[0]['host_id'];
       $author_id = $update_author['author_id'];
 
-      $existing_videos = new WP_Query( array(
-        'post_type'  => 'external-videos',
-        'nopaging' => 1,
-        'meta_query' => array(
-            array(
-                'key'     => 'host_id',
-                'value'   => $host_id
-            ),
-            array(
-                'key'     => 'author_id',
-                'value'   => $author_id
-            )
-        )
-      ) );
+      $existing_videos = $this->get_all_videos( $host_id, $author_id );
     }
 
     // error_log( print_r( $current_video_ids, true ) );
@@ -814,23 +801,39 @@ class SP_EV_Admin {
   *
   *  Used by unembed_all_videos(), delete_all_videos() and
   *  trash_deleted_videos()
-  *  Query for all external video posts
+  *  Query for all external video posts, or by author with params
   *
   *  @type  function
   *  @date  03/07/23
   *  @since  1.3.2
   *
-  *  @param
+  *  @param $host_id
+  *  @param $author_id
   *  @return $ev_posts
   */
 
-  function get_all_videos() {
+  function get_all_videos( $host_id = null, $author_id = null ) {
 
-    // query all of post_type: external-videos
-    $ev_posts = new WP_Query( array(
+    $args = array(
       'post_type' => 'external-videos',
       'nopaging' => 1
-    ) );
+    );
+
+    if( $host_id && $author_id ) {
+      $args['meta_query'] = array(
+        array(
+          'key'     => 'host_id',
+          'value'   => $host_id
+        ),
+        array(
+            'key'     => 'author_id',
+            'value'   => $author_id
+        )
+      );
+    }
+
+    // query all of post_type: external-videos
+    $ev_posts = new WP_Query( $args );
 
     return $ev_posts;
 
