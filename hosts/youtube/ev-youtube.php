@@ -317,16 +317,16 @@ class SP_EV_YouTube {
 
     // Google Get marathon. Let's fill this out.
     $endpoint = "https://www.googleapis.com/youtube/v3/videos";
-    $url = $endpoint . "?part=contentDetails,snippet&key=" . $author['developer_key'] . "&id=" . $vid['contentDetails']['videoId'];
+    $url = $endpoint . "?part=contentDetails,snippet,status&key=" . $author['developer_key'] . "&id=" . $vid['contentDetails']['videoId'];
     $response = wp_remote_get( $url );
     $code = wp_remote_retrieve_response_code( $response );
     $message = wp_remote_retrieve_response_message( $response );
     $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
 
     $items = $body['items'][0];
-    // $tags = (array) $items['snippet']['tags'];
+    // $tags = (array) $vid['snippet']['tags'];
     $tags = array();
-    $duration = $items['contentDetails']['duration'];
+    $duration = $vid['contentDetails']['duration'];
     // echo '<pre>$tags: <br />'; print_r( $tags ); echo '</pre>';
     // echo '<pre>$duration: <br />'; print_r( $duration ); echo '</pre>';
 
@@ -335,6 +335,8 @@ class SP_EV_YouTube {
     $video['host_id']        = 'youtube';
     $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
     $video['video_id']       = sanitize_text_field( $vid['contentDetails']['videoId'] ); // not ID!!!
+    $video['embeddable']     = $vid['status']['embeddable']; // boolean on YT
+    // $video['privacy']        = sanitize_text_field( $vid['status']['privacyStatus'] );
     $video['title']          = sanitize_text_field( $vid['snippet']['title'] );
     $video['description']    = sanitize_text_field( $vid['snippet']['description'] );
     $video['author_name']    = sanitize_text_field( $vid['snippet']['channelTitle'] );

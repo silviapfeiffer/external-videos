@@ -182,6 +182,7 @@ class SP_EV_Wistia {
     $video['host_id']        = 'wistia';
     $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
     $video['video_id']       = sanitize_text_field( $vid['hashed_id'] );
+    $video['embeddable']     = true; // there is no embed control on Wistia
     $video['title']          = sanitize_text_field( $vid['name'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $author['author_id'] );

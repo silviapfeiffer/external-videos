@@ -212,6 +212,13 @@ class SP_EV_Vimeo {
                                substr( $vimeo_uri, 8 ) : $vimeo_uri;
     // error_log(print_r( $id_pos, true ));
 
+    $vimeo_embeddable        = sanitize_text_field( $vid['privacy']['embed'] );
+    // The current options are "public", "whitelist", and "private".
+    // We'll assume it's embeddable as long as it's not "private".
+    // End user will have to allow their own domains to get the embed to
+    // actually work, if it's set to "specific domains" in the Vimeo UI.
+    $video['embeddable']     = $vimeo_embeddable !== "private";
+    // $video['privacy']        = sanitize_text_field( $vid['privacy']['view'] );
     $video['title']          = sanitize_text_field( $vid['name'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $vid['user']['name'] );

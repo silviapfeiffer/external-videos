@@ -155,6 +155,7 @@ class SP_EV_Dailymotion {
     $video['host_id']        = 'dailymotion';
     $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
     $video['video_id']       = sanitize_text_field( $vid['id'] );
+    $video['embeddable']     = true; // there is no embed control on DM
     $video['title']          = sanitize_text_field( $vid['title'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $vid['owner.screenname'] );

@@ -163,6 +163,7 @@ class SP_EV_Dotsub {
     $video['host_id']        = 'dotsub';
     $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
     $video['video_id']       = sanitize_text_field( $vid['uuid'] );
+    $video['embeddable']     = true; // there is no embed control on dotsub
     $video['title']          = sanitize_text_field( $vid['title'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $vid['user'] );
