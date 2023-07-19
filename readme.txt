@@ -87,7 +87,10 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 == Changelog ==
 
 = 1.4.0 =
+* New options: Keep `external-video` post **titles** and/or **descriptions** in sync with the title / description on the host. (Defaults to `false` to maintain current behavior. `true` will override local edits.) Enabling these options makes it easier to keep the titles and descriptions up to date, by only editing the hosted video as the "authoritative version".
 * New field requested from API calls: `poster_url`. If it exists, it's added to `post_meta` for new **or existing** posts. Allows developers to use the image url in a custom `<video>` element.
+* Video metadata (`duration`, `thumbnail_url`, `poster_url`) now synced from host automatically to `post_meta` daily. Doesn't change much, except for developers who use these fields.
+* Refactor of post syncing code
 
 = 1.3.2 =
 * New developer option to *remove* embedded videos from `post_content`. (See notes for 1.3.1)
