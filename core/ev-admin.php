@@ -136,6 +136,8 @@ class SP_EV_Admin {
     $options['rss'] = ( array_key_exists( 'ev-rss', $fields ) ? true : false );
     $options['delete'] = ( array_key_exists( 'ev-delete', $fields ) ? true : false );
     $options['embed'] = ( array_key_exists( 'ev-embed', $fields ) ? true : false );
+    $options['title_sync'] = ( array_key_exists( 'ev-title_sync', $fields ) ? true : false );
+    $options['content_sync'] = ( array_key_exists( 'ev-content_sync', $fields ) ? true : false );
     $options['attrib'] = ( array_key_exists( 'ev-attrib', $fields ) ? true : false );
     $options['loop'] = ( array_key_exists( 'ev-loop', $fields ) ? true : false );
     $options['slug'] = ( array_key_exists( 'ev-slug', $fields ) ? sanitize_title_with_dashes( $fields['ev-slug'] ) : '' );

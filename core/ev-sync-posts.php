@@ -150,30 +150,61 @@ class SP_EV_SyncPosts {
 
     // If we're still here there's news on the channels.
     // we're going to count how many we add at each host
-    $count_added = $count_updated = array();
+    $counts = array(
+      'added' => [],
+      'updated' => [],
+      'trashed' => [],
+      'retitled' => [],
+      'revised' => []
+    );
+
     // fill out this array with zeros, or we'll get an error
     foreach( $update_hosts as $host ){
       $host_id = $host['host_id'];
-      $count_added[$host_id] = 0;
-      $count_updated[$host_id] = 0;
+      $counts['added'][$host_id] = 0;
+      $counts['updated'][$host_id] = 0;
+      $counts['trashed'][$host_id] = 0;
+      $counts['retitled'][$host_id] = 0;
+      $counts['revised'][$host_id] = 0;
+      $counts['deduped'][$host_id] = 0;
     }
 
     // save or update current videos & build list of all new video_ids
     foreach ( $current_videos as $video ) {
-      // $current_video_ids is an array of all current video ids
+      // $current_video_ids is an array of video ids from APIs, not WP
       array_push( $current_video_ids, $video['video_id'] );
-      // save_video() checks if is new, and saves video post
-      // But it also might just update the video post_meta
-      // Ideally we'd build $update_messages too, at least how many
-      // save_video() could return true, false or "updated" (or message)
-      $is_new = $this->save_video( $video );
-      if ( $is_new ) {
-        $host_id = $video['host_id'];
-        $count_added[$host_id]++;
+
+      // save_video() checks if is new, and either saves video post
+      // or if existing, updates or trashes the video (if unembeddable)
+      $save_messages = $this->save_video( $video );
+      $host_id = $video['host_id'];
+
+      // Check $save_messages for each possible message in that array
+      // and keep count all of each message. $host_id nested on purpose
+      // Simplest possibility is `true`, which means it's a new post.
+      // False means nothing embeddable found.
+      if ( $save_messages === true ) {
+        $counts['added'][$host_id]++;
+      } elseif ( is_array( $save_messages ) ) {
+        if ( in_array( "updated", $save_messages ) ) {
+          $counts['updated'][$host_id]++;
+        }
+        if ( in_array( "trashed", $save_messages ) )  {
+          $counts['trashed'][$host_id]++;
+        }
+        if ( in_array( "retitled", $save_messages ) )  {
+          $counts['retitled'][$host_id]++;
+        }
+        if ( in_array( "revised", $save_messages ) )  {
+          $counts['revised'][$host_id]++;
+        }
+        if ( in_array( "deduped", $save_messages ) )  {
+          $counts['deduped'][$host_id]++;
+        }
       }
     }
 
-    $messages = $this->build_sync_messages( $update_hosts, $count_added );
+    $messages = $this->build_sync_messages( $update_hosts, $counts );
 
     // return the messages and the array of current_video_ids,
     // needed by trash_deleted_videos()
@@ -212,6 +243,115 @@ class SP_EV_SyncPosts {
       'messages'          => $zero_message,
       'current_video_ids' => $current_video_ids
     );
+  }
+
+  /*
+  *  build_sync_messages()
+  *
+  *  Used by sync_videos()
+  *
+  *  @type  function
+  *  @date  18/07/23
+  *  @since  1.4.0
+  *
+  *  @param   $update_hosts
+  *  @param   $counts array()
+  *  @return  $messages
+  */
+
+  function build_sync_messages( $update_hosts, $counts ) {
+
+    $messages = $add_messages = $update_messages = $trashed_messages = $retitled_messages = $revised_messages = $deduped_messages = $no_messages = "";
+
+    // build messages about added videos, or no videos, per host
+    foreach ( $counts['added'] as $host_id=>$num ) {
+      $host_name = $update_hosts[$host_id]['host_name'];
+      if ( $num > 0 ) {
+        $add_messages .= sprintf( _n( 'Found %1$s new video on %2$s. ', 'Found %1$s new videos on %2$s. ', $num, 'external-videos' ), $num, $host_name );
+      }
+      else {
+        $no_messages .= sprintf( __( 'No new videos found on %1$s. ', 'external-videos' ), $host_name );
+      }
+    }
+
+    foreach ( $counts['updated'] as $host_id=>$num ) {
+      $host_name = $update_hosts[$host_id]['host_name'];
+      if ( $num > 0 ) {
+        $update_messages .= sprintf( _n( 'Updated %1$s video from %2$s. ', 'Updated %1$s videos from %2$s. ', $num, 'external-videos' ), $num, $host_name );
+      }
+      else {
+        $no_messages .= sprintf( __( 'No videos updated from %1$s. ', 'external-videos' ), $host_name );
+      }
+    }
+
+    foreach ( $counts['trashed'] as $host_id=>$num ) {
+      $host_name = $update_hosts[$host_id]['host_name'];
+      if ( $num > 0 ) {
+        $trashed_messages .= sprintf( _n( '%1$s video from %2$s has been marked "unembeddable" on the host and moved to the trash. ', '%1$s videos from %2$s has been marked "unembeddable" on the host and moved to the trash. ', $num, 'external-videos' ), $num, $host_name );
+      }
+      else {
+        // Quiet if nothing trashed
+      }
+    }
+
+    foreach ( $counts['retitled'] as $host_id=>$num ) {
+      $host_name = $update_hosts[$host_id]['host_name'];
+      if ( $num > 0 ) {
+        $retitled_messages .= sprintf( _n( '%1$s video has been retitled on %2$s and synced to WordPress. ', '%1$s videos have been retitled on %2$s and synced to WordPress. ', $num, 'external-videos' ), $num, $host_name );
+      }
+      else {
+        // Quiet if nothing found
+      }
+    }
+
+    foreach ( $counts['revised'] as $host_id=>$num ) {
+      $host_name = $update_hosts[$host_id]['host_name'];
+      if ( $num > 0 ) {
+        $revised_messages .= sprintf( _n( '%1$s video description has been revised on %2$s and synced to WordPress. ', '%1$s video descriptions have been revised on %2$s and synced to WordPress. ', $num, 'external-videos' ), $num, $host_name );
+      }
+      else {
+        // Quiet if nothing found
+      }
+    }
+
+    foreach ( $counts['deduped'] as $host_id=>$num ) {
+      $host_name = $update_hosts[$host_id]['host_name'];
+      if ( $num > 0 ) {
+        $deduped_messages .= sprintf( _n( '%1$s duplicate video post from %2$s has been moved to the trash. ', '%1$s duplicate video posts from %2$s have been moved to the trash. ', $num, 'external-videos' ), $num, $host_name );
+      }
+      else {
+        // Quiet if nothing found
+      }
+    }
+
+    // after looping to get all add/update/no messages,
+    // wrap them up for delivery
+    if( $add_messages ){
+      $add_messages = SP_EV_Admin::wrap_admin_notice( $add_messages, 'success' );
+      $messages .= $add_messages;
+    }
+    if( $update_messages ){
+      $update_messages = SP_EV_Admin::wrap_admin_notice( $update_messages, 'success' );
+      $messages .= $update_messages;
+    }
+    if( $trashed_messages ){
+      $trashed_messages = SP_EV_Admin::wrap_admin_notice( $trashed_messages, 'success' );
+      $messages .= $trashed_messages;
+    }
+    if( $retitled_messages ){
+      $retitled_messages = SP_EV_Admin::wrap_admin_notice( $retitled_messages, 'info' );
+      $messages .= $retitled_messages;
+    }
+    if( $deduped_messages ){
+      $deduped_messages = SP_EV_Admin::wrap_admin_notice( $deduped_messages, 'info' );
+      $messages .= $deduped_messages;
+    }
+    if( $no_messages ){
+      $no_messages = SP_EV_Admin::wrap_admin_notice( $no_messages, 'info' );
+      $messages .= $no_messages;
+    }
+
+    return $messages;
   }
 
   /*
@@ -265,7 +405,7 @@ class SP_EV_SyncPosts {
   /*
   *  save_video
   *
-  *  Used by sync_videos() and update_videos_handler()
+  *  Used by sync_videos()
   *  Checks if video exists (by `video_id`), because the API returns all videos.
   *  Maybe updates `poster_url` as of 1.4.0
   *  If not exists, creates a post of type `external-videos` and saves it.
@@ -278,39 +418,51 @@ class SP_EV_SyncPosts {
   *  @since  1.0
   *
   *  @param   $video
-  *  @return  boolean
+  *  @return  true, false, or array of $messages
   */
 
   function save_video( $video ) {
 
     // get options
     $options = SP_External_Videos::get_options();
+    // error_log( print_r( $options, true ) );
 
-    // See if video exists, update accordingly and stop execution
-    // or TODO return messages about updates.
-    if( $this->update_existing_post( $options, $video ) ) return false;
-
-    // If we're here, it's a new post.
-    $post_id = $this->create_video_post( $options, $video );
-    $post = get_post( $post_id );
-
-    // set post format
-    if ( current_theme_supports( 'post-formats' ) &&
-      post_type_supports( $post->post_type, 'post-formats' )) {
-      set_post_format( $post, $video['ev_post_format'] );
+    // If the video exists, update it and return. Maybe more than one
+    $existing_posts = $this->get_matching_posts( $video );
+    // See if video exists, update accordingly, stop execution
+    // and return messages about updates or unembeddables trashed.
+    if ( $existing_posts->have_posts() ) {
+      $messages = $this->update_existing_post( $existing_posts,
+                                               $options,
+                                               $video );
+      return $messages;
     }
 
-    // add or update post meta (update will add if not exists)
-    $this->update_post_meta( $post_id, $video );
+    // If we're here, it's a new post. Be sure it's embeddable.
+    if( $video['embeddable'] == true ) {
+      $post_id = $this->create_video_post( $options, $video );
+      $post = get_post( $post_id );
 
-    // set the categories and tags
-    $this->set_post_taxonomies( $post_id, $video );
+      // set post format
+      if ( current_theme_supports( 'post-formats' ) &&
+        post_type_supports( $post->post_type, 'post-formats' )) {
+        set_post_format( $post, $video['ev_post_format'] );
+      }
 
-    return true;
+      // add or update post meta (update will add if not exists)
+      $this->update_post_meta( $post_id, $video );
+
+      // set the categories and tags
+      $this->set_post_taxonomies( $post_id, $video );
+
+      return true;
+    } else {
+      return false;
+    }
   }
 
   /*
-  *  update_existing_post
+  *  get_matching_posts
   *
   *  Used by save_video()
   *  Check for an existing ev post (by video_id)
@@ -321,76 +473,118 @@ class SP_EV_SyncPosts {
   *  @date  18/07/23
   *  @since  1.4.0
   *
-  *  @param   $options
   *  @param   $video
-  *  @return  boolean
+  *  @return  WP_Query object
   */
-  function update_existing_post( $options, $video ) {
 
-    $ev_query = new WP_Query( array(
+  function get_matching_posts( $video ) {
+
+    $args = array(
       'post_type' => 'external-videos',
       'post_status' => 'any',
-      'meta_key' => 'video_id',
-      'meta_value' => $video['video_id'],
-      'meta_compare' => 'LIKE' // because of old vimeo uris
-    ) );
+      'nopaging' => 1
+    );
 
-    // If it does, do some housekeeping
-    while( $ev_query->have_posts() ) {
-
-      $query_video = $ev_query->next_post();
-
-      // Just to be sure, check if the video has a host_id
-      if( get_post_meta( $query_video->ID, 'host_id', true ) ) {
-
-        // Check if video is marked embeddable at the host, in the first place.
-        // Moves video to trash if not. (up to v1.4.0 there were failed embeds)
-        // TODO: Build messages about all of this
-        $this->check_if_embeddable( $query_video->ID, $video );
-
-        // In case updated on host, update the details here.
-        $this->update_post_meta( $query_video->ID, $video );
-
-        // Could also sync title, content, cats n tags with new options.
-      }
-
-      // Post exists already; skip creating a post for this one
-      return true;
+    if( $video['video_id'] && $video['host_id'] ) {
+      $args['meta_query'] = array(
+        array(
+          'key'     => 'video_id',
+          'value'   => $video['video_id'],
+          'compare' => 'LIKE' // because of old vimeo uris
+        ),
+        array(
+          'key'     => 'host_id',
+          'value'   => $video['host_id'],
+          'compare' => '='
+        )
+      );
     }
 
-    return false;
+    $ev_query = new WP_Query( $args );
+
+    return $ev_query;
   }
 
   /*
-  *  check_if_embeddable
+  *  update_existing_post
   *
-  *  Used by update_if_exists()
-  *  Check one existing ev post to find if host API's current $video data says
-  *  embeddable. Not only to respect the setting on the host, but also because
-  *  prior to 1.4, unembeddable videos created a post, but had blank previews,
-  *  and didn't play. If it's not currently embeddable, move it to the trash.
-  *  If embed setting changes, a new ev post will be created.
+  *  Used by save_video()
+  *  Check for an existing ev post(s) (by video_id)
+  *  and if found, sync w/ host API's current $video data.
+  *  Options may indicate whether to sync title and content
   *
   *  @type  function
   *  @date  18/07/23
   *  @since  1.4.0
   *
-  *  @param   $ev_post_id, $video_data
-  *  @return  boolean
+  *  @param   $existing_posts (WP_Query object)
+  *  @param   $options
+  *  @param   $video
+  *  @return  $messages (array of strings)
   */
 
-  function check_if_embeddable( $ev_post_id, $video ) {
+  function update_existing_post( $existing_posts, $options, $video ) {
 
-    if( $video['embeddable'] === false ) {
-      $post = get_post( $ev_post_id );
-      $post->post_status = 'trash';
-      wp_update_post( $post );
-      // TODO: return a message about trashed videos!
-      // $count_trashed += 1;
-      return false;
-    } else {
-      return true;
-    };
+    $messages = array();
+
+    $count_posts = 0;
+    $embeddable = $video['embeddable'];
+    $title_sync = ( $options['title_sync'] == true );
+    $content_sync = ( $options['content_sync'] == true );
+
+    // If it does, do some housekeeping
+    while( $existing_posts->have_posts() ) {
+
+      $ev_post = $existing_posts->next_post();
+
+      // We're going to update the first matching post only.
+      if( $count_posts === 0 ) {
+
+        // NOTE: The following are not mutually exclusive
+
+        // Check if video is marked embeddable at the host, in the first place.
+        // Moves video to trash if not. (up to v1.4.0 there were failed embeds)
+        if( !$embeddable && ( $ev_post->post_status != 'trash' ) ) {
+          $ev_post->post_status = 'trash';
+          $messages[] = "trashed";
+        }
+
+        // In case updated on host, update the details here.
+        if( $this->update_post_meta( $ev_post->ID, $video ) ) {
+          $messages[] = "updated";
+        }
+
+        // sync title if new option selected && is different
+        if( $title_sync && ( $ev_post->post_title !== $video['title'] ) ) {
+          $ev_post->post_title = $video['title'];
+          $messages[] = "retitled";
+        }
+
+        // sync content if new option selected && is different
+        if( $content_sync &&
+            ( $ev_post->post_excerpt !== $video['description'] ) ) {
+          $content = $this->build_post_content( $options, $video );
+          $ev_post->post_content = $content;
+          $ev_post->post_excerpt = sanitize_text_field( $video['description'] );
+          $messages[] = "revised";
+        }
+
+        // only update the post if something changed
+        if( $embeddable || $title_sync || $content_sync ) {
+          wp_update_post( $ev_post );
+        }
+
+      // Later posts matching video_id are considered dupes and go to the trash
+      } else {
+        $ev_post->post_status = 'trash';
+        wp_update_post( $ev_post );
+        $messages[] = "deduped";
+      }
+
+      $count_posts++;
+    }
+
+    return $messages;
   }
 
   /*
@@ -448,7 +642,7 @@ class SP_EV_SyncPosts {
   *  @return  string $post_content
   */
 
-  function build_post_content( $video, $options ) {
+  function build_post_content( $options, $video ) {
 
     $post_content = "";
 
@@ -596,48 +790,6 @@ class SP_EV_SyncPosts {
     return $embed_url;
 
   }
-
-  /*
-  *  build_sync_messages()
-  *
-  *  Used by sync_videos()
-  *
-  *  @type  function
-  *  @date  18/07/23
-  *  @since  1.4.0
-  *
-  *  @param   $update_hosts
-  *  @param   $count_added - updated array of attributes from API
-  *  @return  $messages
-  */
-
-  function build_sync_messages( $update_hosts, $count_added ) {
-
-    $messages = $add_messages = $no_messages = "";
-
-    // build messages about added videos, or no videos, per host
-    foreach ( $count_added as $host_id=>$num ) {
-      $host_name = $update_hosts[$host_id]['host_name'];
-      if ( $num > 0 ) {
-        $add_messages .= sprintf( _n( 'Found %1$s new video on %2$s. ', 'Found %1$s new videos on %2$s. ', $num, 'external-videos' ), $num, $host_name );
-      }
-      else {
-        $no_messages .= "No new videos found on " . $host_name . '. ';
-      }
-    }
-    // after looping to get all add/no messages, wrap them up for delivery
-    if( $add_messages ){
-      $add_messages = SP_EV_Admin::wrap_admin_notice( $add_messages, 'success' );
-      $messages .= $add_messages;
-    }
-    if( $no_messages ){
-      $no_messages = SP_EV_Admin::wrap_admin_notice( $no_messages, 'info' );
-      $messages .= $no_messages;
-    }
-
-    return $messages;
-  }
-
 
   /*
   *  trash_deleted_videos()

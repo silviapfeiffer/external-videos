@@ -262,9 +262,14 @@ class SP_External_Videos {
     if( !array_key_exists( 'delete', $options ) ) $options['delete'] = false;
     if( !array_key_exists( 'hosts', $options ) ) $options['hosts'] = array();
     if( !array_key_exists( 'embed', $options ) ) $options['embed'] = true;
+    if( !array_key_exists( 'title_sync', $options ) )
+      $options['title_sync'] = false;
+    if( !array_key_exists( 'content_sync', $options ) )
+      $options['content_sync'] = false;
     if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
     if( !array_key_exists( 'loop', $options ) ) $options['loop'] = false;
-    if( !array_key_exists( 'slug', $options ) ) $options['slug'] = 'external-videos';
+    if( !array_key_exists( 'slug', $options ) )
+      $options['slug'] = 'external-videos';
 
     // echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
 
