@@ -155,7 +155,8 @@ class SP_EV_SyncPosts {
       'updated' => [],
       'trashed' => [],
       'retitled' => [],
-      'revised' => []
+      'revised' => [],
+      'deduped' => []
     );
 
     // fill out this array with zeros, or we'll get an error
@@ -203,6 +204,7 @@ class SP_EV_SyncPosts {
         }
       }
     }
+    // error_log( print_r( $counts, true ));
 
     $messages = $this->build_sync_messages( $update_hosts, $counts );
 
@@ -261,95 +263,130 @@ class SP_EV_SyncPosts {
 
   function build_sync_messages( $update_hosts, $counts ) {
 
-    $messages = $add_messages = $update_messages = $trashed_messages = $retitled_messages = $revised_messages = $deduped_messages = $no_messages = "";
+    $messages = "";
+
+    // $counts keys are same, except 'no'
+    $messages_new = array(
+      'added' => ['string' => '', 'signal' => 'success'],
+      'updated' => ['string' => '', 'signal' => 'success'],
+      'trashed' => ['string' => '', 'signal' => 'warning'],
+      'retitled' => ['string' => '', 'signal' => 'info'],
+      'revised' => ['string' => '', 'signal' => 'info'],
+      'deduped' => ['string' => '', 'signal' => 'warning'],
+      'no' => ['string' => '', 'signal' => 'info']
+    );
 
     // build messages about added videos, or no videos, per host
-    foreach ( $counts['added'] as $host_id=>$num ) {
-      $host_name = $update_hosts[$host_id]['host_name'];
-      if ( $num > 0 ) {
-        $add_messages .= sprintf( _n( 'Found %1$s new video on %2$s. ', 'Found %1$s new videos on %2$s. ', $num, 'external-videos' ), $num, $host_name );
+    foreach( $counts as $typ=>$array ) :
+      foreach( $array as $host_id=>$num ) {
+        $host_name = $update_hosts[$host_id]['host_name'];
+        $messages_per_host = $this->messages_per_host( $typ, $host_name, $num );
+        if ( $num > 0 ) {
+          $messages_new[$typ]['string'] .= $messages_per_host['found'];
+        }
+        else {
+          $messages_new['no']['string'] .= $messages_per_host['no'];;
+        }
       }
-      else {
-        $no_messages .= sprintf( __( 'No new videos found on %1$s. ', 'external-videos' ), $host_name );
-      }
-    }
+    endforeach;
+    // error_log( print_r( $messages_new, true ));
 
-    foreach ( $counts['updated'] as $host_id=>$num ) {
-      $host_name = $update_hosts[$host_id]['host_name'];
-      if ( $num > 0 ) {
-        $update_messages .= sprintf( _n( 'Updated %1$s video from %2$s. ', 'Updated %1$s videos from %2$s. ', $num, 'external-videos' ), $num, $host_name );
-      }
-      else {
-        $no_messages .= sprintf( __( 'No videos updated from %1$s. ', 'external-videos' ), $host_name );
+    // after looping to get all messages, wrap them up for delivery
+    foreach( $messages_new as $typ=>$att ) {
+      if( $att['string'] ) {
+        $messages .= SP_EV_Admin::wrap_admin_notice(
+          $att['string'], $att['signal']
+        );
       }
     }
+    // error_log( print_r( $messages, true ));
 
-    foreach ( $counts['trashed'] as $host_id=>$num ) {
-      $host_name = $update_hosts[$host_id]['host_name'];
-      if ( $num > 0 ) {
-        $trashed_messages .= sprintf( _n( '%1$s video from %2$s has been marked "unembeddable" on the host and moved to the trash. ', '%1$s videos from %2$s has been marked "unembeddable" on the host and moved to the trash. ', $num, 'external-videos' ), $num, $host_name );
-      }
-      else {
-        // Quiet if nothing trashed
-      }
-    }
+    return $messages;
+  }
 
-    foreach ( $counts['retitled'] as $host_id=>$num ) {
-      $host_name = $update_hosts[$host_id]['host_name'];
-      if ( $num > 0 ) {
-        $retitled_messages .= sprintf( _n( '%1$s video has been retitled on %2$s and synced to WordPress. ', '%1$s videos have been retitled on %2$s and synced to WordPress. ', $num, 'external-videos' ), $num, $host_name );
-      }
-      else {
-        // Quiet if nothing found
-      }
-    }
+  /*
+  *  messages_per_host
+  *
+  *  Used by build_sync_messages()
+  *  Return strings appropriate to the type of sync.
+  *  Avoiding extra `if` statements to keep it quicker
+  *
+  *  @type  function
+  *  @date  18/07/23
+  *  @since  1.4.0
+  *
+  *  @param   $typ string, the type of message ('added', 'updated', etc)
+  *  @param   $host_name string
+  *  @param   $num integer, number of videos synced
+  *  @return  array( 'found', 'no' ) - message strings
+  */
 
-    foreach ( $counts['revised'] as $host_id=>$num ) {
-      $host_name = $update_hosts[$host_id]['host_name'];
-      if ( $num > 0 ) {
-        $revised_messages .= sprintf( _n( '%1$s video description has been revised on %2$s and synced to WordPress. ', '%1$s video descriptions have been revised on %2$s and synced to WordPress. ', $num, 'external-videos' ), $num, $host_name );
-      }
-      else {
-        // Quiet if nothing found
-      }
-    }
+  function messages_per_host( $typ, $host_name, $num ) {
 
-    foreach ( $counts['deduped'] as $host_id=>$num ) {
-      $host_name = $update_hosts[$host_id]['host_name'];
-      if ( $num > 0 ) {
-        $deduped_messages .= sprintf( _n( '%1$s duplicate video post from %2$s has been moved to the trash. ', '%1$s duplicate video posts from %2$s have been moved to the trash. ', $num, 'external-videos' ), $num, $host_name );
-      }
-      else {
-        // Quiet if nothing found
-      }
-    }
-
-    // after looping to get all add/update/no messages,
-    // wrap them up for delivery
-    if( $add_messages ){
-      $add_messages = SP_EV_Admin::wrap_admin_notice( $add_messages, 'success' );
-      $messages .= $add_messages;
-    }
-    if( $update_messages ){
-      $update_messages = SP_EV_Admin::wrap_admin_notice( $update_messages, 'success' );
-      $messages .= $update_messages;
-    }
-    if( $trashed_messages ){
-      $trashed_messages = SP_EV_Admin::wrap_admin_notice( $trashed_messages, 'success' );
-      $messages .= $trashed_messages;
-    }
-    if( $retitled_messages ){
-      $retitled_messages = SP_EV_Admin::wrap_admin_notice( $retitled_messages, 'info' );
-      $messages .= $retitled_messages;
-    }
-    if( $deduped_messages ){
-      $deduped_messages = SP_EV_Admin::wrap_admin_notice( $deduped_messages, 'info' );
-      $messages .= $deduped_messages;
-    }
-    if( $no_messages ){
-      $no_messages = SP_EV_Admin::wrap_admin_notice( $no_messages, 'info' );
-      $messages .= $no_messages;
-    }
+    switch( $typ ):
+      case 'added':
+        $messages = [
+          'found' => sprintf(
+            _n( 'Found %1$s new video on %2$s. ',
+                'Found %1$s new videos on %2$s. ',
+                $num, 'external-videos' ), $num, $host_name
+          ),
+          'no' => sprintf(
+            __( 'No new videos found on %1$s. ', 'external-videos' ), $host_name
+          )
+        ];
+      break;
+      case 'updated':
+        $messages = [
+          'found' => sprintf(
+            _n( 'Updated %1$s video from %2$s. ',
+                'Updated %1$s videos from %2$s. ',
+                $num, 'external-videos' ), $num, $host_name
+          ),
+          'no' => '' // Quiet if nothing updated
+        ];
+      break;
+      case 'trashed':
+        $messages = [
+          'found' => sprintf(
+            _n( '%1$s video from %2$s has been marked "unembeddable" on the host and moved to the trash. ',
+                '%1$s videos from %2$s has been marked "unembeddable" on the host and moved to the trash. ',
+                $num, 'external-videos' ), $num, $host_name
+          ),
+          'no' => '' // Quiet if nothing trashed
+        ];
+      break;
+      case 'retitled':
+        $messages = [
+          'found' => sprintf(
+            _n( '%1$s video has been retitled on %2$s and synced to WordPress. ',
+                '%1$s videos have been retitled on %2$s and synced to WordPress. ',
+                $num, 'external-videos' ), $num, $host_name
+          ),
+          'no' => '' // Quiet if nothing retitled
+        ];
+        break;
+      case 'revised':
+        $messages = [
+          'found' => sprintf(
+            _n( '%1$s video has been revised on %2$s and synced to WordPress. ',
+                '%1$s videos have been revised on %2$s and synced to WordPress. ',
+                $num, 'external-videos' ), $num, $host_name
+          ),
+          'no' => '' // Quiet if nothing revised
+        ];
+      break;
+      case 'deduped':
+        $messages = [
+          'found' => sprintf(
+            _n( '%1$s duplicate video post from %2$s has been moved to the trash. ',
+                '%1$s duplicate video posts from %2$s have been moved to the trash. ',
+                $num, 'external-videos' ), $num, $host_name
+          ),
+          'no' => '' // Quiet if nothing deduped
+        ];
+      break;
+    endswitch;
 
     return $messages;
   }
