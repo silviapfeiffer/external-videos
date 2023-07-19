@@ -122,7 +122,7 @@ class SP_EV_SyncPosts {
   *  sync_videos
   *
   *  Used by update_videos_handler() and daily_function()
-  *  Uses fetch_current_videos(), wrap_admin_notice() and save_video()
+  *  Uses fetch_hosted_videos(), wrap_admin_notice() and save_video()
   *  Saves any new videos from host channels to the database.
   *  Updates existing videos according to returned data.
   *  Returns messages about number of video posts added.
@@ -139,8 +139,8 @@ class SP_EV_SyncPosts {
   function sync_videos( $update_hosts, $update_author = null ) {
 
     $current_video_ids = array();
-    $current_videos = $this->fetch_current_videos( $update_hosts,
-                                                   $update_author );
+    $current_videos = $this->fetch_hosted_videos( $update_hosts,
+                                                  $update_author );
 
     // If there's nothing on the channels, return with a message and the
     // empty array of $current_video_ids
@@ -215,7 +215,7 @@ class SP_EV_SyncPosts {
   }
 
   /*
-  *  fetch_current_videos
+  *  fetch_hosted_videos
   *
   *  Used by sync_videos()
   *  This calls the various API interfaces. Fetches all current videos from a
@@ -231,7 +231,7 @@ class SP_EV_SyncPosts {
   *  @return  $current_videos (array of videos)
   */
 
-  function fetch_current_videos( $update_hosts, $update_author ) {
+  function fetch_hosted_videos( $update_hosts, $update_author ) {
 
     // error_log( '$update_hosts: ' .  print_r( $update_hosts, true ) );
     // error_log( '$update_author: ' .  print_r( $update_author, true ) );
@@ -288,7 +288,7 @@ class SP_EV_SyncPosts {
 
     // See if video exists, update accordingly and stop execution
     // or TODO return messages about updates.
-    if( $this->update_if_exists( $options, $video ) ) return false;
+    if( $this->update_existing_post( $options, $video ) ) return false;
 
     // If we're here, it's a new post.
     $post_id = $this->create_video_post( $options, $video );
@@ -310,7 +310,7 @@ class SP_EV_SyncPosts {
   }
 
   /*
-  *  update_if_exists
+  *  update_existing_post
   *
   *  Used by save_video()
   *  Check for an existing ev post (by video_id)
@@ -325,7 +325,7 @@ class SP_EV_SyncPosts {
   *  @param   $video
   *  @return  boolean
   */
-  function update_if_exists( $options, $video ) {
+  function update_existing_post( $options, $video ) {
 
     $ev_query = new WP_Query( array(
       'post_type' => 'external-videos',
