@@ -95,13 +95,13 @@ $HOSTS = $options['hosts'];
               <fieldset>
                 <label for="ev-title_sync">
                   <input type="checkbox" id="ev-title_sync" name="ev-title_sync" value="title_sync" <?php if ( $ev_title_sync == true ) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Keep video title in sync with title on host? (This will overwrite local changes, if any.)', 'external-videos'); ?></span>
+                  <span><?php esc_attr_e('Keep video titles in sync with titles on host (overwrite local edits)?', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
                 <label for="ev-content_sync">
                   <input type="checkbox" id="ev-content_sync" name="ev-content_sync" value="content_sync" <?php if ( $ev_content_sync == true ) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Keep video description in sync with description on host? (This will overwrite local changes, if any.)', 'external-videos'); ?></span>
+                  <span><?php esc_attr_e('Keep video descriptions in sync with descriptions on host (overwrite local edits)?', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>

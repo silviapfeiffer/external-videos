@@ -237,7 +237,7 @@ class SP_EV_Vimeo {
     $video['thumbnail_url']  = esc_url( $vid['pictures']['sizes'][2]['link'] );
     // Size 4 is 960x540, better for poster preview
     $video['poster_url']     = esc_url( $vid['pictures']['sizes'][4]['link'] );
-    $video['duration']       = sp_ev_sec2hms( $vid['duration'] );
+    $video['duration']       = SP_EV_Helpers::sec2hms( $vid['duration'] );
     $video['ev_author']      = isset( $author['ev_author'] ) ?
                                $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ?

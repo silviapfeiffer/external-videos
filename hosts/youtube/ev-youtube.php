@@ -401,7 +401,7 @@ class SP_EV_YouTube {
     $video['thumbnail_url']  = esc_url( $vid['snippet']['thumbnails']['medium']['url'] );
     $video['poster_url']     = esc_url( $vid['snippet']['thumbnails']['maxres']['url'] ) ?: esc_url( $vid['snippet']['thumbnails']['high']['url'] );
     $duration                = $vid['contentDetails']['duration'];
-    $video['duration']       = sp_ev_convert_youtube_time( $duration );
+    $video['duration']       = SP_EV_Helpers::ytduration2hms( $duration );
     $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
     $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
