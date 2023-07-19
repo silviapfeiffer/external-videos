@@ -50,6 +50,7 @@ class SP_External_Videos {
     require_once( ABSPATH . 'wp-admin/includes/taxonomy.php' );
 
     require( plugin_dir_path( __FILE__ ) . 'core/ev-admin.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-sync-posts.php' );
     require( plugin_dir_path( __FILE__ ) . 'core/ev-helpers.php' );
     require( plugin_dir_path( __FILE__ ) . 'core/ev-widget.php' );
     require( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
