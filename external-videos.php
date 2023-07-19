@@ -509,8 +509,8 @@ class SP_External_Videos {
         $video = trim( $embed_url[0] );
         $description = esc_attr( get_post_meta( get_the_ID(), 'description' ) );
         $desc = $description[0];
-        $short_title = sp_ev_shorten_text( get_the_title(), 33 );
-        $thickbox_title = sp_ev_shorten_text( get_the_title(), 90 );
+        $short_title = SP_EV_Helpers::shorten_text( get_the_title(), 33 );
+        $thickbox_title = SP_EV_Helpers::shorten_text( get_the_title(), 90 );
         // get oEmbed code
         $oembed = new WP_Embed();
         $html = $oembed->shortcode( null, $video );
