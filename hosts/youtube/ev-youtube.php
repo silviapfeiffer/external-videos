@@ -315,7 +315,8 @@ class SP_EV_YouTube {
 
   public static function video_url( $video_id ) {
 
-    return esc_url( sprintf( "https://www.youtube.com/watch?v=", $video_id ) );
+    return esc_url( sprintf( "https://www.youtube.com/watch?v=%s",
+                             $video_id ) );
 
   }
 
