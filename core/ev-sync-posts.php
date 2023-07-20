@@ -7,7 +7,7 @@
 *
 *  @type  class
 *  @date  18/07/23
-*  @since  1.4.0
+*  @since  2.0.0
 *
 */
 
@@ -40,7 +40,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param
   *  @return
@@ -224,7 +224,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $update_hosts
   *  @return  array( html $messages, array $current_video_ids )
@@ -254,7 +254,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $update_hosts
   *  @param   $counts array()
@@ -313,7 +313,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $typ string, the type of message ('added', 'updated', etc)
   *  @param   $host_name string
@@ -444,7 +444,7 @@ class SP_EV_SyncPosts {
   *
   *  Used by sync_videos()
   *  Checks if video exists (by `video_id`), because the API returns all videos.
-  *  Maybe updates `poster_url` as of 1.4.0
+  *  Maybe updates `poster_url` as of 2.0.0
   *  If not exists, creates a post of type `external-videos` and saves it.
   *  The passed $video array contains the fields we need to make the post,
   *  all except `embed_url` (provided by embed_url()).
@@ -508,7 +508,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $video
   *  @return  WP_Query object
@@ -552,7 +552,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $existing_posts (WP_Query object)
   *  @param   $options
@@ -580,7 +580,7 @@ class SP_EV_SyncPosts {
         // NOTE: The following are not mutually exclusive
 
         // Check if video is marked embeddable at the host, in the first place.
-        // Moves video to trash if not. (up to v1.4.0 there were failed embeds)
+        // Moves video to trash if not. (up to v2.0.0 there were failed embeds)
         if( !$embeddable && ( $ev_post->post_status != 'trash' ) ) {
           $ev_post->post_status = 'trash';
           $messages[] = "trashed";
@@ -633,7 +633,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $options
   *  @param   $video
@@ -672,7 +672,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $options - from SP_External_Videos::get_options
   *  @param   $video - updated array of video attributes from API
@@ -725,7 +725,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  11/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $query_video - existing ev post from the db
   *  @param   $video - updated array of attributes from API
@@ -734,7 +734,7 @@ class SP_EV_SyncPosts {
 
   function update_post_meta( $post_id, $video ) {
 
-    // New in 1.4.0 - Check if the new post_meta `poster_url` exists.
+    // New in 2.0.0 - Check if the new post_meta `poster_url` exists.
     // If not, and if we did get a `poster_url` from the API, add it.
     // if( !get_post_meta( $ev_post_id, 'poster_url', true ) &&
     //     $video['poster_url'] ) {
@@ -778,7 +778,7 @@ class SP_EV_SyncPosts {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $post_id - existing ev post from the db
   *  @param   $video - updated array of attributes from API

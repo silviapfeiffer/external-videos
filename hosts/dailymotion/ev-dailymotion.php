@@ -170,7 +170,7 @@ class SP_EV_Dailymotion {
         array_push( $video['tags'], sanitize_text_field( $tag ) );
       }
     }
-    // v1.4.0 - note new thumbnail field names here
+    // v2.0.0 - note new thumbnail field names here
     $video['thumbnail_url']  = esc_url( $vid['thumbnail_180_url'] );
     $video['poster_url']     = esc_url( $vid['thumbnail_720_url'] );
     $video['duration']       = gmdate( "H:i:s", $vid['duration'] );

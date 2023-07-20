@@ -307,7 +307,7 @@ class SP_EV_YouTube {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $video_id
   *  @return  string that WP converts to an <iframe> via the_content
@@ -330,7 +330,7 @@ class SP_EV_YouTube {
   *
   *  @type  function
   *  @date  18/07/23
-  *  @since  1.4.0
+  *  @since  2.0.0
   *
   *  @param   $vid array
   *  @param   $author array

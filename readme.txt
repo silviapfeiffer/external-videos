@@ -1,18 +1,18 @@
 === External Videos ===
 Contributors: silviapfeiffer1, johnfjohnf, nimmolo
 Donate link: http://www.gingertech.net/
-Tags: video, crosspost, sync, YouTube, Vimeo, DotSub, Wistia, Dailymotion
+Tags: video, crosspost, sync, YouTube, Vimeo, Wistia, Dailymotion
 Requires at least: 4.4
 Tested up to: 6.2.2
-Stable Tag: 1.3.2
+Stable Tag: 2.0.0
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymotion to your WordPress site.
+Automatically syncs your videos from YouTube, Vimeo, Wistia or Dailymotion to your WordPress site.
 
 == Description ==
 
-This plugin connects WordPress to your video channels on YouTube, Vimeo, DotSub, Wistia, or Dailymotion, and cross-posts the videos in WordPress automatically. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post on WordPress. The posts are created as a separate post type, "external-videos", but can optionally be added to your posts page or news feed like regular posts. Your videos, once imported, can also be added to any other post via the media library, or presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
+This plugin connects WordPress to your video channels on YouTube, Vimeo, Wistia, or Dailymotion, and cross-posts the videos in WordPress automatically. For example, it finds all the videos of the user "Fred" on YouTube and adds them each as a new post on WordPress. The posts are created as a separate post type, "external-videos", but can optionally be added to your posts page or news feed like regular posts. Your videos, once imported, can also be added to any other post via the media library, or presented in a gallery using the shortcode [external-videos]. There is also a widget to add a list of the most recent videos in a sidebar.
 
 == Installation ==
 
@@ -28,7 +28,7 @@ To install the External Videos plugin simply:
 
 = What sites are supported? =
 
-Currently supported sites are: YouTube, Vimeo, Dotsub, Wistia, Dailymotion
+Currently supported sites are: YouTube, Vimeo, Wistia, Dailymotion
 
 = How do I register another user account to draw videos from? =
 
@@ -86,11 +86,12 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 == Changelog ==
 
-= 1.4.0 =
+= 2.0.0 =
+* Refactor of post syncing code
+* Retire Dotsub code, the service has ended :(
 * New options: Keep `external-video` post **titles** and/or **descriptions** in sync with the title / description on the host. (Defaults to `false` to maintain current behavior. `true` will override local edits.) Enabling these options makes it easier to keep the titles and descriptions up to date, by only editing the hosted video as the "authoritative version".
 * New field requested from API calls: `poster_url`. If it exists, it's added to `post_meta` for new **or existing** posts. Allows developers to use the image url in a custom `<video>` element.
 * Video metadata (`duration`, `thumbnail_url`, `poster_url`) now synced from host automatically to `post_meta` daily. Doesn't change much, except for developers who use these fields.
-* Refactor of post syncing code
 
 = 1.3.2 =
 * New developer option to *remove* embedded videos from `post_content`. (See notes for 1.3.1)
