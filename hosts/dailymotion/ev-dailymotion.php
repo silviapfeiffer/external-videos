@@ -155,6 +155,7 @@ class SP_EV_Dailymotion {
     $video['host_id']        = 'dailymotion';
     $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
     $video['video_id']       = sanitize_text_field( $vid['id'] );
+    $video['embeddable']     = true; // there is no embed control on DM
     $video['title']          = sanitize_text_field( $vid['title'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $vid['owner.screenname'] );
@@ -169,7 +170,9 @@ class SP_EV_Dailymotion {
         array_push( $video['tags'], sanitize_text_field( $tag ) );
       }
     }
-    $video['thumbnail_url']  = esc_url( $vid['thumbnail_url'] );
+    // v2.0.0 - note new thumbnail field names here
+    $video['thumbnail_url']  = esc_url( $vid['thumbnail_180_url'] );
+    $video['poster_url']     = esc_url( $vid['thumbnail_720_url'] );
     $video['duration']       = gmdate( "H:i:s", $vid['duration'] );
     $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
@@ -191,7 +194,7 @@ class SP_EV_Dailymotion {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
@@ -225,7 +228,7 @@ class SP_EV_Dailymotion {
       'headers'     => $headers
     );
 
-    $new_videos = array();
+    $current_videos = array();
 
     // /*
     do {
@@ -244,8 +247,8 @@ class SP_EV_Dailymotion {
 
       foreach ( $list as $vid ) {
         $video = SP_EV_Dailymotion::compose_video( $vid, $author );
-        // add $video to the end of $new_videos
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos
+        array_push( $current_videos, $video );
       }
 
       // next page
@@ -255,8 +258,8 @@ class SP_EV_Dailymotion {
 
     } while ( $has_more );
 
-    // echo '<pre>'; print_r( $new_videos); echo '</pre>';
-    return $new_videos;
+    // echo '<pre>'; print_r( $current_videos); echo '</pre>';
+    return $current_videos;
 
   }
 

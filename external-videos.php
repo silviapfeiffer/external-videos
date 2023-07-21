@@ -2,9 +2,9 @@
 /*
 * Plugin Name: External Videos
 * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
-* Description: Automatically syncs your videos from YouTube, Vimeo, Dotsub, Wistia or Dailymotion to your WordPress site as new posts.
+* Description: Automatically syncs your videos from YouTube, Vimeo, Wistia or Dailymotion to your WordPress site as new posts.
 * Author: Silvia Pfeiffer and Andrew Nimmo
-* Version: 1.3.2
+* Version: 2.0.0
 * Author URI: http://www.gingertech.net/
 * License: GPL2
 * Text Domain: external-videos
@@ -32,7 +32,7 @@
   @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>, Andrew Nimmo <andrnimm@fastmail.fm>
   @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    1.3.1
+  @version    2.0.0
   @link       http://wordpress.org/extend/plugins/external-videos/
 
 */
@@ -45,9 +45,12 @@ class SP_External_Videos {
 
   public function __construct() {
 
+    $this->constants();
+
     require_once( ABSPATH . 'wp-admin/includes/taxonomy.php' );
 
     require( plugin_dir_path( __FILE__ ) . 'core/ev-admin.php' );
+    require( plugin_dir_path( __FILE__ ) . 'core/ev-sync-posts.php' );
     require( plugin_dir_path( __FILE__ ) . 'core/ev-helpers.php' );
     require( plugin_dir_path( __FILE__ ) . 'core/ev-widget.php' );
     require( plugin_dir_path( __FILE__ ) . 'core/ev-media-gallery.php' );
@@ -79,6 +82,16 @@ class SP_External_Videos {
     add_filter( 'pre_get_posts', array( $this, 'add_to_main_query' ) );
     add_filter( 'request', array( $this, 'feed_request' ) );
 
+  }
+
+  // https://wordpress.stackexchange.com/questions/18268/i-want-to-get-a-plugin-version-number-dynamically
+  function constants() {
+    if (!defined('EXTERNAL_VIDEOS_VERSION')) {
+      $plugin_data = get_file_data( __FILE__,
+                                    array('Version' => 'Version'),
+                                    false );
+      define('EXTERNAL_VIDEOS_VERSION', $plugin_data['Version']);
+    }
   }
 
   /*
@@ -249,9 +262,14 @@ class SP_External_Videos {
     if( !array_key_exists( 'delete', $options ) ) $options['delete'] = false;
     if( !array_key_exists( 'hosts', $options ) ) $options['hosts'] = array();
     if( !array_key_exists( 'embed', $options ) ) $options['embed'] = true;
+    if( !array_key_exists( 'title_sync', $options ) )
+      $options['title_sync'] = false;
+    if( !array_key_exists( 'content_sync', $options ) )
+      $options['content_sync'] = false;
     if( !array_key_exists( 'attrib', $options ) ) $options['attrib'] = false;
     if( !array_key_exists( 'loop', $options ) ) $options['loop'] = false;
-    if( !array_key_exists( 'slug', $options ) ) $options['slug'] = 'external-videos';
+    if( !array_key_exists( 'slug', $options ) )
+      $options['slug'] = 'external-videos';
 
     // echo '<pre style="margin-left:150px;">$options: '; print_r($options); echo '</pre>';
 
@@ -491,8 +509,8 @@ class SP_External_Videos {
         $video = trim( $embed_url[0] );
         $description = esc_attr( get_post_meta( get_the_ID(), 'description' ) );
         $desc = $description[0];
-        $short_title = sp_ev_shorten_text( get_the_title(), 33 );
-        $thickbox_title = sp_ev_shorten_text( get_the_title(), 90 );
+        $short_title = SP_EV_Helpers::shorten_text( get_the_title(), 33 );
+        $thickbox_title = SP_EV_Helpers::shorten_text( get_the_title(), 90 );
         // get oEmbed code
         $oembed = new WP_Embed();
         $html = $oembed->shortcode( null, $video );

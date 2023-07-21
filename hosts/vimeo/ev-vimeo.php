@@ -61,13 +61,15 @@ class SP_EV_Vimeo {
 
       foreach( $authors as $author ){
         // Check for necessary API keys
-        if( !isset( $author['developer_key'] ) || empty( $author['developer_key'] ) ){
+        if( !isset( $author['developer_key'] ) ||
+            empty( $author['developer_key'] ) ){
           // to do: return a WP Error message so they know to update the author.
           error_log( 'no client identifier for ' . $author['author_id'] );
 
         } else { // Only continue if we have a developer_key
 
-          if( !isset( $author['secret_key'] ) || empty( $author['secret_key'] ) ){
+          if( !isset( $author['secret_key'] ) ||
+              empty( $author['secret_key'] ) ){
             // to do: return a WP Error message so they know to update the author.
             error_log( 'no client secret for ' . $author['author_id'] );
 
@@ -159,7 +161,7 @@ class SP_EV_Vimeo {
   *  Embed url is stored as postmeta in external-video posts.
   *  Url is specific to each host site's embed API.
   *
-  *  This function is a bit more involved on Vimeo because they give you
+  *  This function was a bit more involved on Vimeo because they give you
   *  a useless "uri" containing the regex /videos/ before the proper videoID.
   *  This regex is not any part of the embedabble uri of the video! Remove!
 
@@ -173,8 +175,8 @@ class SP_EV_Vimeo {
 
   public static function embed_url( $video_id ) {
 
-    $parts = explode( "/", $video_id );
-    $video_id = $parts[2];
+    // $parts = explode( "/", $video_id );
+    // $video_id = $parts[2];
     return esc_url( sprintf( "https://player.vimeo.com/video/%s", $video_id ) );
 
   }
@@ -199,8 +201,24 @@ class SP_EV_Vimeo {
     $video = array();
     // extract fields
     $video['host_id']        = 'vimeo';
-    $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
-    $video['video_id']       = sanitize_text_field( $vid['uri'] );
+    $video['author_id']      = sanitize_text_field(
+                                 strtolower( $author['author_id'] )
+                               );
+    // Vimeo doesn't store the video_id separately, we have to extract from uri
+    // We assume it still follows the pattern "/videos/24234325"
+    $vimeo_uri               = sanitize_text_field( $vid['uri'] );
+    $id_pos                  = strpos( $vimeo_uri, "/videos/" );
+    $video['video_id']       = ( $id_pos === 0 ) ?
+                               substr( $vimeo_uri, 8 ) : $vimeo_uri;
+    // error_log(print_r( $id_pos, true ));
+
+    $vimeo_embeddable        = sanitize_text_field( $vid['privacy']['embed'] );
+    // The current options are "public", "whitelist", and "private".
+    // We'll assume it's embeddable as long as it's not "private".
+    // End user will have to allow their own domains to get the embed to
+    // actually work, if it's set to "specific domains" in the Vimeo UI.
+    $video['embeddable']     = $vimeo_embeddable !== "private";
+    // $video['privacy']        = sanitize_text_field( $vid['privacy']['view'] );
     $video['title']          = sanitize_text_field( $vid['name'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $vid['user']['name'] );
@@ -215,12 +233,21 @@ class SP_EV_Vimeo {
         array_push( $video['tags'], esc_attr( $tag['tag'] ) ); // yep, it's $tag['tag'] at vimeo
       }
     }
+    // Size 2 is our thumbnail, 295x166.
     $video['thumbnail_url']  = esc_url( $vid['pictures']['sizes'][2]['link'] );
-    $video['duration']       = sp_ev_sec2hms( $vid['duration'] );
-    $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
-    $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
-    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
-    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ? $author['ev_post_status'] : '';
+    // Size 4 is 960x540, better for poster preview
+    $video['poster_url']     = esc_url( $vid['pictures']['sizes'][4]['link'] );
+    $video['duration']       = SP_EV_Helpers::sec2hms( $vid['duration'] );
+    $video['ev_author']      = isset( $author['ev_author'] ) ?
+                               $author['ev_author'] : '';
+    $video['ev_category']    = isset( $author['ev_category'] ) ?
+                               $author['ev_category'] : array();
+    $video['ev_post_format'] = isset( $author['ev_post_format'] ) ?
+                               $author['ev_post_format'] : '';
+    $video['ev_post_status'] = isset( $author['ev_post_status'] ) ?
+                               $author['ev_post_status'] : '';
+    // Could store privacy.embed or privacy.view
+    // https://developer.vimeo.com/api/reference/response/video
 
     return $video;
 
@@ -280,7 +307,7 @@ class SP_EV_Vimeo {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
@@ -327,7 +354,7 @@ class SP_EV_Vimeo {
 
     // loop through all feed pages
     $count = 0;
-    $new_videos = array();
+    $current_videos = array();
     do {
       // Do an authenticated call
       try {
@@ -352,8 +379,8 @@ class SP_EV_Vimeo {
 
       foreach ( $data as $vid ) {
         $video = SP_EV_Vimeo::compose_video( $vid, $author );
-        // add $video to the end of $new_videos
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos
+        array_push( $current_videos, $video );
         $count++;
       }
 
@@ -362,8 +389,11 @@ class SP_EV_Vimeo {
 
     } while ( $next );
 
-    // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($new_videos); echo '</pre>';
-    return $new_videos;
+    // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($current_videos); echo '</pre>';
+
+    // error_log(print_r($current_videos, true));
+
+    return $current_videos;
 
   }
 

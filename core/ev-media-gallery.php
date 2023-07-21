@@ -74,12 +74,10 @@ class SP_EV_Media_Gallery {
     $form_class = 'media-upload-form validate';
 
     $_GET['paged'] = isset( $_GET['paged'] ) ? intval($_GET['paged']) : 0;
-    if ( $_GET['paged'] < 1 )
-        $_GET['paged'] = 1;
+    if ( $_GET['paged'] < 1 ) $_GET['paged'] = 1;
     $start = ( $_GET['paged'] - 1 ) * 10;
-    if ( $start < 1 )
-        $start = 0;
-    add_filter( 'post_limits', create_function( '$a', "return 'LIMIT $start, 10';" ) );
+    if ( $start < 1 ) $start = 0;
+    add_filter( 'post_limits', function( $start ) { return "LIMIT $start, 10"; } );
 
     list( $post_mime_types, $avail_post_mime_types ) = $this->edit_query();
 
@@ -159,20 +157,18 @@ class SP_EV_Media_Gallery {
     <?php //media_upload_form( $errors ); ?>
 
     <script type="text/javascript">
-    <!--
+
     jQuery(function($){
       var preloaded = $(".media-item.preloaded");
       if ( preloaded.length > 0 ) {
-          preloaded.each(function(){
-                      console.log(this.id);
-
-              prepareMediaItem({id:this.id.replace(/[^0-9]/g, '')},'');
-          });
-          updateMediaForm();
+        preloaded.each(function(){
+          console.log(this.id);
+          prepareMediaItem({id:this.id.replace(/[^0-9]/g, '')},'');
+        });
+        updateMediaForm();
       }
     });
 
-    -->
     </script>
 
     <div id="media-items">

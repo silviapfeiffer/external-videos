@@ -10,8 +10,10 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
+#[AllowDynamicProperties] added for PHP 8.2
 */
 
+#[AllowDynamicProperties]
 class Media_Explorer extends MEXP_Plugin {
 
 	/**

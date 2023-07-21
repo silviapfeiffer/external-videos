@@ -182,6 +182,7 @@ class SP_EV_Wistia {
     $video['host_id']        = 'wistia';
     $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
     $video['video_id']       = sanitize_text_field( $vid['hashed_id'] );
+    $video['embeddable']     = true; // there is no embed control on Wistia
     $video['title']          = sanitize_text_field( $vid['name'] );
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $author['author_id'] );
@@ -191,7 +192,6 @@ class SP_EV_Wistia {
     $video['author_url']     = esc_url( "https://" . $author['author_id'] . ".wistia.com/projects" );
     $video['category']       = array();
     $video['tags']           = array();
-    // $video['thumbnail']   = $vid['thumbnail']['url'];
 
     // Wistia API delivers a huge thumbnail by default. But also an endpoint.
     // If we want a smaller thumbnail, we have to trim off the url after the "="
@@ -204,7 +204,8 @@ class SP_EV_Wistia {
     $thumbnail_url           = substr( $thumbnail_url, 0, $equipos ) . "=" . $thumb_w . "x" . $thumb_h;
 
     $video['thumbnail_url']  = $thumbnail_url;
-    $video['duration']       = sp_ev_sec2hms( $vid['duration'] );
+    $video['poster_url']     = esc_url( $vid['thumbnail']['url'] );
+    $video['duration']       = SP_EV_Helpers::sec2hms( $vid['duration'] );
     $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
     $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
@@ -225,7 +226,7 @@ class SP_EV_Wistia {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
@@ -250,7 +251,7 @@ class SP_EV_Wistia {
       'timeout' => 25
     );
 
-    $new_videos = array();
+    $current_videos = array();
 
     do {
       // fetch videos
@@ -266,8 +267,8 @@ class SP_EV_Wistia {
 
       foreach ($body as $vid) {
         $video = SP_EV_Wistia::compose_video( $vid, $author );
-        // add $video to the end of $new_videos array
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos array
+        array_push( $current_videos, $video );
       }
 
       // next page
@@ -277,7 +278,7 @@ class SP_EV_Wistia {
 
     } while ( $body );
 
-    return $new_videos;
+    return $current_videos;
 
   }
 

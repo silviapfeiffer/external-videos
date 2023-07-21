@@ -62,7 +62,8 @@ class SP_EV_YouTube {
 
       foreach( $authors as $author ){
         // Check for necessary API keys
-        if( !isset( $author['developer_key'] ) || empty( $author['developer_key'] ) ){
+        if( !isset( $author['developer_key'] ) ||
+            empty( $author['developer_key'] ) ){
           // return a WP Error message so they know to update the author.
           error_log( 'no developer key for ' . $author['author_id'] );
 
@@ -288,13 +289,72 @@ class SP_EV_YouTube {
   *  @since  0.23
   *
   *  @param   $video_id
-  *  @return  <iframe>
+  *  @return  string that WP converts to an <iframe> via the_content
   */
 
   public static function embed_url( $video_id ) {
 
     return esc_url( sprintf( "https://www.youtube.com/embed/%s", $video_id ) );
 
+  }
+
+  /*
+  *  video_url
+  *
+  *  Used by fetch() and SP_EV_Admin::save_video()
+  *  Video url is stored as postmeta in external-video posts.
+  *  Url is specific to each host site's embed API.
+  *
+  *  @type  function
+  *  @date  18/07/23
+  *  @since  2.0.0
+  *
+  *  @param   $video_id
+  *  @return  string that WP converts to an <iframe> via the_content
+  */
+
+  public static function video_url( $video_id ) {
+
+    return esc_url( sprintf( "https://www.youtube.com/watch?v=%s",
+                             $video_id ) );
+
+  }
+
+  /*
+  *  video_detail
+  *
+  *  Used by compose_video()
+  *  We have to re-query the YouTube API for **each video** to get more details
+  *  using id=$vid['contentDetails']['videoId'] from the playlist results
+  *  because playlist items does not have everything we need.
+  *
+  *  @type  function
+  *  @date  18/07/23
+  *  @since  2.0.0
+  *
+  *  @param   $vid array
+  *  @param   $author array
+  *  @return  $video array
+  */
+
+  public static function video_detail( $vid, $author ) {
+
+    $url = "https://www.googleapis.com/youtube/v3/videos";
+    $url .= "?part=contentDetails,snippet,status";
+
+    $url .= "&key=" . $author['developer_key'];
+    $url .= "&id=" . $vid['contentDetails']['videoId'];
+
+    $response = wp_remote_get( $url );
+    $code = wp_remote_retrieve_response_code( $response );
+    $message = wp_remote_retrieve_response_message( $response );
+    // true to return array, not object
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
+
+    // Redefine $vid as this new, more detailed object
+    $vid = $body['items'][0];
+
+    return $vid;
   }
 
   /*
@@ -309,42 +369,39 @@ class SP_EV_YouTube {
   *  @since  1.0
   *
   *  @param   $vid array
+  *  @param   $author array
   *  @return  $video array
   */
 
   public static function compose_video( $vid, $author ) {
 
-    // Google Get marathon. Let's fill this out.
-    $endpoint = "https://www.googleapis.com/youtube/v3/videos";
-    $url = $endpoint . "?part=contentDetails,snippet&key=" . $author['developer_key'] . "&id=" . $vid['contentDetails']['videoId'];
-    $response = wp_remote_get( $url );
-    $code = wp_remote_retrieve_response_code( $response );
-    $message = wp_remote_retrieve_response_message( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
-
-    $items = $body['items'][0];
-    // $tags = (array) $items['snippet']['tags'];
+    $vid = SP_EV_YouTube::video_detail( $vid, $author );
+    // error_log('updated $vid:' . "\n" . print_r( $vid, true ) );
+    // $tags = (array) $vid['snippet']['tags'];
     $tags = array();
-    $duration = $items['contentDetails']['duration'];
     // echo '<pre>$tags: <br />'; print_r( $tags ); echo '</pre>';
-    // echo '<pre>$duration: <br />'; print_r( $duration ); echo '</pre>';
 
     $video = array();
     // extract fields
     $video['host_id']        = 'youtube';
     $video['author_id']      = sanitize_text_field( strtolower( $author['author_id'] ) );
-    $video['video_id']       = sanitize_text_field( $vid['contentDetails']['videoId'] ); // not ID!!!
+    $video['video_id']       = sanitize_text_field( $vid['id'] ); // now ID!!!
+    // embeddable is boolean on YT
+    $video['embeddable']     = (boolean) $vid['status']['embeddable'];
+    // $video['privacy']        = sanitize_text_field( $vid['status']['privacyStatus'] );
     $video['title']          = sanitize_text_field( $vid['snippet']['title'] );
     $video['description']    = sanitize_text_field( $vid['snippet']['description'] );
     $video['author_name']    = sanitize_text_field( $vid['snippet']['channelTitle'] );
-    $video['video_url']      = esc_url( "https://www.youtube.com/watch?v=" . $vid['contentDetails']['videoId'] );
-    $video['embed_url']      = SP_EV_YouTube::embed_url( $vid['contentDetails']['videoId'] );
+    $video['video_url']      = SP_EV_YouTube::video_url( $vid['id'] );
+    $video['embed_url']      = SP_EV_YouTube::embed_url( $vid['id'] );
     $video['published']      = gmdate( "Y-m-d H:i:s", strtotime( $vid['snippet']['publishedAt'] ) );
     $video['author_url']     = esc_url( "https://www.youtube.com/user/".$video['author_id'] );
     $video['category']       = array();
     $video['tags']           = array_map( 'esc_attr', $tags );
     $video['thumbnail_url']  = esc_url( $vid['snippet']['thumbnails']['medium']['url'] );
-    $video['duration']       = sp_ev_convert_youtube_time( $duration );
+    $video['poster_url']     = esc_url( $vid['snippet']['thumbnails']['maxres']['url'] ) ?: esc_url( $vid['snippet']['thumbnails']['high']['url'] );
+    $duration                = $vid['contentDetails']['duration'];
+    $video['duration']       = SP_EV_Helpers::ytduration2hms( $duration );
     $video['ev_author']      = isset( $author['ev_author'] ) ? $author['ev_author'] : '';
     $video['ev_category']    = isset( $author['ev_category'] ) ? $author['ev_category'] : array();
     $video['ev_post_format'] = isset( $author['ev_post_format'] ) ? $author['ev_post_format'] : '';
@@ -364,22 +421,24 @@ class SP_EV_YouTube {
   *  @since  1.0
   *
   *  @param   $author
-  *  @return  $new_videos
+  *  @return  $current_videos
   */
 
   public static function fetch( $author ) {
 
-    $author_id = $author['author_id'];
+    // $author_id = $author['author_id'];
     $developer_key = $author['developer_key'];
-    $channelId = $author['channel_id']; // was channel_id
+    // $channelId = $author['channel_id'];
     $playlistId = $author['playlist_id'];
 
     // And now we need those videos
     $per_page = 30;
     $pageToken = '1';
 
+    // Using $baseurl because we may append pageToken later
     $baseurl = "https://www.googleapis.com/youtube/v3/playlistItems";
-    $baseurl .= "?part=contentDetails,snippet";
+    $baseurl .= "?part=contentDetails,snippet,status";
+
     $baseurl .= "&key=" . $developer_key;
     // $baseurl .= "&channelId=" . $channelId; // API doesn't need this anymore
     $baseurl .= "&playlistId=" . $playlistId;
@@ -387,7 +446,7 @@ class SP_EV_YouTube {
 
     $url = $baseurl;
 
-    $new_videos = array();
+    $current_videos = array();
 
     // /*
     do {
@@ -396,26 +455,30 @@ class SP_EV_YouTube {
         $response = wp_remote_get( $url );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+        // set json_decode `true` to return array, not object
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
         $items = isset( $body['items'] ) ? $body['items'] : array();
         $pageToken = isset( $body['nextPageToken'] ) ? true : null;
       }
       catch ( Exception $e ) {
-        echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
+        echo "Encountered an API error -- code " .
+             "{$e->getCode()} - {$e->getMessage()}";
       }
 
-      foreach ( $items as $vid )
-      {
+      foreach ( $items as $vid ) {
+        // error_log('$vid:' . "\n" . print_r( $vid, true ) );
         $video = SP_EV_YouTube::compose_video( $vid, $author );
-        // add $video to the end of $new_videos
-        array_push( $new_videos, $video );
+        // add $video to the end of $current_videos
+        array_push( $current_videos, $video );
       }
       // next page
       $url = $baseurl . "&pageToken=" . $pageToken;
 
     } while ( $pageToken );
 
-    return $new_videos;
+    // error_log(print_r($current_videos, true));
+
+    return $current_videos;
 
   }
 
