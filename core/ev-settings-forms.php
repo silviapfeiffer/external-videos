@@ -89,19 +89,19 @@ $HOSTS = $options['hosts'];
               <fieldset>
                 <label for="ev-embed">
                   <input type="checkbox" id="ev-embed" name="ev-embed" value="embed" <?php if ( $ev_embed == true ) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Embed video in external-video post content. (This is the default. Only disable this if you are writing a custom theme.)', 'external-videos'); ?></span>
+                  <span><?php esc_attr_e('Embed video in external-video post content? (This is the default. Only disable this if you are writing a custom theme.)', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
                 <label for="ev-title_sync">
                   <input type="checkbox" id="ev-title_sync" name="ev-title_sync" value="title_sync" <?php if ( $ev_title_sync == true ) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Keep video titles in sync with titles on host (overwrite local edits)', 'external-videos'); ?></span>
+                  <span><?php esc_attr_e('Keep video titles in sync with titles on host (overwrite local edits)?', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>
                 <label for="ev-content_sync">
                   <input type="checkbox" id="ev-content_sync" name="ev-content_sync" value="content_sync" <?php if ( $ev_content_sync == true ) echo "checked"; ?>/>
-                  <span><?php esc_attr_e('Keep video descriptions in sync with descriptions on host (overwrite local edits)', 'external-videos'); ?></span>
+                  <span><?php esc_attr_e('Keep video descriptions in sync with descriptions on host (overwrite local edits)?', 'external-videos'); ?></span>
                 </label>
               </fieldset>
               <fieldset>

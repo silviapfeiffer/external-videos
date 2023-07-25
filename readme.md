@@ -17,7 +17,7 @@ Automatically syncs your videos from YouTube, Vimeo, Wistia or Dailymotion to yo
 - Tags: video, crosspost, sync, YouTube, Vimeo, Wistia, Dailymotion
 - Requires at least: 4.4
 - Tested up to: 6.2.2
-- Stable Tag: 2.0.1
+- Stable Tag: 2.0.0
 - License: GPLv2
 - License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -101,9 +101,6 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 
 
 # Changelog
-
-### 2.0.1
-* Bug fix for SP_EV_SyncPosts::trash_deleted_videos
 
 ### 2.0.0
 * Refactor of post syncing code
