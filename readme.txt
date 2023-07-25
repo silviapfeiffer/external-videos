@@ -87,7 +87,8 @@ Yes, you can pick any slug you like in Settings->External Videos, as long as it 
 == Changelog ==
 
 = 2.0.1 =
-* Bug fix for SP_EV_SyncPosts::trash_deleted_videos
+* Bug fix for SP_EV_SyncPosts::trash_deleted_videos that caused valid videos to be moved to trash, then restored
+* Cleanup: Remove Dotsub tab from Settings page
 
 = 2.0.0 =
 * Refactor of post syncing code
