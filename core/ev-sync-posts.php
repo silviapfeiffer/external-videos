@@ -850,27 +850,29 @@ class SP_EV_SyncPosts {
                                  $current_video_ids ) {
 
     // we're going to count how many were deleted at each host
-    // must fill out this array with zeros, or error
+    // must fill out $count_deleted[$host_id] with zeros, or error
     $count_deleted = array();
 
+    // there will only be one update_host in the event of a selected author
     foreach( $update_hosts as $host ){
       $host_id = $host['host_id'];
       $count_deleted[$host_id] = 0;
     }
 
+    // no selected update_author means get all hosts all authors
     if( $update_author == null ){
 
       $existing_videos = $this->get_video_posts();
 
     } else {
 
-      $host_id = $update_hosts[0]['host_id'];
+      // $host_id already defined above
       $author_id = $update_author['author_id'];
-
       $existing_videos = $this->get_video_posts( $host_id, $author_id );
+
     }
 
-    // error_log( print_r( $current_video_ids, true ) );
+    // error_log( '$current_video_ids: ' . print_r( $current_video_ids, true ) );
 
     // Check this is working. Value could be an array
     while( $existing_videos->have_posts() ) {
