@@ -253,7 +253,7 @@ class SP_External_Videos {
       $options = array();
     }
     // Upgrade options to v1.0: move author options to hosts
-    $options = SP_External_Videos::convert_author_options( $options );
+    $options = SP_External_Videos::upgrade_options( $options );
 
     // Set defaults for the basic options
     // There are new options that may not be set yet
@@ -278,9 +278,17 @@ class SP_External_Videos {
   }
 
   /*
-  *  convert_author_options
+  *  upgrade_options
   *
-  *  This is for an update of the plugin to version 1.0.
+  *  new function to update options
+  *
+  *  @type  function
+  *  @date  25/07/23
+  *  @since  2.0.1
+  *
+  *  remove dotsub
+  *
+  *  convert_author_options was for an update of the plugin to version 1.0.
   *  Move authors array under respective hosts for much easier indexing.
   *  This is a database conversion function that is light and runs automatically
   *  but is really needed once only. Could be moved to settings-page AJAX
@@ -294,11 +302,17 @@ class SP_External_Videos {
   *  @return
   */
 
-  static function convert_author_options( $options ){
+  static function upgrade_options( $options ){
 
+    // return if there are no hosts yet
     if( !array_key_exists( 'hosts', $options ) ) return $options;
+
+    // error_log(print_r( $options['hosts'], true ));
+
+    // return if we've already converted the data
     if( !array_key_exists( 'authors', $options ) ) return $options;
 
+    // nest each author under the respective host in the $options array
     $AUTHORS = $options['authors'];
 
     foreach( $AUTHORS as $author ){
@@ -307,7 +321,12 @@ class SP_External_Videos {
       $options['hosts'][$host_id]['authors'][$author_id] = $author;
     }
 
+    // remove the old "authors" options, now nested under hosts
     unset( $options['authors'] );
+
+    // remove host dotsub, now defunct
+    unset( $options['hosts']['dotsub'] );
+
     update_option( 'sp_external_videos_options', $options );
 
     return $options;
