@@ -465,13 +465,13 @@ class SP_EV_SyncPosts {
     // error_log( print_r( $options, true ) );
 
     // If the video exists, update it and return. Maybe more than one
-    $existing_posts = $this->get_matching_posts( $video );
+    $matching_posts = $this->get_matching_posts( $video );
     // See if video exists, update accordingly, stop execution
     // and return messages about updates or unembeddables trashed.
-    if ( $existing_posts->have_posts() ) {
-      $messages = $this->update_existing_post( $existing_posts,
-                                               $options,
-                                               $video );
+    if ( $matching_posts->have_posts() ) {
+      $messages = $this->update_existing_posts( $matching_posts,
+                                                $options,
+                                                $video );
       return $messages;
     }
 
@@ -543,10 +543,10 @@ class SP_EV_SyncPosts {
   }
 
   /*
-  *  update_existing_post
+  *  update_existing_posts
   *
   *  Used by save_video()
-  *  Check for an existing ev post(s) (by video_id)
+  *  Check for an existing ev post(s) (by video_id, there may be dupes)
   *  and if found, sync w/ host API's current $video data.
   *  Options may indicate whether to sync title and content
   *
@@ -560,7 +560,7 @@ class SP_EV_SyncPosts {
   *  @return  $messages (array of strings)
   */
 
-  function update_existing_post( $existing_posts, $options, $video ) {
+  function update_existing_posts( $existing_posts, $options, $video ) {
 
     $messages = array();
 
@@ -764,11 +764,8 @@ class SP_EV_SyncPosts {
     update_post_meta( $post_id, '_wp_attached_file', 'dummy.png' );
     update_post_meta( $post_id, 'description',
                       sanitize_text_field( $video['description'] ) );
-    // video embed code.
-    // TODO: meta key could be converted to "embed_url" for consistency
-    update_post_meta( $post_id, 'embed_code',
-                      esc_url( $this->embed_url( $video['host_id'],
-                                                 $video['video_id'] ) ) );
+    // Video "embed_url" for consistency
+    update_post_meta( $post_id, 'embed_code', esc_url( $video['embed_url'] ) );
   }
 
   /*

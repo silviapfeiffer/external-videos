@@ -4,7 +4,7 @@
 * Plugin URI: http://wordpress.org/extend/plugins/external-videos/
 * Description: Automatically syncs your videos from YouTube, Vimeo, Wistia or Dailymotion to your WordPress site as new posts.
 * Author: Silvia Pfeiffer and Andrew Nimmo
-* Version: 2.0.1
+* Version: 2.1.0
 * Author URI: http://www.gingertech.net/
 * License: GPL2
 * Text Domain: external-videos
@@ -32,7 +32,7 @@
   @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>, Andrew Nimmo <andrnimm@fastmail.fm>
   @copyright  Copyright 2010+ Silvia Pfeiffer
   @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    2.0.0
+  @version    2.1.0
   @link       http://wordpress.org/extend/plugins/external-videos/
 
 */
@@ -62,7 +62,7 @@ class SP_External_Videos {
 
     require_once( plugin_dir_path( __FILE__ ) . 'mexp/media-explorer.php' );
 
-    // includes do not bring methods into the class! they're standalone functions
+    // includes don't bring methods into the class! they're standalone functions
     register_activation_hook( __FILE__, array( $this, 'activation' ) );
     register_deactivation_hook( __FILE__, array( $this, 'deactivation' ) );
     register_activation_hook( __FILE__, array( $this, 'rewrite_flush' ) );
@@ -91,6 +91,9 @@ class SP_External_Videos {
                                     array('Version' => 'Version'),
                                     false );
       define('EXTERNAL_VIDEOS_VERSION', $plugin_data['Version']);
+    }
+    if (!defined('EXTERNAL_VIDEOS_MENU_POSITION')) {
+      define('EXTERNAL_VIDEOS_MENU_POSITION', 42);
     }
   }
 
@@ -127,7 +130,7 @@ class SP_External_Videos {
       'publicly_queryable' => true,
       'show_ui'          => true,
       'show_in_menu'     => true,
-      'menu_position'    => 42,
+      'menu_position'    => EXTERNAL_VIDEOS_MENU_POSITION,
       'menu_icon'        => 'dashicons-embed-video',
       'capability_type'  => 'post',
       'hierarchical'     => false,

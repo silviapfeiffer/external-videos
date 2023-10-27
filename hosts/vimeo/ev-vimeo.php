@@ -165,6 +165,8 @@ class SP_EV_Vimeo {
   *  a useless "uri" containing the regex /videos/ before the proper videoID.
   *  This regex is not any part of the embedabble uri of the video! Remove!
 
+  *  Update 26/10/23 - they give you player_embed_url now.
+
   *  @type  function
   *  @date  31/10/16
   *  @since  0.23
@@ -223,7 +225,7 @@ class SP_EV_Vimeo {
     $video['description']    = sanitize_text_field( $vid['description'] );
     $video['author_name']    = sanitize_text_field( $vid['user']['name'] );
     $video['video_url']      = esc_url( $vid['link'] );
-    $video['embed_url']      = SP_EV_Vimeo::embed_url( $vid['uri'] );
+    $video['embed_url']      = esc_url( $vid['player_embed_url'] );
     $video['published']      = gmdate( "Y-m-d H:i:s", strtotime( $vid['release_time'] ) );
     $video['author_url']     = esc_url( $vid['user']['link'] );
     $video['category']       = array();
@@ -270,35 +272,43 @@ class SP_EV_Vimeo {
 
   private static function get_temporary_token( $author ){
 
-    $developer_key = $author['developer_key'];
-    $secret_key = $author['secret_key'];
-
     // send request
     $url = "https://api.vimeo.com/oauth/authorize/client?grant_type=client_credentials";
-    $auth = base64_encode( $developer_key . ':' . $secret_key );
+
+    $auth = base64_encode(
+      $$author['developer_key'] . ':' . $author['secret_key']
+    );
+
     $headers = array(
       'Authorization' => 'Basic ' . $auth,
-      'Content-Type' => 'application/json'
+      'Content-Type' => 'application/json',
+      'Accept' => 'application/vnd.vimeo.*+json;version=3.4'
     );
+
     $args = array(
       'headers'     => $headers
     );
 
     $response = wp_remote_post( $url, $args );
+
     $code = wp_remote_retrieve_response_code( $response );
+    error_log('token $code ' . print_r($code, true));
+
     $message = wp_remote_retrieve_response_message( $response );
-    $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+    error_log('token $message ' . print_r($message, true));
+
+    // true to return array, not object
+    $body = json_decode( wp_remote_retrieve_body( $response ), true );
 
     $access_token = $body['access_token'];
 
     return $access_token;
-
   }
 
   /*
   *  fetch
   *
-  *  NEW VIMEO API 3.0 oAuth2
+  *  NEW VIMEO API 3.4 oAuth2
   *  Requires client identifier (developer_key) and client secret (secret_key)
   *  Optional personal access token (auth_token) gives you access to private videos
   *
@@ -323,13 +333,15 @@ class SP_EV_Vimeo {
 
     // Now we should have an access token.
     // Limit field return.
+    // uri, name, link, player_embed_url, description, duration, pictures.sizes, user.name, user.link, privacy, tags, release_time
     $fields_desired = array(
       'uri',
       'name',
       'link',
+      'player_embed_url',
       'description',
       'duration',
-      'pictures',
+      'pictures.sizes',
       'user.name',
       'user.link',
       'privacy',
@@ -341,12 +353,14 @@ class SP_EV_Vimeo {
     // Put the parameters in the URL directly.
     // wp_remote_get doesn't stringify params in URL like Vimeo likes it
     $baseurl = 'https://api.vimeo.com';
-    // This whole end of the url is modified by the $next field at Vimeo. All parts needed
-    $url = $baseurl . '/users/' . $author_id . '/videos?sort=date&page=1&per_page=50&fields=' . $fields_desired;
+    // This whole end of the url is modified by the $next field at Vimeo.
+    // All parts needed
+    $url = $baseurl . '/users/' . $author_id .
+      '/videos?sort=date&page=1&per_page=50&fields=' . $fields_desired;
     $headers = array(
       'Authorization' => 'Bearer ' . $access_token, // was $token
       'Content-Type' => 'application/json',
-      'Accept' => 'application/vnd.vimeo.*+json;version=3.2'
+      'Accept' => 'application/vnd.vimeo.*+json;version=3.4'
     );
     $args = array(
       'headers'     => $headers
@@ -361,14 +375,15 @@ class SP_EV_Vimeo {
         $response = wp_remote_get( $url, $args );
         $code = wp_remote_retrieve_response_code( $response );
         $message = wp_remote_retrieve_response_message( $response );
-        $body = json_decode( wp_remote_retrieve_body( $response ), true ); // true to return array, not object
+        // true to return array, not object
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
         // Adjust array to get to the data
         $data = $body['data'];
         $next = $body['paging']['next'];
 
         // Interpret errors from the API - should really raise this as an exception
         if ( isset( $body['error'] ) ) {
-          // print_r( $body['error'] );
+          error_log(print_r( $body['error'], true ));
           return [];
         }
 
@@ -377,6 +392,7 @@ class SP_EV_Vimeo {
         echo "Encountered an API error -- code {$e->getCode()} - {$e->getMessage()}";
       }
 
+      // error_log( print_r( $data, true ) );
       foreach ( $data as $vid ) {
         $video = SP_EV_Vimeo::compose_video( $vid, $author );
         // add $video to the end of $current_videos
@@ -391,8 +407,7 @@ class SP_EV_Vimeo {
 
     // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($current_videos); echo '</pre>';
 
-    // error_log(print_r($current_videos, true));
-
+    error_log( print_r( $current_videos, true ) );
     return $current_videos;
 
   }
