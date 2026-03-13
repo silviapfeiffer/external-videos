@@ -48,7 +48,7 @@ class SP_EV_Dailymotion {
 
   private function setup_options(){
     // options table host_name is automatically set the last part of this Class Name
-    $class = static::class;
+    $class = self::class;
     $host_name = preg_split( "/SP_EV_/", $class, 2, PREG_SPLIT_NO_EMPTY );
     $host_name = $host_name[0];
 
