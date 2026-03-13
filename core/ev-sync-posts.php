@@ -765,7 +765,7 @@ class SP_EV_SyncPosts {
     update_post_meta( $post_id, 'description',
                       sanitize_text_field( $video['description'] ) );
     // Video "embed_url" for consistency
-    update_post_meta( $post_id, 'embed_code', esc_url( $video['embed_url'] ) );
+    update_post_meta( $post_id, 'embed_url', esc_url( $video['embed_url'] ) );
   }
 
   /*

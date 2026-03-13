@@ -30,15 +30,16 @@ class SP_EV_Helpers {
   // Convert $num_secs to Hours:Minutes:Seconds
   public static function sec2hms($num_secs) {
     $result = '';
+    $num_secs = intval($num_secs);
 
-    $hours   = intval(intval($num_secs) / 3600);
+    $hours   = intval($num_secs / 3600);
     $result .= $hours.':';
 
-    $minutes = intval(((intval($num_secs) / 60) % 60));
+    $minutes = intval(($num_secs / 60) % 60);
     if ($minutes < 10) $result .= '0';
     $result .= $minutes.':';
 
-    $seconds = intval(intval(($num_secs % 60)));
+    $seconds = $num_secs % 60;
     if ($seconds < 10) $result .= '0';
     $result .= $seconds;
 

@@ -407,7 +407,7 @@ class SP_EV_Vimeo {
 
     // echo '<pre>sp_ev_fetch_vimeo_videos: ' . $count . '<br />'; print_r($current_videos); echo '</pre>';
 
-    error_log( print_r( $current_videos, true ) );
+    // error_log( print_r( $current_videos, true ) );
     return $current_videos;
 
   }
